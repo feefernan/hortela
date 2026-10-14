@@ -180,14 +180,14 @@
     <div class="sc-bar">
       <span class="sc-bar-lbl">Vista:</span>
       <div class="sc-btn-group">
-        <button type="button" class="sc-btn on" id="vf" title="Frente" data-action="view" data-view="frente">F</button>
-        <button type="button" class="sc-btn"    id="vc" title="Costas" data-action="view" data-view="costas">C</button>
+        <button type="button" class="sc-btn on" id="vf" data-tip="Frente" aria-label="Ver frente" aria-pressed="true" data-action="view" data-view="frente">F</button>
+        <button type="button" class="sc-btn"    id="vc" data-tip="Costas" aria-label="Ver costas" aria-pressed="false" data-action="view" data-view="costas">C</button>
       </div>
       <div class="sc-sep"></div>
       <div class="sc-btn-group">
-        <button type="button" class="sc-btn" title="Desfazer"   data-action="undo">↩</button>
-        <button type="button" class="sc-btn" title="Centralizar" data-action="center">⊕</button>
-        <button type="button" class="sc-btn" title="Limpar"     data-action="clear">✕</button>
+        <button type="button" class="sc-btn" data-tip="Desfazer" aria-label="Desfazer última estampa" data-action="undo">↩</button>
+        <button type="button" class="sc-btn" data-tip="Centralizar" aria-label="Centralizar estampa selecionada" data-action="center">⊕</button>
+        <button type="button" class="sc-btn" data-tip="Limpar lado" aria-label="Limpar estampas deste lado" data-action="clear">✕</button>
       </div>
       <button type="button" class="sc-surp" data-action="surprise">✦ Surpresa</button>
     </div>
@@ -200,14 +200,15 @@
             <path id="shirt-body"
               d="M 108 30 L 26 82 L 62 112 L 62 372 L 298 372 L 298 112 L 334 82 L 252 30 Q 216 57 180 57 Q 144 57 108 30 Z"
               fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1.3"/>
-            <path d="M 108 30 Q 144 66 180 57 Q 216 66 252 30 Q 216 88 180 78 Q 144 88 108 30 Z"
+            <path id="shirt-collar" d="M 108 30 Q 144 66 180 57 Q 216 66 252 30 Q 216 88 180 78 Q 144 88 108 30 Z"
                   fill="#EBE5D5" stroke="#D6CCBA" stroke-width="1"/>
             <path d="M 108 30 L 26 82 L 62 112 L 80 78 Z"  fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
             <path d="M 252 30 L 334 82 L 298 112 L 280 78 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
           </g>
-          <line x1="180" y1="78" x2="180" y2="372" stroke="#D6CCBA" stroke-width=".4" opacity=".5"/>
+          <line id="shirt-seam" x1="180" y1="78" x2="180" y2="372" stroke="#D6CCBA" stroke-width=".4" opacity=".5"/>
         </svg>
-        <div class="drop-zone" id="drop-zone"></div>
+        <div class="drop-zone" id="drop-zone" data-side="frente"></div>
+        <div class="drop-zone" id="drop-zone-back" data-side="costas" hidden></div>
       </div>
       <div class="sc-hint" id="sc-hint">Escolha uma estampa no painel ao lado</div>
     </div>

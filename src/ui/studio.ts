@@ -1,5 +1,7 @@
 import { findStamp, STAMPS, type Stamp } from '../domain/catalog';
+import { BODY_PATH, COLLAR_PATH, SIDE_LABEL, type Side, viewLabel } from '../domain/garment';
 import type { StudioConfig } from '../domain/orders';
+import { nextPlacement, type Rect } from '../domain/placement';
 import { formatBRL, MODELS, type ModelId, studioTotal } from '../domain/pricing';
 import { isValidWord } from '../domain/validation';
 import { layoutWord } from '../domain/word-layout';
@@ -9,17 +11,34 @@ import { byId, onAction, onEnter, onInput, qsa, selectInGroup } from './dom';
 import { removeWithExit } from './motion';
 import { toast } from './toast';
 
-let selected: HTMLElement | null = null;
-let drag: { el: HTMLElement; sx: number; sy: number; ox: number; oy: number } | null = null;
-let resize: { el: HTMLElement; sx: number; ow: number } | null = null;
-let model: ModelId = 'oversized';
+type Gesture =
+  | { kind: 'drag'; el: HTMLElement; sx: number; sy: number; ox: number; oy: number }
+  | { kind: 'resize'; el: HTMLElement; sx: number; ow: number };
 
-const zone = () => byId('drop-zone');
+let selected: HTMLElement | null = null;
+let gesture: Gesture | null = null;
+let model: ModelId = 'oversized';
+let side: Side = 'frente';
+
+const SIDES: readonly Side[] = ['frente', 'costas'];
+const zoneFor = (s: Side) => byId(s === 'frente' ? 'drop-zone' : 'drop-zone-back');
+const activeZone = () => zoneFor(side);
 // Estampas saindo (animação de remoção) já não contam como camadas.
-const placedEls = () => qsa<HTMLElement>('.ps:not(.removing)', zone());
+const placedEls = (zone: HTMLElement = activeZone()) => qsa<HTMLElement>('.ps:not(.removing)', zone);
+const sidesWithStamps = () => SIDES.filter((s) => placedEls(zoneFor(s)).length > 0);
+
+/** Retângulo pelo style (funciona mesmo com a zona escondida, onde offset* é 0). */
+export const rectOf = (el: HTMLElement): Rect => ({
+  x: Number.parseFloat(el.style.left) || 0,
+  y: Number.parseFloat(el.style.top) || 0,
+  w: Number.parseFloat(el.style.width) || el.offsetWidth,
+  h: Number.parseFloat(el.style.height) || el.offsetHeight,
+});
+
 const setHintVisible = (visible: boolean) => {
   byId('sc-hint').style.opacity = visible ? '1' : '0';
 };
+const refreshHint = () => setHintVisible(placedEls().length === 0);
 
 const renderStampPicker = () => {
   const scroll = byId('stamps-scroll');
@@ -57,6 +76,7 @@ const renderStampPicker = () => {
   wordBox.style.cssText = 'padding:4px 2px 14px;';
   wordBox.innerHTML = `
     <input id="word-input" type="text" placeholder="Escreva uma palavra" data-enter-action="add-word"
+      aria-label="Palavra com letras do alfabeto em aquarela"
       style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--dust);
         border-radius:4px;font-family:var(--body);font-size:13px;background:var(--white);">
     <div id="word-err" style="opacity:0;color:#a33;font-size:11.5px;font-style:italic;margin-top:6px;">
@@ -82,36 +102,47 @@ const deselect = () => {
   renderLayers();
 };
 
+const capturePointer = (target: Element, e: PointerEvent) => {
+  try {
+    target.setPointerCapture?.(e.pointerId);
+  } catch {
+    // Alguns ambientes (testes, navegadores antigos) não suportam captura.
+  }
+};
+
 const place = (el: HTMLElement) => {
-  el.addEventListener('mousedown', (e) => {
+  // Pointer Events: mouse, caneta e toque com o mesmo código (#13).
+  el.addEventListener('pointerdown', (e) => {
     const target = e.target as HTMLElement;
-    if (target.closest('.ps-resize') || target.closest('.ps-del')) return;
+    if (target.closest('.ps-del')) return;
     e.stopPropagation();
-    select(el);
-    drag = { el, sx: e.clientX, sy: e.clientY, ox: el.offsetLeft, oy: el.offsetTop };
     e.preventDefault();
+    select(el);
+    capturePointer(el, e);
+    const r = rectOf(el);
+    gesture = target.closest('.ps-resize')
+      ? { kind: 'resize', el, sx: e.clientX, ow: r.w }
+      : { kind: 'drag', el, sx: e.clientX, sy: e.clientY, ox: r.x, oy: r.y };
   });
-  el.querySelector('.ps-resize')?.addEventListener('mousedown', (e) => {
-    const me = e as MouseEvent;
-    me.stopPropagation();
-    resize = { el, sx: me.clientX, ow: el.offsetWidth };
-    me.preventDefault();
-  });
-  zone().appendChild(el);
+  activeZone().appendChild(el);
   select(el);
   renderLayers();
 };
 
-const controlsHTML = '<div class="ps-resize"></div><button class="ps-del" data-action="remove-stamp">✕</button>';
+const controlsHTML =
+  '<div class="ps-resize" aria-hidden="true"></div><button type="button" class="ps-del" data-action="remove-stamp" aria-label="Remover estampa">✕</button>';
+
+const placementFor = (w: number, h: number) => {
+  const wrap = byId('shirt-wrap');
+  return nextPlacement(placedEls().map(rectOf), { w: wrap.offsetWidth || 360, h: wrap.offsetHeight || 416 }, { w, h });
+};
 
 const addStamp = (id: string) => {
   const s = findStamp(id);
   if (!s) return;
   setHintVisible(false);
-  const wrap = byId('shirt-wrap');
   const size = 96;
-  const x = (wrap.offsetWidth - size) / 2 + (Math.random() - 0.5) * 64;
-  const y = (wrap.offsetHeight - size) / 2 + (Math.random() - 0.5) * 48;
+  const { x, y } = placementFor(size, size);
   const el = document.createElement('div');
   el.className = 'ps';
   el.dataset.sid = id;
@@ -135,11 +166,9 @@ const addWord = (raw: string): boolean => {
   setHintVisible(false);
 
   const word = raw.trim().toUpperCase();
-  const wrap = byId('shirt-wrap');
   const size = 140;
   const dispH = size / layout.aspectRatio;
-  const x = (wrap.offsetWidth - size) / 2 + (Math.random() - 0.5) * 40;
-  const y = (wrap.offsetHeight - dispH) / 2 + (Math.random() - 0.5) * 30;
+  const { x, y } = placementFor(size, dispH);
   const parts = layout.glyphs.map(
     (g) => `<image href="${g.href}" x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" />`,
   );
@@ -161,7 +190,7 @@ const removeStamp = (el: HTMLElement) => {
   if (selected === el) selected = null;
   removeWithExit(el);
   renderLayers();
-  if (!placedEls().length) setHintVisible(true);
+  refreshHint();
 };
 
 const layerThumb = (el: HTMLElement, stamp: Stamp | undefined): string => {
@@ -173,22 +202,24 @@ const layerThumb = (el: HTMLElement, stamp: Stamp | undefined): string => {
   return stamp ? stampImageHTML(stamp, 20, false) : '';
 };
 
+/** Nome legível da camada, como aparece no pedido e no certificado (#8). */
+const layerName = (el: HTMLElement): string =>
+  el.dataset.word ? `Palavra "${el.dataset.word}"` : (findStamp(el.dataset.sid ?? '')?.name ?? 'Estampa');
+
 const renderLayers = () => {
   const wrap = byId('layers-wrap');
   const els = placedEls();
   if (!els.length) {
-    wrap.innerHTML =
-      '<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage);">Nenhuma estampa adicionada</div>';
+    wrap.innerHTML = `<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage);">Nenhuma estampa ${side === 'frente' ? 'na frente' : 'nas costas'}</div>`;
     return;
   }
   wrap.innerHTML = els
     .map((el, idx) => {
       const stamp = el.dataset.word ? undefined : findStamp(el.dataset.sid ?? '');
-      const name = el.dataset.word ?? stamp?.name ?? 'Estampa';
       return `<div class="layer-item ${el.classList.contains('sel') ? 'hi' : ''}" data-action="select-layer" data-index="${idx}">
         <div class="layer-thumb">${layerThumb(el, stamp)}</div>
-        <div class="layer-name">${name}</div>
-        <button class="layer-del" title="Remover" data-action="remove-layer" data-index="${idx}">✕</button>
+        <div class="layer-name">${el.dataset.word ?? stamp?.name ?? 'Estampa'}</div>
+        <button type="button" class="layer-del" title="Remover" aria-label="Remover camada" data-action="remove-layer" data-index="${idx}">✕</button>
       </div>`;
     })
     .reverse()
@@ -199,17 +230,33 @@ const pickModel = (el: HTMLElement) => {
   selectInGroup(el, '.model-row', '.mo');
   model = el.dataset.model as ModelId;
   const m = MODELS[model];
+  byId('shirt-body').setAttribute('d', BODY_PATH[model]);
   byId('o-model').textContent = m.label;
   byId('o-mprice').textContent = formatBRL(m.price);
   byId('o-total').textContent = formatBRL(studioTotal(model));
 };
 
-const clearComposition = () => {
-  zone().innerHTML = '';
+const setView = (next: Side) => {
+  side = next;
+  deselect();
+  for (const s of SIDES) zoneFor(s).hidden = s !== side;
+  for (const btn of qsa<HTMLElement>('[data-action="view"]')) {
+    const on = btn.dataset.view === side;
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', String(on));
+  }
+  byId('shirt-collar').setAttribute('d', COLLAR_PATH[side]);
+  refreshHint();
+  renderLayers();
+  toast(side === 'costas' ? 'Vista traseira' : 'Vista frontal');
+};
+
+const clearComposition = (silent = false) => {
+  activeZone().innerHTML = '';
   selected = null;
   renderLayers();
   setHintVisible(true);
-  toast('Composição limpa');
+  if (!silent) toast(side === 'frente' ? 'Frente limpa' : 'Costas limpas');
 };
 
 const undo = () => {
@@ -224,13 +271,15 @@ const center = () => {
     return;
   }
   const wrap = byId('shirt-wrap');
-  selected.style.left = `${(wrap.offsetWidth - selected.offsetWidth) / 2}px`;
-  selected.style.top = `${(wrap.offsetHeight - selected.offsetHeight) / 2}px`;
+  const r = rectOf(selected);
+  selected.style.left = `${(wrap.offsetWidth - r.w) / 2}px`;
+  selected.style.top = `${(wrap.offsetHeight - r.h) / 2}px`;
 };
 
 const surprise = () => {
-  clearComposition();
-  const pool = [...STAMPS].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
+  clearComposition(true);
+  const artwork = STAMPS.filter((s) => s.series !== 'Alfabeto');
+  const pool = [...artwork].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
   pool.forEach((s, i) => {
     setTimeout(() => addStamp(s.id), i * 200);
   });
@@ -239,50 +288,61 @@ const surprise = () => {
 
 export const studioTotalLabel = () => byId('o-total').textContent ?? formatBRL(studioTotal(model));
 
-const hasStamps = () => placedEls().length > 0;
+const hasStamps = () => sidesWithStamps().length > 0;
 
-export const readStudioConfig = (): StudioConfig => ({
-  model: document.querySelector('.mo.on .mo-name')?.textContent || 'Camiseta Oversized',
-  color: document.querySelector<HTMLElement>('.sr .sw.on')?.title || 'Pergaminho',
-  size: document.querySelector('.sz-row .sz.on')?.textContent || 'G',
-  view: byId('vf').classList.contains('on') ? 'Frente' : 'Costas',
-  stamps: placedEls().map((el) => findStamp(el.dataset.sid ?? '')?.name ?? 'Estampa'),
-});
+/** Lados com estampa e a zona de cada um — usado na captura e no SVG de produção. */
+export const compositionSides = () =>
+  sidesWithStamps().map((s) => ({ side: s, label: SIDE_LABEL[s], zone: zoneFor(s), collar: COLLAR_PATH[s] }));
+
+export const readStudioConfig = (): StudioConfig => {
+  const sides = sidesWithStamps();
+  const both = sides.length > 1;
+  return {
+    model: MODELS[model].label,
+    color: document.querySelector<HTMLElement>('.sr .sw.on')?.title || 'Pergaminho',
+    size: document.querySelector('#estudio .sz-row .sz.on')?.textContent || 'G',
+    view: viewLabel(sides),
+    stamps: sides.flatMap((s) =>
+      placedEls(zoneFor(s)).map((el) => (both ? `${SIDE_LABEL[s]}: ${layerName(el)}` : layerName(el))),
+    ),
+  };
+};
 
 export const initStudio = (onCheckout: () => void) => {
   renderStampPicker();
 
-  document.addEventListener('mousemove', (e) => {
-    if (drag) {
-      drag.el.style.left = `${drag.ox + e.clientX - drag.sx}px`;
-      drag.el.style.top = `${drag.oy + e.clientY - drag.sy}px`;
+  document.addEventListener('pointermove', (e) => {
+    if (!gesture) return;
+    if (gesture.kind === 'drag') {
+      gesture.el.style.left = `${gesture.ox + e.clientX - gesture.sx}px`;
+      gesture.el.style.top = `${gesture.oy + e.clientY - gesture.sy}px`;
+      return;
     }
-    if (resize) {
-      const nw = Math.max(48, resize.ow + e.clientX - resize.sx);
-      const nh = nw / Number.parseFloat(resize.el.dataset.ar || '1');
-      resize.el.style.width = `${nw}px`;
-      resize.el.style.height = `${nh}px`;
-      const art = resize.el.querySelector<HTMLElement>('svg, img');
-      if (art) {
-        art.setAttribute('width', String(nw));
-        art.setAttribute('height', String(nh));
-        art.style.width = `${nw}px`;
-        art.style.height = `${nh}px`;
-      }
+    const nw = Math.max(48, gesture.ow + e.clientX - gesture.sx);
+    const nh = nw / Number.parseFloat(gesture.el.dataset.ar || '1');
+    gesture.el.style.width = `${nw}px`;
+    gesture.el.style.height = `${nh}px`;
+    const art = gesture.el.querySelector<HTMLElement>('svg, img');
+    if (art) {
+      art.setAttribute('width', String(nw));
+      art.setAttribute('height', String(nh));
+      art.style.width = `${nw}px`;
+      art.style.height = `${nh}px`;
     }
   });
-  document.addEventListener('mouseup', () => {
-    drag = null;
-    resize = null;
-  });
+  const endGesture = () => {
+    gesture = null;
+  };
+  document.addEventListener('pointerup', endGesture);
+  document.addEventListener('pointercancel', endGesture);
 
   onAction('add-stamp', (el) => {
     const id = el.dataset.stampId as string;
-    track('estudio.estampa', { estampa: id }, () => addStamp(id));
+    track('estudio.estampa', { estampa: id, lado: side }, () => addStamp(id));
   });
   onEnter('add-word', (el) => {
     const input = el as HTMLInputElement;
-    track('estudio.palavra', { letras: input.value.trim().length }, () => addWord(input.value));
+    track('estudio.palavra', { letras: input.value.trim().length, lado: side }, () => addWord(input.value));
     input.value = '';
   });
   onAction('remove-stamp', (el, e) => {
@@ -313,13 +373,10 @@ export const initStudio = (onCheckout: () => void) => {
     byId('shirt-body').setAttribute('fill', el.dataset.hex as string);
     toast(`Cor: ${el.dataset.name}`);
   });
-  onAction('view', (el) => {
-    selectInGroup(el, '.sc-btn-group', '.sc-btn');
-    toast(el.dataset.view === 'costas' ? 'Vista traseira' : 'Vista frontal');
-  });
+  onAction('view', (el) => setView(el.dataset.view as Side));
   onAction('stamp-tab', (el) => selectInGroup(el, '.sl-tabs', '.sl-tab'));
   onAction('center', center);
-  onAction('clear', clearComposition);
+  onAction('clear', () => clearComposition());
   onAction('undo', undo);
   onAction('surprise', surprise);
   onAction('add-studio', () => {

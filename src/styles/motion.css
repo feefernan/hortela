@@ -189,6 +189,49 @@ button:active:not(:disabled),
   transition: opacity var(--dur-base) var(--ease-out);
 }
 
+/* Tooltip: aparece com atraso para não piscar ao passar o mouse; some na hora. Só com hover. */
+@media (hover: hover) {
+  [data-tip] {
+    position: relative;
+  }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    padding: 4px 8px;
+    background: var(--ink);
+    color: var(--white);
+    font: italic 11px/1.2 var(--body);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -2px);
+    transform-origin: top center;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+    z-index: 10;
+  }
+  [data-tip]:hover::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    transition-delay: 350ms;
+  }
+}
+
+/* Estampas recebem ponteiro/toque sem rolar a página (#13). */
+.ps,
+.ps-resize {
+  touch-action: none;
+}
+
+/* Troca frente/costas: a silhueta muda suavemente. */
+#shirt-collar,
+#shirt-body {
+  transition: d var(--dur-slow) var(--ease-in-out);
+}
+
 /* ── SKELETON ───────────────────────────────────── */
 .skeleton,
 .is-loading {
