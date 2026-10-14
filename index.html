@@ -100,7 +100,7 @@
     <h2>Coleção</h2>
     <a class="strip-link" data-action="go" data-page="loja">Ver tudo →</a>
   </div>
-  <div class="product-row" id="home-grid"></div>
+  <div class="product-row" id="home-grid" aria-busy="true"><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div></div>
 
   <!-- studio teaser -->
   <div class="teaser-band">
@@ -155,7 +155,7 @@
       <button type="button" class="filter-pill"     data-action="filter">Últimas</button>
     </div>
   </div>
-  <div class="loja-grid" id="loja-grid"></div>
+  <div class="loja-grid" id="loja-grid" aria-busy="true"><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div></div>
 </div>
 
 
@@ -172,7 +172,7 @@
         <button type="button" class="sl-tab"     data-action="stamp-tab">Elementos</button>
       </div>
     </div>
-    <div class="stamps-scroll" id="stamps-scroll"></div>
+    <div class="stamps-scroll" id="stamps-scroll" aria-busy="true"><div class="sg"><div class="st skeleton-tile skeleton" aria-hidden="true"></div><div class="st skeleton-tile skeleton" aria-hidden="true"></div><div class="st skeleton-tile skeleton" aria-hidden="true"></div><div class="st skeleton-tile skeleton" aria-hidden="true"></div><div class="st skeleton-tile skeleton" aria-hidden="true"></div><div class="st skeleton-tile skeleton" aria-hidden="true"></div></div></div>
   </div>
 
   <!-- CENTER -->
@@ -437,7 +437,7 @@
 
   <!-- composition preview -->
   <div style="background:var(--parchment);border:1px solid var(--dust);display:flex;align-items:center;justify-content:center;padding:40px;margin-bottom:2px;min-height:280px;">
-    <img id="conf-preview" src="" alt="Sua composição"
+    <img id="conf-preview" src="" alt="Sua composição" data-lazy decoding="async"
       style="display:none;max-width:280px;max-height:320px;object-fit:contain;filter:drop-shadow(0 12px 28px rgba(28,24,18,.12));">
     <div id="conf-preview-placeholder" style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);">Sua composição</div>
   </div>

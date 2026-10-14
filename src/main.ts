@@ -1,4 +1,5 @@
 import './styles/main.css';
+import './styles/motion.css';
 import { createLocalOrderRepository } from './infra/local-order-repository';
 import { initTelemetry } from './infra/telemetry';
 import { installStampFallback } from './ui/art';
@@ -6,6 +7,7 @@ import { initCart } from './ui/cart-badge';
 import { initCatalog } from './ui/catalog-view';
 import { initCheckout, openCheckout } from './ui/checkout';
 import { bindActions } from './ui/dom';
+import { installLazyImages, settleLoadedImages } from './ui/motion';
 import { initPanel } from './ui/panel';
 import { initRouter } from './ui/router';
 import { initStudio } from './ui/studio';
@@ -14,6 +16,7 @@ const orders = createLocalOrderRepository();
 
 void initTelemetry();
 
+installLazyImages();
 installStampFallback();
 bindActions();
 initCart();
@@ -22,3 +25,4 @@ initStudio(openCheckout);
 initCheckout(orders);
 initPanel(orders);
 initRouter();
+settleLoadedImages();
