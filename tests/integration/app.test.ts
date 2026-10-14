@@ -126,7 +126,7 @@ describe('estúdio', () => {
     expect(document.querySelectorAll('#drop-zone .ps')).toHaveLength(1);
     click('[data-action="clear"]');
     expect(document.querySelectorAll('#drop-zone .ps')).toHaveLength(0);
-    expect($('#layers-wrap').textContent).toContain('Nenhuma estampa adicionada');
+    expect($('#layers-wrap').textContent).toContain('Nenhuma estampa na frente');
   });
 
   it('ajusta a opacidade da camada selecionada', () => {
@@ -154,6 +154,119 @@ describe('estúdio', () => {
     click('[data-action="add-studio"]');
     expect($('#checkout-modal').classList.contains('open')).toBe(false);
     expect($('#toast-el').textContent).toBe('Adicione pelo menos uma estampa');
+  });
+});
+
+describe('estúdio: frente, costas, modelo e gestos', () => {
+  const ps = (zone = '#drop-zone') => [...document.querySelectorAll<HTMLElement>(`${zone} .ps`)];
+  const rect = (el: HTMLElement) => ({
+    x: Number.parseFloat(el.style.left),
+    y: Number.parseFloat(el.style.top),
+    w: Number.parseFloat(el.style.width),
+    h: Number.parseFloat(el.style.height),
+  });
+
+  beforeEach(() => {
+    click('#n-estudio');
+    click('[data-view="costas"]');
+    click('[data-action="clear"]');
+    click('[data-view="frente"]');
+    click('[data-action="clear"]');
+  });
+
+  it('distribui estampas novas sem empilhar (#12)', () => {
+    click('[data-stamp-id="s1"]');
+    click('[data-stamp-id="s2"]');
+    const [a, b] = ps().map(rect);
+    const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    expect(overlap).toBe(false);
+  });
+
+  it('frente e costas têm composições independentes (#12)', () => {
+    click('[data-stamp-id="s10"]');
+    click('[data-view="costas"]');
+    expect($('#drop-zone').hidden).toBe(true);
+    expect($('#drop-zone-back').hidden).toBe(false);
+    expect($('#vc').getAttribute('aria-pressed')).toBe('true');
+    expect($('#layers-wrap').textContent).toContain('Nenhuma estampa nas costas');
+    expect($('#shirt-collar').getAttribute('d')).toContain('Q 144 44');
+    const input = $<HTMLInputElement>('#word-input');
+    input.value = 'sol';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(ps('#drop-zone-back')).toHaveLength(1);
+    expect(ps('#drop-zone')).toHaveLength(1);
+    click('[data-action="clear"]');
+    expect(ps('#drop-zone-back')).toHaveLength(0);
+    expect(ps('#drop-zone')).toHaveLength(1);
+  });
+
+  it('pedido lista os dois lados e nomeia palavras (#8)', () => {
+    click('[data-stamp-id="s10"]');
+    click('[data-view="costas"]');
+    const input = $<HTMLInputElement>('#word-input');
+    input.value = 'flor';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    click('[data-action="add-studio"]');
+    expect($('#ck-view').textContent).toBe('Frente e costas');
+    expect($('#ck-stamps').textContent).toBe('Frente: Açucena, Costas: Palavra "FLOR"');
+    click('[data-action="close-checkout"]');
+  });
+
+  it('Camisetão muda a silhueta (#12)', () => {
+    const before = $('#shirt-body').getAttribute('d');
+    click('[data-action="pick-model"][data-model="long"]');
+    expect($('#shirt-body').getAttribute('d')).not.toBe(before);
+    click('[data-action="pick-model"][data-model="oversized"]');
+    expect($('#shirt-body').getAttribute('d')).toBe(before);
+  });
+
+  it('botões de ferramenta têm rótulo acessível', () => {
+    for (const action of ['undo', 'center', 'clear']) {
+      expect($(`.sc-btn[data-action="${action}"]`).getAttribute('aria-label')).toBeTruthy();
+    }
+  });
+
+  it('arrasta e redimensiona com Pointer Events, inclusive toque (#13)', () => {
+    click('[data-stamp-id="s1"]');
+    const el = ps()[0];
+    const start = rect(el);
+    const fire = (target: EventTarget, type: string, x: number, y: number) =>
+      target.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX: x, clientY: y }));
+    fire(el, 'pointerdown', 100, 100);
+    fire(document, 'pointermove', 130, 90);
+    fire(document, 'pointerup', 130, 90);
+    expect(rect(el).x).toBe(start.x + 30);
+    expect(rect(el).y).toBe(start.y - 10);
+
+    fire(el.querySelector('.ps-resize') as Element, 'pointerdown', 0, 0);
+    fire(document, 'pointermove', 40, 0);
+    fire(document, 'pointercancel', 40, 0);
+    expect(rect(el).w).toBe(start.w + 40);
+    fire(document, 'pointermove', 400, 0);
+    expect(rect(el).w).toBe(start.w + 40);
+  });
+});
+
+describe('arquivo de produção', () => {
+  it('inclui as aquarelas como <image> e os dois lados', async () => {
+    click('#n-estudio');
+    click('[data-view="costas"]');
+    click('[data-action="clear"]');
+    click('[data-view="frente"]');
+    click('[data-action="clear"]');
+    click('[data-stamp-id="s11"]');
+    click('[data-view="costas"]');
+    click('[data-stamp-id="s10"]');
+    const { exportProductionSVG } = await import('../../src/ui/capture');
+    const svg = exportProductionSVG('HRT-TESTE');
+    expect(svg).toContain('<g id="frente"');
+    expect(svg).toContain('<g id="costas"');
+    expect(svg).toMatch(/<image href="http[^"]*\/images\/s11\.png"/);
+    expect(svg).toMatch(/<image href="http[^"]*\/images\/s10\.png"/);
+    expect(svg).toContain('Serial: HRT-TESTE');
+    click('[data-action="clear"]');
+    click('[data-view="frente"]');
+    click('[data-action="clear"]');
   });
 });
 
