@@ -22,7 +22,8 @@
     "test:e2e": "playwright test",
     "test:mutation": "stryker run",
     "check": "npm run typecheck && npm run lint && npm run arch && npm run knip && npm run test:coverage",
-    "prepare": "husky"
+    "prepare": "husky",
+    "og:image": "node --experimental-strip-types scripts/og-image.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

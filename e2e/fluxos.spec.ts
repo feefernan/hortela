@@ -64,3 +64,26 @@ test.describe('layout responsivo', () => {
     await expect(page.locator('#n-loja')).toBeInViewport();
   });
 });
+
+test.describe('rotas e compartilhamento', () => {
+  test('link direto de uma peça e botão Voltar', async ({ page }) => {
+    await page.goto('/#/peca/raizes');
+    await expect(page.locator('#m-name')).toHaveText('Raízes');
+    await expect(page).toHaveTitle('Raízes — Hortelã');
+    await page.locator('#modal-bg .modal-close').click();
+    await expect(page).toHaveURL(/#\/colecao$/);
+    await page.locator('#n-sobre').click();
+    await expect(page).toHaveURL(/#\/sobre$/);
+    await page.goBack();
+    await expect(page.locator('#loja')).toHaveClass(/active/);
+  });
+
+  test('metadados de compartilhamento e arquivos de SEO', async ({ page, request }) => {
+    await page.goto('/');
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /aquarela/);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /og\.png$/);
+    for (const path of ['/og.png', '/favicon.svg', '/robots.txt', '/sitemap.xml']) {
+      expect((await request.get(path)).ok(), path).toBe(true);
+    }
+  });
+});

@@ -3,10 +3,12 @@ import { PRODUCTS, type Product } from '../domain/catalog';
 import { type CollectionFilter, FILTER_EMPTY_MESSAGE, filterProducts } from '../domain/collection-filter';
 import { editionLabel } from '../domain/edition';
 import { formatBRL } from '../domain/pricing';
+import { routeToHash } from '../domain/routes';
 import { track } from '../infra/telemetry';
 import { watercolorSVG } from './art';
 import { addProductToCart } from './cart';
 import { byId, onAction, qsa, selectInGroup } from './dom';
+import { navigate, setProductHook } from './router';
 
 const badgeHTML = (p: Product) =>
   p.status === 'last'
@@ -26,24 +28,26 @@ const infoHTML = (p: Product, cls: string) => `
   </div>`;
 
 const homeCardHTML = (p: Product, i: number) => `
-  <div class="p-card" style="--i:${i}" data-action="open-product" data-product="${p.id}">
+  <a class="p-card" href="${routeToHash({ page: 'loja', productId: p.id })}" style="--i:${i}" data-action="open-product" data-product="${p.id}">
     <div class="p-art"><div class="p-art-inner">${watercolorSVG(p.palette, 160)}</div></div>
     ${infoHTML(p, 'p-info')}
     ${badgeHTML(p)}
-  </div>`;
+  </a>`;
 
 const collectionCardHTML = (p: Product, i: number) => {
   const available = p.status !== 'sold';
   return `
-  <div class="loja-card" style="--i:${i}"${available ? ` data-action="open-product" data-product="${p.id}"` : ''}>
+  <${available ? 'a' : 'div'} class="loja-card" style="--i:${i}"${available ? ` href="${routeToHash({ page: 'loja', productId: p.id })}" data-action="open-product" data-product="${p.id}"` : ''}>
     <div class="loja-art"><div class="loja-art-inner">${watercolorSVG(p.palette, 180)}</div></div>
     ${infoHTML(p, 'loja-info')}
-    ${available ? '<div class="loja-hover"><button class="btn-ver">Ver peça</button></div>' : ''}
+    ${available ? '<div class="loja-hover"><span class="btn-ver">Ver peça</span></div>' : ''}
     ${badgeHTML(p)}
-  </div>`;
+  </${available ? 'a' : 'div'}>`;
 };
 
 let openProductId: string | null = null;
+/** true quando o modal foi aberto por clique aqui (há uma entrada de histórico para desfazer). */
+let openedInApp = false;
 
 const renderCollection = (filter: CollectionFilter) => {
   const items = filterProducts(PRODUCTS, filter);
@@ -53,7 +57,7 @@ const renderCollection = (filter: CollectionFilter) => {
   empty.textContent = items.length ? '' : FILTER_EMPTY_MESSAGE[filter];
 };
 
-const openProduct = (id: string) => {
+const showProduct = (id: string) => {
   const p = PRODUCTS.find((x) => x.id === id);
   if (!p) return;
   openProductId = id;
@@ -67,14 +71,40 @@ const openProduct = (id: string) => {
   byId('modal-bg').classList.add('open');
 };
 
-const closeProduct = () => byId('modal-bg').classList.remove('open');
+const hideProduct = () => {
+  openProductId = null;
+  byId('modal-bg').classList.remove('open');
+};
+
+/** Abre a peça e muda a URL para #/peca/:id (link compartilhável). */
+const openProduct = (id: string) => {
+  openedInApp = true;
+  navigate({ page: 'loja', productId: id });
+};
+
+/** Fecha o modal; se ele foi aberto aqui, o Voltar do histórico desfaz a entrada #/peca/:id. */
+const closeProduct = () => {
+  if (!openProductId) return;
+  hideProduct();
+  if (openedInApp) {
+    openedInApp = false;
+    history.back();
+  } else {
+    navigate({ page: 'loja' }, { replace: true });
+  }
+};
 
 export const initCatalog = () => {
   byId('home-grid').innerHTML = PRODUCTS.slice(0, 3).map(homeCardHTML).join('');
   renderCollection('todas');
   for (const id of ['home-grid', 'loja-grid']) byId(id).removeAttribute('aria-busy');
+  setProductHook((id) => (id ? showProduct(id) : hideProduct()));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && openProductId) closeProduct();
+  });
 
-  onAction('open-product', (el) => {
+  onAction('open-product', (el, event) => {
+    event.preventDefault();
     const id = el.dataset.product as string;
     track('produto.abrir', { produto: id }, () => openProduct(id));
   });

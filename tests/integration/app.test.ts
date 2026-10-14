@@ -52,6 +52,58 @@ describe('carregamento', () => {
   });
 });
 
+describe('rotas e URLs compartilháveis (#15)', () => {
+  it('navegar muda a URL, o título e marca o link atual', () => {
+    click('#n-loja');
+    expect(window.location.hash).toBe('#/colecao');
+    expect(document.title).toBe('Coleção — Hortelã');
+    expect($('#n-loja').getAttribute('aria-current')).toBe('page');
+    expect($('#n-loja').getAttribute('href')).toBe('#/colecao');
+  });
+
+  it('abrir uma peça gera link próprio; fechar volta para a coleção', () => {
+    click('#n-loja');
+    click('.loja-card[data-product="nevoa"]');
+    expect(window.location.hash).toBe('#/peca/nevoa');
+    expect(document.title).toBe('Névoa — Hortelã');
+    expect($('#modal-bg').classList.contains('open')).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect($('#modal-bg').classList.contains('open')).toBe(false);
+  });
+
+  it('link direto para uma peça abre o modal (ex.: vindo do Instagram)', () => {
+    history.replaceState(null, '', '#/peca/broto');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(isActive('loja')).toBe(true);
+    expect($('#modal-bg').classList.contains('open')).toBe(true);
+    expect($('#m-name').textContent).toBe('Broto');
+    history.replaceState(null, '', '#/colecao');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect($('#modal-bg').classList.contains('open')).toBe(false);
+  });
+
+  it('o botão Voltar troca de página', () => {
+    click('#n-sobre');
+    history.replaceState(null, '', '#/estudio');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(isActive('estudio')).toBe(true);
+  });
+
+  it('confirmação e painel não abrem por link direto', () => {
+    history.replaceState(null, '', '#/pedido');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(isActive('home')).toBe(true);
+    history.replaceState(null, '', '#/painel');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(isActive('painel')).toBe(false);
+  });
+
+  it('cards de peça são links reais', () => {
+    expect($('#home-grid a.p-card').getAttribute('href')).toMatch(/^#\/peca\//);
+    expect($('#loja-grid a.loja-card').getAttribute('href')).toMatch(/^#\/peca\//);
+  });
+});
+
 describe('coleção', () => {
   it('renderiza 3 peças na home e 6 na coleção', () => {
     expect(document.querySelectorAll('#home-grid .p-card')).toHaveLength(3);
