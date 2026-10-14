@@ -1,10 +1,12 @@
+import { isGarmentSize } from '../domain/cart';
 import { PRODUCTS, type Product } from '../domain/catalog';
+import { type CollectionFilter, FILTER_EMPTY_MESSAGE, filterProducts } from '../domain/collection-filter';
 import { editionLabel } from '../domain/edition';
 import { formatBRL } from '../domain/pricing';
 import { track } from '../infra/telemetry';
 import { watercolorSVG } from './art';
-import { addToCart } from './cart-badge';
-import { byId, onAction, selectInGroup } from './dom';
+import { addProductToCart } from './cart';
+import { byId, onAction, qsa, selectInGroup } from './dom';
 
 const badgeHTML = (p: Product) =>
   p.status === 'last'
@@ -41,9 +43,22 @@ const collectionCardHTML = (p: Product, i: number) => {
   </div>`;
 };
 
+let openProductId: string | null = null;
+
+const renderCollection = (filter: CollectionFilter) => {
+  const items = filterProducts(PRODUCTS, filter);
+  byId('loja-grid').innerHTML = items.map(collectionCardHTML).join('');
+  const empty = byId('loja-empty');
+  empty.hidden = items.length > 0;
+  empty.textContent = items.length ? '' : FILTER_EMPTY_MESSAGE[filter];
+};
+
 const openProduct = (id: string) => {
   const p = PRODUCTS.find((x) => x.id === id);
   if (!p) return;
+  openProductId = id;
+  // Cada peça abre no tamanho padrão (G), sem herdar a escolha da peça anterior.
+  for (const sz of qsa('#modal-bg .sz')) sz.classList.toggle('on', sz.textContent?.trim() === 'G');
   byId('m-col').textContent = `${p.collection} · ${editionLabel(p)}`;
   byId('m-name').textContent = p.name;
   byId('m-story').textContent = p.story;
@@ -56,7 +71,7 @@ const closeProduct = () => byId('modal-bg').classList.remove('open');
 
 export const initCatalog = () => {
   byId('home-grid').innerHTML = PRODUCTS.slice(0, 3).map(homeCardHTML).join('');
-  byId('loja-grid').innerHTML = PRODUCTS.map(collectionCardHTML).join('');
+  renderCollection('todas');
   for (const id of ['home-grid', 'loja-grid']) byId(id).removeAttribute('aria-busy');
 
   onAction('open-product', (el) => {
@@ -66,10 +81,15 @@ export const initCatalog = () => {
   onAction('close-product', closeProduct);
   onAction('buy-product', () =>
     track('carrinho.adicionar', { origem: 'colecao' }, () => {
-      addToCart();
-      closeProduct();
+      const size = document.querySelector('#modal-bg .sz.on')?.textContent?.trim();
+      if (!openProductId || !isGarmentSize(size)) return;
+      if (addProductToCart(openProductId, size)) closeProduct();
     }),
   );
   onAction('pick-size', (el) => selectInGroup(el, '.sz-row', '.sz'));
-  onAction('filter', (el) => selectInGroup(el, '.loja-top-right', '.filter-pill'));
+  onAction('filter', (el) => {
+    selectInGroup(el, '.loja-top-right', '.filter-pill');
+    for (const pill of qsa('.filter-pill')) pill.setAttribute('aria-pressed', String(pill === el));
+    renderCollection(el.dataset.filter as CollectionFilter);
+  });
 };

@@ -1,3 +1,5 @@
+import type { CartLine } from './cart';
+
 export type OrderStatus = 'novo' | 'em produção' | 'enviado';
 
 export const ORDER_STATUSES: readonly OrderStatus[] = ['novo', 'em produção', 'enviado'];
@@ -10,7 +12,13 @@ export interface StudioConfig {
   stamps: string[];
 }
 
+type OrderKind = 'estudio' | 'colecao';
+
 export interface Order {
+  /** Ausente em pedidos antigos (todos eram do Estúdio). */
+  kind?: OrderKind;
+  /** Peças da coleção, quando kind = 'colecao'. */
+  items?: CartLine[];
   serial: string;
   name: string;
   email: string;
@@ -40,6 +48,8 @@ export interface OrderRepository {
 }
 
 export const toRecord = (order: Order): OrderRecord => ({
+  kind: order.kind ?? 'estudio',
+  items: order.items,
   serial: order.serial,
   name: order.name,
   email: order.email,

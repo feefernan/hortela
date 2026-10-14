@@ -80,9 +80,81 @@ describe('coleção', () => {
     expect($('#cn').classList.contains('bump')).toBe(true);
   });
 
-  it('o carrinho ainda é só um contador', () => {
-    click('[data-action="cart"]');
-    expect($('#toast-el').textContent).toBe('Carrinho vazio');
+  it('o carrinho lista a peça, com tamanho e subtotal (#10, #11)', () => {
+    expect($('#toast-el').textContent).toBe('"Floresta nº 3" (P) no carrinho');
+    click('[data-action="open-cart"]');
+    expect($('#cart-drawer-bg').classList.contains('open')).toBe(true);
+    expect($('#cart-open-btn').getAttribute('aria-expanded')).toBe('true');
+    expect($('#cart-lines').textContent).toContain('Floresta nº 3');
+    expect($('#cart-lines').textContent).toContain('Tamanho P');
+    expect($('#cart-subtotal').textContent).toBe('R$ 210');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect($('#cart-drawer-bg').classList.contains('open')).toBe(false);
+  });
+
+  it('peça "última" só entra uma vez', () => {
+    click('.loja-card[data-product="raizes"]');
+    click('[data-action="buy-product"]');
+    click('.loja-card[data-product="raizes"]');
+    click('[data-action="buy-product"]');
+    expect($('#toast-el').textContent).toBe('Limite desta peça já está no carrinho');
+    expect($('#modal-bg').classList.contains('open')).toBe(true);
+    click('[data-action="close-product"]');
+    expect($('#cn').textContent).toBe('2');
+    expect(JSON.parse(localStorage.getItem('hortela_cart_v1') ?? '[]')).toHaveLength(2);
+  });
+
+  it('remove itens e mostra estado vazio', () => {
+    click('[data-action="open-cart"]');
+    click('[data-action="remove-cart-line"][data-product="raizes"]');
+    expect($('#cn').textContent).toBe('1');
+    click('[data-action="remove-cart-line"]');
+    expect($('#cart-lines').textContent).toContain('Seu carrinho está vazio');
+    expect($('#cart-foot').hidden).toBe(true);
+    expect($('#cn').classList.contains('on')).toBe(false);
+    click('[data-action="cart-browse"]');
+    expect(isActive('loja')).toBe(true);
+    expect($('#cart-drawer-bg').classList.contains('open')).toBe(false);
+  });
+
+  it('filtros da coleção filtram de verdade (#9)', () => {
+    click('#n-loja');
+    click('[data-filter="disponiveis"]');
+    expect(document.querySelectorAll('#loja-grid .loja-card')).toHaveLength(5);
+    expect($('#loja-grid').textContent).not.toContain('Chuva fina');
+    expect($('[data-filter="disponiveis"]').getAttribute('aria-pressed')).toBe('true');
+    click('[data-filter="ultimas"]');
+    const cards = document.querySelectorAll('#loja-grid .loja-card');
+    expect(cards).toHaveLength(1);
+    expect(cards[0].textContent).toContain('Raízes');
+    click('[data-filter="todas"]');
+    expect(document.querySelectorAll('#loja-grid .loja-card')).toHaveLength(6);
+    expect($('#loja-empty').hidden).toBe(true);
+  });
+});
+
+describe('checkout do carrinho', () => {
+  it('finaliza peças da coleção, sem certificado, e esvazia o carrinho', async () => {
+    click('.loja-card[data-product="broto"]');
+    click('[data-action="buy-product"]');
+    click('[data-action="open-cart"]');
+    click('[data-action="checkout-cart"]');
+    expect($('#checkout-modal').classList.contains('open')).toBe(true);
+    expect($('#ck-stamps-label').textContent).toBe('Itens');
+    expect($('#ck-stamps').textContent).toBe('Broto (G)');
+    expect($('#ck-total').textContent).toBe('R$ 185');
+    $<HTMLInputElement>('#ck-name').value = 'Bia';
+    $<HTMLInputElement>('#ck-email').value = 'bia@site.com';
+    click('[data-action="submit-order"]');
+    await vi.waitFor(() => expect(isActive('confirmacao')).toBe(true));
+    expect($('#conf-stamps-label').textContent).toBe('Itens');
+    expect($('#conf-cert-btn').hidden).toBe(true);
+    expect($('#cn').classList.contains('on')).toBe(false);
+    const saved = JSON.parse(localStorage.getItem('hortela_orders_v1') ?? '[]');
+    expect(saved[0]).toMatchObject({ kind: 'colecao', total: 'R$ 185', hasImg: false });
+    expect(saved[0].items).toHaveLength(1);
+    // limpa para os próximos testes
+    localStorage.removeItem('hortela_orders_v1');
   });
 });
 
@@ -292,7 +364,8 @@ describe('checkout', () => {
 
     const saved = JSON.parse(localStorage.getItem('hortela_orders_v1') ?? '[]');
     expect(saved).toHaveLength(1);
-    expect(saved[0]).toMatchObject({ status: 'novo', hasSVG: true });
+    expect(saved[0]).toMatchObject({ kind: 'estudio', status: 'novo', hasSVG: true });
+    expect($('#conf-cert-btn').hidden).toBe(false);
     expect(saved[0].name).toContain('Ana');
   });
 });

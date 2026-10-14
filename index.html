@@ -32,9 +32,9 @@
     <li><a id="n-painel" style="opacity:.18!important;font-size:11px;" data-action="open-panel" title="Acesso restrito">●</a></li>
   </ul>
 
-  <div class="nav-right" data-action="cart">
-    Carrinho <div class="cart-n" id="cn">0</div>
-  </div>
+  <button type="button" class="nav-right" data-action="open-cart" aria-controls="cart-drawer" aria-expanded="false">
+    Carrinho <span class="cart-n" id="cn" aria-live="polite">0</span>
+  </button>
 </nav>
 
 
@@ -150,11 +150,12 @@
   <div class="loja-top">
     <h1>Coleção</h1>
     <div class="loja-top-right">
-      <button type="button" class="filter-pill on"  data-action="filter">Todas</button>
-      <button type="button" class="filter-pill"     data-action="filter">Disponíveis</button>
-      <button type="button" class="filter-pill"     data-action="filter">Últimas</button>
+      <button type="button" class="filter-pill on"  data-action="filter" data-filter="todas" aria-pressed="true">Todas</button>
+      <button type="button" class="filter-pill"     data-action="filter" data-filter="disponiveis" aria-pressed="false">Disponíveis</button>
+      <button type="button" class="filter-pill"     data-action="filter" data-filter="ultimas" aria-pressed="false">Últimas</button>
     </div>
   </div>
+  <p class="loja-empty" id="loja-empty" hidden></p>
   <div class="loja-grid" id="loja-grid" aria-busy="true"><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div><div class="skeleton-card" aria-hidden="true"><div class="sk-art skeleton"></div><div class="sk-line skeleton"></div><div class="sk-line short skeleton"></div></div></div>
 </div>
 
@@ -285,7 +286,7 @@
         <span id="o-total">R$ 200</span>
       </div>
       <p class="order-note">Produção em até 12 dias úteis.<br>Composição salva com certificado único.</p>
-      <button type="button" class="btn-cart" data-action="add-studio">Adicionar ao carrinho</button>
+      <button type="button" class="btn-cart" data-action="add-studio">Finalizar composição</button>
     </div>
   </div>
 
@@ -350,7 +351,23 @@
   </div>
 </div>
 
-<div class="toast" id="toast-el"></div>
+<!-- CARRINHO -->
+<div class="drawer-bg" id="cart-drawer-bg" data-action="close-cart">
+  <aside class="drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" data-stop>
+    <header class="drawer-head">
+      <h2 id="cart-title">Carrinho</h2>
+      <button type="button" class="modal-close" data-action="close-cart" aria-label="Fechar carrinho">✕</button>
+    </header>
+    <div class="drawer-body" id="cart-lines"></div>
+    <footer class="drawer-foot" id="cart-foot">
+      <div class="drawer-total"><span>Subtotal</span><span id="cart-subtotal">R$ 0</span></div>
+      <p class="drawer-note">Composições do Estúdio são peças únicas e têm checkout próprio.</p>
+      <button type="button" class="btn-cart" id="cart-checkout" data-action="checkout-cart">Finalizar pedido</button>
+    </footer>
+  </aside>
+</div>
+
+<div class="toast" id="toast-el" role="status" aria-live="polite"></div>
 <!-- ════════════════════ CHECKOUT MODAL ════════════════════ -->
 <div class="modal-bg" id="checkout-modal" data-action="close-checkout">
 <div class="modal" style="grid-template-columns:1fr 1fr;max-width:780px;" data-stop>
@@ -375,7 +392,7 @@
         <span>Posição</span><span id="ck-view" style="color:var(--ink)"></span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;font-family:var(--body);font-size:14px;color:var(--sage);">
-        <span>Estampas</span>
+        <span id="ck-stamps-label">Estampas</span>
         <span id="ck-stamps" style="color:var(--ink);text-align:right;max-width:180px;font-style:italic;"></span>
       </div>
     </div>
@@ -467,7 +484,7 @@
         <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-view"></div>
       </div>
       <div>
-        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Estampas</div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;" id="conf-stamps-label">Estampas</div>
         <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-stamps"></div>
       </div>
       <div style="grid-column:1/-1;">
@@ -479,7 +496,7 @@
 
   <!-- actions -->
   <div style="display:flex;gap:12px;justify-content:center;margin-bottom:40px;">
-    <button type="button" data-action="download-certificate"
+    <button type="button" id="conf-cert-btn" data-action="download-certificate"
       style="background:var(--moss);color:var(--white);border:none;padding:15px 36px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s;" data-hover="solid">
       ↓ Baixar certificado
     </button>
