@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hortelã</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" data-action="go" data-page="home">
+    <div class="logo-mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M 4 18 Q 8 5 12 5 Q 16 5 18 14" stroke="#3C4E2E" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 8 20 Q 11 9 15 7" stroke="#3C4E2E" stroke-width="1.3" stroke-linecap="round" opacity=".55"/>
+        <line x1="5" y1="4" x2="19" y2="20" stroke="#7A9268" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="17.5" cy="5.5" r="2.2" fill="#9B7FA8"/>
+      </svg>
+    </div>
+    HORTELÃ
+  </div>
+
+  <ul class="nav-center">
+    <li><a id="n-home"    class="active" data-action="go" data-page="home">Início</a></li>
+    <li><a id="n-loja"               data-action="go" data-page="loja">Coleção</a></li>
+    <li><a id="n-estudio"            data-action="go" data-page="estudio">Estúdio</a></li>
+    <li><a id="n-sobre"              data-action="go" data-page="sobre">Sobre</a></li>
+    <li><a id="n-painel" style="opacity:.18!important;font-size:11px;" data-action="open-panel" title="Acesso restrito">●</a></li>
+  </ul>
+
+  <div class="nav-right" data-action="cart">
+    Carrinho <div class="cart-n" id="cn">0</div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════ HOME ════════════════════ -->
+<div class="page" id="home">
+
+  <!-- hero: centered, clean -->
+  <div class="hero">
+    <div class="hero-eyebrow">Arte vestível em aquarela · @usehortela</div>
+
+    <div class="hero-art-frame">
+      <!-- large floating shirt with watercolor art -->
+      <svg aria-hidden="true" class="hero-shirt" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="h1"><feGaussianBlur stdDeviation="10"/></filter>
+          <filter id="h2"><feGaussianBlur stdDeviation="4"/></filter>
+          <filter id="sh"><feDropShadow dx="0" dy="8" stdDeviation="18" flood-opacity=".1"/></filter>
+        </defs>
+        <!-- shirt shape, parchment fill -->
+        <g filter="url(#sh)">
+          <path d="M 100 30 L 28 76 L 58 98 L 58 300 L 282 300 L 282 98 L 312 76 L 240 30 Q 210 55 170 55 Q 130 55 100 30 Z"
+                fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1.2"/>
+          <path d="M 100 30 Q 130 62 170 55 Q 210 62 240 30 Q 210 80 170 72 Q 130 80 100 30 Z"
+                fill="#EBE5D5" stroke="#D6CCBA" stroke-width=".8"/>
+          <path d="M 100 30 L 28 76 L 58 98 L 74 68 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+          <path d="M 240 30 L 312 76 L 282 98 L 266 68 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+        </g>
+        <!-- large watercolor composition on shirt — the art IS the hero -->
+        <g clip-path="url(#shirt-clip)">
+          <clipPath id="shirt-clip">
+            <path d="M 100 30 L 28 76 L 58 98 L 58 300 L 282 300 L 282 98 L 312 76 L 240 30 Q 210 55 170 55 Q 130 55 100 30 Z"/>
+          </clipPath>
+          <!-- big watercolor wash -->
+          <ellipse cx="170" cy="185" rx="100" ry="80"  fill="#3C4E2E" opacity=".38" filter="url(#h1)"/>
+          <ellipse cx="145" cy="155" rx="72"  ry="58"  fill="#7A9268" opacity=".45" filter="url(#h1)"/>
+          <ellipse cx="195" cy="210" rx="55"  ry="45"  fill="#3C4E2E" opacity=".32" filter="url(#h2)"/>
+          <!-- main botanical shape -->
+          <path d="M 130 110 Q 175 68 220 108 Q 210 172 170 158 Q 125 144 130 110 Z"
+                fill="#3C4E2E" opacity=".5"/>
+          <!-- veins -->
+          <path d="M 130 110 Q 175 134 220 108" fill="none" stroke="#3C4E2E" stroke-width="1.4" opacity=".6"/>
+          <path d="M 172 70  Q 175 112 178 158"  fill="none" stroke="#3C4E2E" stroke-width="1"   opacity=".5"/>
+          <path d="M 148 92  Q 142 130 140 155"  fill="none" stroke="#3C4E2E" stroke-width=".9"  opacity=".4"/>
+          <path d="M 196 92  Q 200 128 198 155"  fill="none" stroke="#3C4E2E" stroke-width=".9"  opacity=".4"/>
+          <!-- lilas dot — the flower -->
+          <circle cx="218" cy="96" r="4.5" fill="#9B7FA8" opacity=".75"/>
+          <!-- secondary shape lower -->
+          <ellipse cx="148" cy="230" rx="38" ry="28" fill="#7A9268" opacity=".35" filter="url(#h2)" transform="rotate(-15 148 230)"/>
+        </g>
+      </svg>
+    </div>
+
+    <h1 class="hero-h1">Cada peça, <em>uma obra.</em></h1>
+    <p class="hero-sub">Estampas pintadas à mão que saem do papel e começam a andar pelo mundo.</p>
+    <div class="hero-btns">
+      <button type="button" class="btn btn-dark"  data-action="go" data-page="estudio">Abrir estúdio</button>
+      <button type="button" class="btn btn-ghost" data-action="go" data-page="loja">Ver coleção</button>
+    </div>
+  </div>
+
+  <!-- collection preview -->
+  <div class="strip-label">
+    <h2>Coleção</h2>
+    <a class="strip-link" data-action="go" data-page="loja">Ver tudo →</a>
+  </div>
+  <div class="product-row" id="home-grid"></div>
+
+  <!-- studio teaser -->
+  <div class="teaser-band">
+    <div class="teaser-left">
+      <h2>Monte a sua <em>própria obra</em></h2>
+      <p>Escolha as aquarelas, combine camadas, posicione onde quiser. Cada composição existe uma única vez.</p>
+      <button type="button" class="btn btn-dark" data-action="go" data-page="estudio">Entrar no estúdio →</button>
+    </div>
+    <div class="teaser-right">
+      <div class="teaser-composer">
+        <div class="composer-top">
+          <span class="composer-top-label">Estúdio de composição</span>
+          <span class="composer-top-hint">interativo</span>
+        </div>
+        <div class="composer-stage" data-action="go" data-page="estudio">
+          <svg aria-hidden="true" viewBox="0 0 200 230" width="140" height="160">
+            <defs><filter id="cs"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity=".1"/></filter></defs>
+            <g filter="url(#cs)">
+              <path d="M 58 18 L 16 46 L 34 60 L 34 200 L 166 200 L 166 60 L 184 46 L 142 18 Q 120 34 100 34 Q 80 34 58 18 Z"
+                    fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1"/>
+              <path d="M 58 18 Q 80 38 100 34 Q 120 38 142 18 Q 120 52 100 46 Q 80 52 58 18 Z" fill="#EBE5D5"/>
+            </g>
+            <ellipse cx="100" cy="118" rx="42" ry="34" fill="#3C4E2E" opacity=".35" filter="url(#cs)"/>
+            <ellipse cx="88"  cy="104" rx="30" ry="24" fill="#7A9268" opacity=".45" filter="url(#cs)"/>
+            <path d="M 76 82 Q 104 60 130 84 Q 124 120 100 110 Q 72 100 76 82 Z" fill="#3C4E2E" opacity=".5"/>
+            <circle cx="128" cy="72" r="3.5" fill="#9B7FA8" opacity=".7"/>
+          </svg>
+          <div style="position:absolute;bottom:12px;right:14px;font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);">clique para abrir →</div>
+        </div>
+        <div class="composer-footer">
+          <div class="c-swatch on"  style="background:#F3EDE0"></div>
+          <div class="c-swatch"     style="background:#3C4E2E"></div>
+          <div class="c-swatch"     style="background:#1C1812"></div>
+          <div class="c-swatch"     style="background:#7A9268"></div>
+          <div class="c-swatch"     style="background:#D6CCBA"></div>
+          <span class="c-label">cor da peça</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /home -->
+
+
+<!-- ════════════════════ LOJA ════════════════════ -->
+<div class="page" id="loja">
+  <div class="loja-top">
+    <h1>Coleção</h1>
+    <div class="loja-top-right">
+      <button type="button" class="filter-pill on"  data-action="filter">Todas</button>
+      <button type="button" class="filter-pill"     data-action="filter">Disponíveis</button>
+      <button type="button" class="filter-pill"     data-action="filter">Últimas</button>
+    </div>
+  </div>
+  <div class="loja-grid" id="loja-grid"></div>
+</div>
+
+
+<!-- ════════════════════ ESTÚDIO ════════════════════ -->
+<div class="page" id="estudio">
+<div class="studio-shell">
+
+  <!-- LEFT -->
+  <div class="sl">
+    <div class="sl-head">
+      <div class="sl-head-label">Estampas</div>
+      <div class="sl-tabs">
+        <button type="button" class="sl-tab on"  data-action="stamp-tab">Por série</button>
+        <button type="button" class="sl-tab"     data-action="stamp-tab">Elementos</button>
+      </div>
+    </div>
+    <div class="stamps-scroll" id="stamps-scroll"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="sc">
+    <div class="sc-bar">
+      <span class="sc-bar-lbl">Vista:</span>
+      <div class="sc-btn-group">
+        <button type="button" class="sc-btn on" id="vf" title="Frente" data-action="view" data-view="frente">F</button>
+        <button type="button" class="sc-btn"    id="vc" title="Costas" data-action="view" data-view="costas">C</button>
+      </div>
+      <div class="sc-sep"></div>
+      <div class="sc-btn-group">
+        <button type="button" class="sc-btn" title="Desfazer"   data-action="undo">↩</button>
+        <button type="button" class="sc-btn" title="Centralizar" data-action="center">⊕</button>
+        <button type="button" class="sc-btn" title="Limpar"     data-action="clear">✕</button>
+      </div>
+      <button type="button" class="sc-surp" data-action="surprise">✦ Surpresa</button>
+    </div>
+
+    <div class="sc-stage" id="sc-stage" data-action="deselect">
+      <div class="shirt-wrap" id="shirt-wrap" data-stop>
+        <svg aria-hidden="true" class="shirt-svg-el" viewBox="0 0 360 416" id="shirt-el">
+          <defs><filter id="ss"><feDropShadow dx="0" dy="5" stdDeviation="13" flood-opacity=".13"/></filter></defs>
+          <g filter="url(#ss)">
+            <path id="shirt-body"
+              d="M 108 30 L 26 82 L 62 112 L 62 372 L 298 372 L 298 112 L 334 82 L 252 30 Q 216 57 180 57 Q 144 57 108 30 Z"
+              fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1.3"/>
+            <path d="M 108 30 Q 144 66 180 57 Q 216 66 252 30 Q 216 88 180 78 Q 144 88 108 30 Z"
+                  fill="#EBE5D5" stroke="#D6CCBA" stroke-width="1"/>
+            <path d="M 108 30 L 26 82 L 62 112 L 80 78 Z"  fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+            <path d="M 252 30 L 334 82 L 298 112 L 280 78 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+          </g>
+          <line x1="180" y1="78" x2="180" y2="372" stroke="#D6CCBA" stroke-width=".4" opacity=".5"/>
+        </svg>
+        <div class="drop-zone" id="drop-zone"></div>
+      </div>
+      <div class="sc-hint" id="sc-hint">Escolha uma estampa no painel ao lado</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="sr">
+
+    <div class="sr-block">
+      <div class="sr-lbl">Modelo</div>
+      <div class="model-row">
+        <div class="mo on" data-action="pick-model" data-model="oversized">
+          <div class="mo-name">Camiseta</div>
+          <div class="mo-meta">Oversized · algodão</div>
+        </div>
+        <div class="mo" data-action="pick-model" data-model="long">
+          <div class="mo-name">Camisetão</div>
+          <div class="mo-meta">Long · unissex</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Cor da peça</div>
+      <div class="sw-row">
+        <div class="sw on" style="background:#F3EDE0" title="Pergaminho" data-action="pick-color" data-hex="#F3EDE0" data-name="Pergaminho"></div>
+        <div class="sw"    style="background:#FAFAF8;border:1px solid #D6CCBA" title="Off-white"  data-action="pick-color" data-hex="#FAFAF8" data-name="Off-white"></div>
+        <div class="sw"    style="background:#3C4E2E" title="Musgo"      data-action="pick-color" data-hex="#3C4E2E" data-name="Musgo"></div>
+        <div class="sw"    style="background:#1C1812" title="Tinta"      data-action="pick-color" data-hex="#1C1812" data-name="Tinta"></div>
+        <div class="sw"    style="background:#7A9268" title="Sage"       data-action="pick-color" data-hex="#7A9268" data-name="Sage"></div>
+        <div class="sw"    style="background:#D6CCBA" title="Poeira"     data-action="pick-color" data-hex="#D6CCBA" data-name="Poeira"></div>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Tamanho</div>
+      <div class="sz-row">
+        <button type="button" class="sz"    data-action="pick-size">P</button>
+        <button type="button" class="sz"    data-action="pick-size">M</button>
+        <button type="button" class="sz on" data-action="pick-size">G</button>
+        <button type="button" class="sz"    data-action="pick-size">GG</button>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Camadas</div>
+      <div class="layers-wrap" id="layers-wrap">
+        <div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage);">
+          Nenhuma estampa adicionada
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Opacidade da camada</div>
+      <div class="op-row">
+        <input type="range" min="20" max="100" value="100"
+               id="op-slider" data-input-action="opacity">
+        <span class="op-val" id="op-val">100%</span>
+      </div>
+    </div>
+
+    <div class="order-block">
+      <div class="order-line">
+        <span id="o-model">Camiseta Oversized</span>
+        <span id="o-mprice">R$ 120</span>
+      </div>
+      <div class="order-line">
+        <span>Estampagem personalizada</span>
+        <span>R$ 80</span>
+      </div>
+      <div class="order-total">
+        <span>Total</span>
+        <span id="o-total">R$ 200</span>
+      </div>
+      <p class="order-note">Produção em até 12 dias úteis.<br>Composição salva com certificado único.</p>
+      <button type="button" class="btn-cart" data-action="add-studio">Adicionar ao carrinho</button>
+    </div>
+  </div>
+
+</div>
+</div><!-- /estudio -->
+
+
+<!-- ════════════════════ SOBRE ════════════════════ -->
+<div class="page" id="sobre">
+  <div class="sobre-wrap">
+    <h1>Sobre a Hortelã</h1>
+    <p>Nascemos de um caderno de aquarelas e de uma pergunta: o que acontece quando uma obra sai do papel e começa a andar pelo mundo?</p>
+    <p>Cada estampa é pintada à mão antes de ir para o tecido. Nenhuma é perfeita. Nenhuma precisa ser.</p>
+    <p>A Hortelã não segue calendário de moda. Lançamos quando a obra estiver pronta, não quando o mercado espera. Quando esgota, esgotou — e a próxima coleção começa a ser construída em público.</p>
+    <div class="sobre-vals">
+      <div class="sv">
+        <div class="sv-lbl">Arte autoral</div>
+        <div class="sv-txt">Toda estampa nasce de uma aquarela original. A obra existe antes do produto.</div>
+      </div>
+      <div class="sv">
+        <div class="sv-lbl">Drops limitados</div>
+        <div class="sv-txt">No máximo 20 peças por coleção, numeradas. Quando esgota, não repõe.</div>
+      </div>
+      <div class="sv">
+        <div class="sv-lbl">Sob demanda</div>
+        <div class="sv-txt">Peças do estúdio feitas após o pedido. Sem estoque, sem desperdício.</div>
+      </div>
+      <div class="sv">
+        <div class="sv-lbl">Independência</div>
+        <div class="sv-txt">Uma marca de uma pessoa, feita à mão. Essa transparência não é fraqueza — é o produto.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" data-action="close-product">
+  <div class="modal" data-stop>
+    <button type="button" class="modal-close" data-action="close-product">✕</button>
+    <div class="modal-art" id="m-art"></div>
+    <div class="modal-info">
+      <div class="mi-col"   id="m-col"></div>
+      <div class="mi-name"  id="m-name"></div>
+      <div class="mi-story" id="m-story"></div>
+      <div class="mi-price" id="m-price"></div>
+      <div>
+        <div class="mi-sz-lbl">Tamanho</div>
+        <div class="sz-row">
+          <button type="button" class="sz"    data-action="pick-size">P</button>
+          <button type="button" class="sz"    data-action="pick-size">M</button>
+          <button type="button" class="sz on" data-action="pick-size">G</button>
+          <button type="button" class="sz"    data-action="pick-size">GG</button>
+        </div>
+      </div>
+      <div>
+        <div class="mi-sz-lbl" style="margin-bottom:4px;">Material</div>
+        <div style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);">100% algodão penteado · Oversized unissex</div>
+      </div>
+      <button type="button" class="btn-cart" data-action="buy-product">Adicionar ao carrinho</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+<!-- ════════════════════ CHECKOUT MODAL ════════════════════ -->
+<div class="modal-bg" id="checkout-modal" data-action="close-checkout">
+<div class="modal" style="grid-template-columns:1fr 1fr;max-width:780px;" data-stop>
+  <button type="button" class="modal-close" data-action="close-checkout">✕</button>
+
+  <!-- LEFT: order summary -->
+  <div style="background:var(--parchment);padding:48px 36px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;">
+    <div style="font-family:var(--body);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--moss);margin-bottom:4px;">Resumo do pedido</div>
+    <div style="font-family:var(--display);font-style:italic;font-size:30px;color:var(--ink);margin-bottom:12px;">Sua composição</div>
+
+    <div style="border-top:1px solid var(--dust);padding-top:16px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Modelo</span><span id="ck-model" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Cor</span><span id="ck-color" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Tamanho</span><span id="ck-size" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Posição</span><span id="ck-view" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Estampas</span>
+        <span id="ck-stamps" style="color:var(--ink);text-align:right;max-width:180px;font-style:italic;"></span>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--dust);padding-top:14px;display:flex;justify-content:space-between;font-family:var(--display);font-style:italic;font-size:22px;color:var(--ink);">
+      <span>Total</span><span id="ck-total"></span>
+    </div>
+
+    <div style="font-family:var(--body);font-style:italic;font-size:11.5px;color:var(--sage);line-height:1.65;margin-top:4px;">
+      Um certificado com o código serial da sua obra será gerado ao finalizar.
+    </div>
+  </div>
+
+  <!-- RIGHT: client info form -->
+  <div style="background:var(--white);padding:48px 36px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;">
+    <div style="font-family:var(--body);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Seus dados</div>
+    <div style="font-family:var(--display);font-style:italic;font-size:26px;color:var(--ink);margin-bottom:8px;">Finalizar pedido</div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label for="ck-name" style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">Nome</label>
+      <input id="ck-name" type="text" placeholder="Seu nome completo"
+        style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-size:14px;color:var(--ink);outline:none;transition:border-color .18s;">
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label for="ck-email" style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">E-mail</label>
+      <input id="ck-email" type="email" placeholder="seu@email.com"
+        style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-size:14px;color:var(--ink);outline:none;transition:border-color .18s;">
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label for="ck-obs" style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">Observações <span style="opacity:.5;">(opcional)</span></label>
+      <textarea id="ck-obs" rows="3" placeholder="Alguma instrução especial para a produção..."
+        style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-style:italic;font-size:14px;color:var(--ink);outline:none;resize:vertical;transition:border-color .18s;"></textarea>
+    </div>
+
+    <div style="font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);line-height:1.6;padding:10px 14px;border-left:2px solid var(--dust);">
+      Ao finalizar, você receberá um certificado para baixar e eu recebo os dados do pedido para iniciar a confecção.
+    </div>
+
+    <button type="button" id="ck-submit" data-action="submit-order"
+      style="background:var(--moss);color:var(--white);border:none;padding:17px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s;margin-top:4px;" data-hover="solid">
+      Finalizar pedido
+    </button>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════ CONFIRMAÇÃO ════════════════════ -->
+<div class="page" id="confirmacao" style="background:var(--white);min-height:100vh;">
+<div style="max-width:800px;margin:0 auto;padding:64px 48px 96px;">
+
+  <!-- header -->
+  <div style="text-align:center;margin-bottom:56px;">
+    <div style="font-family:var(--body);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss);margin-bottom:12px;">Pedido confirmado</div>
+    <h1 style="font-family:var(--display);font-weight:300;font-style:italic;font-size:52px;color:var(--ink);margin-bottom:16px;">Obrigado.</h1>
+    <div style="font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--lilas);padding:10px 20px;display:inline-block;border:1px solid var(--lilas);letter-spacing:.2em;" id="conf-serial">—</div>
+  </div>
+
+  <!-- composition preview -->
+  <div style="background:var(--parchment);border:1px solid var(--dust);display:flex;align-items:center;justify-content:center;padding:40px;margin-bottom:2px;min-height:280px;">
+    <img id="conf-preview" src="" alt="Sua composição"
+      style="display:none;max-width:280px;max-height:320px;object-fit:contain;filter:drop-shadow(0 12px 28px rgba(28,24,18,.12));">
+    <div id="conf-preview-placeholder" style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);">Sua composição</div>
+  </div>
+
+  <!-- order details -->
+  <div style="border:1px solid var(--dust);border-top:none;background:var(--white);padding:28px 32px;margin-bottom:32px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 40px;">
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Cliente</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-name"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Modelo</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-model"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Cor</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-color"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Tamanho</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-size"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Posição da estampa</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-view"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Estampas</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-stamps"></div>
+      </div>
+      <div style="grid-column:1/-1;">
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Observações</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-obs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- actions -->
+  <div style="display:flex;gap:12px;justify-content:center;margin-bottom:40px;">
+    <button type="button" data-action="download-certificate"
+      style="background:var(--moss);color:var(--white);border:none;padding:15px 36px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s;" data-hover="solid">
+      ↓ Baixar certificado
+    </button>
+    <button type="button" data-action="go" data-page="estudio"
+      style="background:transparent;color:var(--ink);border:1px solid var(--dust);padding:15px 36px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .18s;" data-hover="outline">
+      Nova composição
+    </button>
+  </div>
+
+  <!-- note about email -->
+  <div style="text-align:center;padding:20px;border:1px solid var(--dust);background:var(--parchment);">
+    <div style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);line-height:1.7;">
+      Os dados deste pedido serão enviados para a Hortelã assim que o e-mail estiver configurado.<br>
+      <span style="font-size:12px;color:var(--lilas);">→ Guarde o código serial: <strong id="conf-serial-2" style="color:var(--lilas);font-style:normal;"></strong></span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+
+<!-- ════════════════════ PAINEL DE PEDIDOS ════════════════════ -->
+<div class="page" id="painel">
+  <div class="painel-header">
+    <h1>Pedidos</h1>
+    <div class="painel-meta">
+      <span class="panel-count-badge" id="panel-count">0 pedidos</span>
+      <button type="button" class="panel-logout" data-action="panel-logout">Sair</button>
+    </div>
+  </div>
+  <div class="panel-list" id="panel-list"></div>
+  <div class="panel-empty" id="panel-empty">
+    <p>Nenhum pedido ainda.</p>
+  </div>
+</div>
+
+<!-- PANEL LOGIN MODAL -->
+<div class="panel-login-bg" id="panel-login" data-action="close-panel-login">
+  <div class="panel-login-box" data-stop>
+    <div class="panel-login-title">Painel Hortelã</div>
+    <div class="panel-login-sub">Acesso restrito — insira a senha para continuar.</div>
+    <input class="panel-login-input" id="panel-pw" type="password" placeholder="Senha"
+      data-enter-action="panel-login">
+    <div class="panel-pw-err" id="panel-pw-err">Senha incorreta</div>
+    <button type="button" class="panel-login-btn" data-action="panel-login">Entrar</button>
+  </div>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
