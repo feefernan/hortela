@@ -1,0 +1,101 @@
+# AGENTS.md — Hortelã
+
+Instruções para **qualquer agente de IA (de qualquer modelo/ferramenta) e pessoa** que trabalhe neste repositório.
+`CLAUDE.md` aponta para este arquivo. Se uma regra aqui conflitar com o seu padrão, **esta vence**.
+
+## O projeto
+
+Loja da **Hortelã** — arte vestível em aquarela (`usehortela.comercial.ws`, Instagram `@usehortela`).
+Site estático (Vite + TypeScript, sem framework) com Coleção (drops numerados), **Estúdio** (o cliente compõe a
+própria estampa sobre a camiseta) e checkout que gera serial e certificado.
+
+Ideais da marca (Notion): sustentabilidade, minimalismo, fauna e flora, saúde e bem-estar, identidade.
+
+## Fluxo de trabalho obrigatório: issue → branch → PR → deploy
+
+1. **Toda tarefa tem uma issue no GitHub** antes de qualquer código — correção (`bug`), melhoria (`melhoria`) ou
+   função nova (`feature`). Sem issue, crie uma (`gh issue create`) usando os templates em `.github/ISSUE_TEMPLATE`.
+2. **Uma branch por issue**, a partir da `main` (ou da branch da qual depende), com o nome
+   `<tipo>/<número-da-issue>-<slug>` — ex.: `fix/12-carrinho-real`.
+3. **Commits em Conventional Commits** (validado por commitlint): `feat: …`, `fix: …`, `chore: …`, `ci: …`,
+   `docs: …`, `test: …`, `refactor: …`, `perf: …`. Mensagens em português.
+4. **Toda mudança entra por Pull Request.** Nunca dê push direto na `main`.
+5. **A descrição do PR menciona a(s) issue(s)** com palavra-chave de fechamento: `Closes #12` (ou `Refs #12`
+   quando o PR não resolve tudo). Use o template `.github/pull_request_template.md`.
+6. O PR só é mergeado com **CI verde** (lint, tipos, arquitetura, knip, testes unitários/integração com cobertura,
+   e2e). Merge na `main` = **deploy automático** em produção (workflow `deploy.yml`, via FTP).
+7. PRs que dependem de outro PR usam a branch dele como base (PRs empilhados) e dizem isso na descrição.
+
+## Comandos
+
+| Objetivo | Comando |
+|---|---|
+| Rodar local | `npm run dev` |
+| Build de produção | `npm run build` (gera `dist/`) |
+| Tudo que o CI checa | `npm run check` |
+| Lint/format (Biome) | `npm run lint` · `npm run lint:fix` |
+| Contratos de arquitetura | `npm run arch` (dependency-cruiser) |
+| Código morto | `npm run knip` |
+| Unidade + integração | `npm test` · `npm run test:coverage` |
+| End-to-end | `npm run test:e2e` (Playwright, desktop + mobile) |
+| Testes de mutação | `npm run test:mutation` (Stryker, só `src/domain`) |
+
+## Arquitetura (contratos verificados no CI)
+
+```
+src/
+  domain/   regras puras: catálogo, preços, edição, serial, validação, layout de palavras, contratos de pedido
+  infra/    integrações: storage, e-mail, config de ambiente, telemetria
+  ui/       DOM e interação (um módulo por área: catálogo, estúdio, checkout, painel…)
+  styles/   CSS
+  main.ts   composição/bootstrap — ninguém importa main.ts
+```
+
+- `domain/` **não importa** `infra/` nem `ui/` e não toca no DOM. Toda regra de negócio nova nasce aqui, com teste.
+- `infra/` **não importa** `ui/`.
+- Sem dependências circulares.
+- Eventos: o HTML declara `data-action="nome"` e o módulo registra `onAction('nome', handler)` (`src/ui/dom.ts`).
+  **Não use** `onclick="..."` inline nem funções globais em `window`.
+
+## Qualidade
+
+- **Biome** é o único linter/formatter (sem ESLint/Prettier). Rode `npm run lint:fix` antes de commitar
+  (o hook de pre-commit já roda via husky + lint-staged).
+- **Knip**: não deixe exports, arquivos ou dependências sem uso.
+- **Testes**: todo bug corrigido ganha um teste que falharia antes da correção.
+  - `tests/unit` — domínio e infra (ambiente node).
+  - `tests/integration` — monta o `index.html` real no jsdom e exercita a UI.
+  - `e2e/` — Playwright contra o build de produção, em desktop e mobile.
+- **Cobertura** é catraca: os limites em `vitest.config.ts` só sobem. Relatório vai para o Codecov.
+- **Mutação**: score mínimo 60% (`stryker.config.json`). Vitest fica fixado na v4 até o runner do Stryker
+  suportar a v5 (na v5 todos os mutantes "sobrevivem" por incompatibilidade).
+
+## Observabilidade
+
+- Erros, performance e traces via **Sentry** + **OpenTelemetry** (`src/infra/telemetry.ts`), ligados apenas
+  quando as variáveis de ambiente existem. Nunca envie dados pessoais do cliente (nome, e-mail) para telemetria.
+
+## Motion e estados de carregamento
+
+Use a skill **design-motion-principles** (`.claude/skills/design-motion-principles`, de
+github.com/kylezantos/design-motion-principles). Contexto: **e-commerce** → peso primário **Jakub Krehel**
+(polimento sutil), secundário **Emil Kowalski** (contenção nas interações frequentes).
+
+Regras:
+- Todo conteúdo assíncrono tem **skeleton** enquanto carrega; imagens usam **lazy loading** e entram com fade.
+- Entrada = opacity + translateY pequeno + blur; **saída mais sutil que a entrada**; nunca `ease`/`ease-in-out`
+  puros — use os tokens de easing/duração em `src/styles/motion.css`.
+- Ações com espera (finalizar pedido, gerar certificado) mostram **progresso**.
+- Anime só `transform`, `opacity`, `filter`, `clip-path`. Nunca `width/height/top/left`.
+- Interações de alta frequência (arrastar estampa, slider, atalhos de teclado) **não animam**.
+- **`prefers-reduced-motion` é obrigatório** em toda animação nova.
+
+## Segredos e dados
+
+- Nada de senhas, chaves ou e-mails pessoais no código. Use `.env.local` (não versionado) e GitHub Secrets.
+  Variáveis documentadas em `.env.example`.
+- `legacy/index.html` é o snapshot do site antigo, só para referência. Não edite nem importe.
+
+## Idioma
+
+Código (identificadores) em inglês; textos de interface, commits, issues, PRs e comentários em **português**.
