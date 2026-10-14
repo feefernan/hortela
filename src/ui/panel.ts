@@ -40,14 +40,14 @@ const cardHTML = (o: OrderRecord, img: string | null) => `
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 20px;margin-bottom:14px;">
         ${pcRow('Cliente', o.name)}${pcRow('E-mail', o.email)}${pcRow('Total', o.total)}
         ${pcRow('Modelo', o.cfg.model)}${pcRow('Cor', o.cfg.color)}${pcRow('Tamanho', o.cfg.size)}
-        ${pcRow('Posição', o.cfg.view)}${pcRow('Estampas', o.cfg.stamps.join(', '))}
+        ${pcRow('Posição', o.cfg.view)}${pcRow(o.kind === 'colecao' ? 'Itens' : 'Estampas', o.cfg.stamps.join(', '))}
         ${o.obs ? pcRow('Observações', o.obs) : ''}
       </div>
     </div>
     <div class="pc-actions">
       ${o.hasSVG ? `<button class="pc-btn pc-btn-primary" data-action="panel-svg" data-serial="${e(o.serial)}">↓ SVG produção</button>` : ''}
       ${o.hasImg ? `<button class="pc-btn pc-btn-primary" data-action="panel-img" data-serial="${e(o.serial)}">↓ Preview PNG</button>` : ''}
-      <button class="pc-btn pc-btn-primary" data-action="panel-cert" data-serial="${e(o.serial)}">↓ Certificado</button>
+      ${o.kind === 'colecao' ? '' : `<button type="button" class="pc-btn pc-btn-primary" data-action="panel-cert" data-serial="${e(o.serial)}">↓ Certificado</button>`}
       <div style="margin-top:8px;">
         <select class="pc-select" data-serial="${e(o.serial)}">
           ${ORDER_STATUSES.map((s) => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s[0].toUpperCase()}${s.slice(1)}</option>`).join('')}

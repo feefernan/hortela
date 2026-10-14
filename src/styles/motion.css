@@ -163,6 +163,45 @@ button:active:not(:disabled),
   }
 }
 
+/* ── GAVETA DO CARRINHO ─────────────────────────── */
+/* Entra deslizando da borda (de onde "vem"); sai mais curta e mais rápida. */
+.drawer-bg {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    visibility 0s linear var(--dur-fast);
+}
+.drawer-bg.open {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    visibility 0s;
+}
+.drawer {
+  transform: translateX(24px);
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    transform var(--dur-fast) var(--ease-in),
+    opacity var(--dur-fast) var(--ease-in),
+    filter var(--dur-fast) var(--ease-in);
+}
+.drawer-bg.open .drawer {
+  transform: none;
+  opacity: 1;
+  filter: none;
+  transition:
+    transform var(--dur-slow) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    filter var(--dur-base) var(--ease-out);
+}
+.cart-line {
+  animation: enter var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 6) * var(--stagger));
+}
+
 /* ── ESTÚDIO ────────────────────────────────────── */
 /* Estampa nova "materializa"; arrastar/redimensionar não anima (alta frequência). */
 .ps {

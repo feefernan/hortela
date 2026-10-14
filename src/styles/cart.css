@@ -1,0 +1,143 @@
+/* ── CARRINHO (gaveta lateral) ───────────────────── */
+.nav-right {
+  border: none;
+  background: none;
+  padding: 6px 0;
+}
+
+.drawer-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 350;
+  background: rgba(28, 24, 18, 0.45);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer {
+  width: min(420px, 100vw);
+  height: 100%;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -12px 0 40px rgba(28, 24, 18, 0.12);
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--dust);
+}
+.drawer-head h2 {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 30px;
+}
+.drawer-head .modal-close {
+  position: static;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 24px;
+}
+
+.cart-line {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--parchment);
+}
+.cart-line-art {
+  width: 64px;
+  height: 64px;
+  background: var(--parchment);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.cart-line-name {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+}
+.cart-line-meta {
+  font-family: var(--body);
+  font-size: 12px;
+  color: var(--sage);
+  margin-top: 2px;
+}
+.cart-line-side {
+  text-align: right;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink);
+}
+.cart-line-remove {
+  display: block;
+  margin-top: 6px;
+  margin-left: auto;
+  border: none;
+  background: none;
+  font-family: var(--body);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sage);
+  cursor: pointer;
+}
+.cart-line-remove:hover {
+  color: var(--ink);
+}
+
+.cart-empty {
+  padding: 48px 0;
+  text-align: center;
+  font-family: var(--body);
+  font-style: italic;
+  color: var(--sage);
+}
+.cart-empty .btn {
+  margin-top: 18px;
+}
+
+.drawer-foot {
+  padding: 20px 24px 24px;
+  border-top: 1px solid var(--dust);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.drawer-foot[hidden] {
+  display: none;
+}
+.drawer-total {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 22px;
+}
+.drawer-note {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--sage);
+}
+
+/* ── COLEÇÃO: estado vazio do filtro ─────────────── */
+.loja-empty {
+  padding: 48px;
+  text-align: center;
+  font-family: var(--body);
+  font-style: italic;
+  color: var(--sage);
+}
