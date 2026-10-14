@@ -2,6 +2,7 @@ import { formatOrderDate, type Order, type OrderRepository } from '../domain/ord
 import { generateSerial } from '../domain/serial';
 import { CHECKOUT_ERROR_MESSAGES, validateCheckout } from '../domain/validation';
 import { sendOrderEmail } from '../infra/email';
+import { reportError, track } from '../infra/telemetry';
 import { captureComposition, exportProductionSVG } from './capture';
 import { addToCart } from './cart-badge';
 import { downloadCertificate } from './certificate';
@@ -82,7 +83,9 @@ const submitOrder = async (repo: OrderRepository) => {
 
 export const initCheckout = (repo: OrderRepository) => {
   onAction('close-checkout', closeCheckout);
-  onAction('submit-order', () => void submitOrder(repo));
+  onAction('submit-order', () => {
+    track('pedido.finalizar', { origem: 'estudio' }, () => submitOrder(repo)).catch(reportError);
+  });
   onAction('download-certificate', () => {
     if (!currentOrder) {
       toast('Nenhum pedido ativo');

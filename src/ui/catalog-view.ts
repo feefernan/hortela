@@ -1,6 +1,7 @@
 import { PRODUCTS, type Product } from '../domain/catalog';
 import { editionLabel } from '../domain/edition';
 import { formatBRL } from '../domain/pricing';
+import { track } from '../infra/telemetry';
 import { watercolorSVG } from './art';
 import { addToCart } from './cart-badge';
 import { byId, onAction, selectInGroup } from './dom';
@@ -57,12 +58,17 @@ export const initCatalog = () => {
   byId('home-grid').innerHTML = PRODUCTS.slice(0, 3).map(homeCardHTML).join('');
   byId('loja-grid').innerHTML = PRODUCTS.map(collectionCardHTML).join('');
 
-  onAction('open-product', (el) => openProduct(el.dataset.product as string));
-  onAction('close-product', closeProduct);
-  onAction('buy-product', () => {
-    addToCart();
-    closeProduct();
+  onAction('open-product', (el) => {
+    const id = el.dataset.product as string;
+    track('produto.abrir', { produto: id }, () => openProduct(id));
   });
+  onAction('close-product', closeProduct);
+  onAction('buy-product', () =>
+    track('carrinho.adicionar', { origem: 'colecao' }, () => {
+      addToCart();
+      closeProduct();
+    }),
+  );
   onAction('pick-size', (el) => selectInGroup(el, '.sz-row', '.sz'));
   onAction('filter', (el) => selectInGroup(el, '.loja-top-right', '.filter-pill'));
 };
