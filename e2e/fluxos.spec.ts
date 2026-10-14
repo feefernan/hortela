@@ -33,6 +33,6 @@ test.describe('fluxos principais', () => {
     await page.locator('#ck-email').fill('ana@site.com');
     await page.locator('[data-action="submit-order"]').click();
     await expect(page.locator('#confirmacao')).toHaveClass(/active/);
-    await expect(page.locator('#conf-serial')).toHaveText(/^HRT-\d{8}-\d{4}$/);
+    await expect(page.locator('#conf-serial')).toHaveText(/^HRT-\d{8}-[0-9A-Z]{6}$/);
   });
 });

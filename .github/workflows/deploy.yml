@@ -35,7 +35,7 @@ jobs:
           VITE_EMAILJS_SERVICE_ID: ${{ secrets.VITE_EMAILJS_SERVICE_ID }}
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
           VITE_ORDERS_EMAIL: ${{ secrets.VITE_ORDERS_EMAIL }}
-          VITE_PANEL_PASSWORD: ${{ secrets.VITE_PANEL_PASSWORD }}
+          VITE_PANEL_PASSWORD_SHA256: ${{ secrets.VITE_PANEL_PASSWORD_SHA256 }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           VITE_OTEL_EXPORTER_URL: ${{ vars.VITE_OTEL_EXPORTER_URL }}
           VITE_RELEASE: ${{ github.sha }}

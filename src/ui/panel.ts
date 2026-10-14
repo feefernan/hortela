@@ -1,5 +1,7 @@
+import { escapeHtml as e } from '../domain/escape';
 import { ORDER_STATUSES, type OrderRecord, type OrderRepository, type OrderStatus } from '../domain/orders';
 import { config } from '../infra/config';
+import { sha256Hex } from '../infra/password';
 import { downloadDataUrl, downloadText } from './capture';
 import { downloadCertificate } from './certificate';
 import { byId, onAction, onEnter } from './dom';
@@ -14,25 +16,26 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   enviado: '#3C4E2E',
 };
 
+// Todo dado vindo do pedido passa por escapeHtml (e): nome, e-mail e observações são do cliente (#18).
 const pcRow = (label: string, value: string) => `<div>
   <div style="font-family:var(--body);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:2px;">${label}</div>
-  <div style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--ink);">${value || '—'}</div>
+  <div style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--ink);">${value ? e(value) : '—'}</div>
 </div>`;
 
 const cardHTML = (o: OrderRecord, img: string | null) => `
-  <div class="panel-card" id="pc-${o.serial}">
+  <div class="panel-card" id="pc-${e(o.serial)}">
     <div class="pc-thumb">
       ${
         img
-          ? `<img src="${img}" style="width:100%;height:100%;object-fit:contain;padding:8px;">`
-          : `<div style="font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);text-align:center;padding:12px;">${o.cfg.stamps.slice(0, 2).join('<br>')}</div>`
+          ? `<img src="${e(img)}" alt="" style="width:100%;height:100%;object-fit:contain;padding:8px;">`
+          : `<div style="font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);text-align:center;padding:12px;">${o.cfg.stamps.slice(0, 2).map(e).join('<br>')}</div>`
       }
     </div>
     <div class="pc-info">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="font-family:'Courier New',monospace;font-size:11px;color:var(--lilas);letter-spacing:.06em;">${o.serial}</div>
-        <div style="font-family:var(--body);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;background:${STATUS_COLORS[o.status] ?? '#D6CCBA'};color:white;">${o.status}</div>
-        <div style="font-family:var(--body);font-size:11px;color:var(--sage);margin-left:auto;">${o.date}</div>
+        <div style="font-family:'Courier New',monospace;font-size:11px;color:var(--lilas);letter-spacing:.06em;">${e(o.serial)}</div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;background:${STATUS_COLORS[o.status] ?? '#D6CCBA'};color:white;">${e(o.status)}</div>
+        <div style="font-family:var(--body);font-size:11px;color:var(--sage);margin-left:auto;">${e(o.date)}</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 20px;margin-bottom:14px;">
         ${pcRow('Cliente', o.name)}${pcRow('E-mail', o.email)}${pcRow('Total', o.total)}
@@ -42,15 +45,15 @@ const cardHTML = (o: OrderRecord, img: string | null) => `
       </div>
     </div>
     <div class="pc-actions">
-      ${o.hasSVG ? `<button class="pc-btn pc-btn-primary" data-action="panel-svg" data-serial="${o.serial}">↓ SVG produção</button>` : ''}
-      ${o.hasImg ? `<button class="pc-btn pc-btn-primary" data-action="panel-img" data-serial="${o.serial}">↓ Preview PNG</button>` : ''}
-      <button class="pc-btn pc-btn-primary" data-action="panel-cert" data-serial="${o.serial}">↓ Certificado</button>
+      ${o.hasSVG ? `<button class="pc-btn pc-btn-primary" data-action="panel-svg" data-serial="${e(o.serial)}">↓ SVG produção</button>` : ''}
+      ${o.hasImg ? `<button class="pc-btn pc-btn-primary" data-action="panel-img" data-serial="${e(o.serial)}">↓ Preview PNG</button>` : ''}
+      <button class="pc-btn pc-btn-primary" data-action="panel-cert" data-serial="${e(o.serial)}">↓ Certificado</button>
       <div style="margin-top:8px;">
-        <select class="pc-select" data-serial="${o.serial}">
+        <select class="pc-select" data-serial="${e(o.serial)}">
           ${ORDER_STATUSES.map((s) => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s[0].toUpperCase()}${s.slice(1)}</option>`).join('')}
         </select>
       </div>
-      <button class="pc-btn pc-btn-danger" data-action="panel-delete" data-serial="${o.serial}">Apagar</button>
+      <button class="pc-btn pc-btn-danger" data-action="panel-delete" data-serial="${e(o.serial)}">Apagar</button>
     </div>
   </div>`;
 
@@ -64,17 +67,19 @@ const render = (repo: OrderRepository) => {
   list.innerHTML = orders.map((o) => cardHTML(o, o.hasImg ? repo.asset(o.serial, 'img') : null)).join('');
 };
 
-const isAuthed = () => Boolean(config.panelPassword) && sessionStorage.getItem(AUTH_KEY) === config.panelPassword;
+const isEnabled = () => Boolean(config.panelPasswordHash);
+const isAuthed = () => isEnabled() && sessionStorage.getItem(AUTH_KEY) === config.panelPasswordHash;
 
 export const initPanel = (repo: OrderRepository) => {
   const showPanel = () => {
     go('painel');
     render(repo);
   };
-  const login = () => {
+  const login = async () => {
     const input = byId<HTMLInputElement>('panel-pw');
-    if (config.panelPassword && input.value === config.panelPassword) {
-      sessionStorage.setItem(AUTH_KEY, input.value);
+    const hash = isEnabled() && input.value ? await sha256Hex(input.value) : '';
+    if (hash && hash === config.panelPasswordHash) {
+      sessionStorage.setItem(AUTH_KEY, hash);
       input.value = '';
       byId('panel-login').classList.remove('open');
       showPanel();
@@ -87,10 +92,13 @@ export const initPanel = (repo: OrderRepository) => {
     }
   };
 
+  // Sem senha configurada o painel não existe: some o link discreto do menu.
+  if (!isEnabled()) document.getElementById('n-painel')?.closest('li')?.remove();
+
   onAction('open-panel', () => (isAuthed() ? showPanel() : byId('panel-login').classList.add('open')));
   onAction('close-panel-login', () => byId('panel-login').classList.remove('open'));
-  onAction('panel-login', login);
-  onEnter('panel-login', login);
+  onAction('panel-login', () => void login());
+  onEnter('panel-login', () => void login());
   onAction('panel-logout', () => {
     sessionStorage.removeItem(AUTH_KEY);
     go('home');

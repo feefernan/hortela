@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ALPHABET, findProduct, findStamp, PRODUCTS, STAMPS } from '../../src/domain/catalog';
 import { editionLabel } from '../../src/domain/edition';
+import { escapeHtml } from '../../src/domain/escape';
 import { formatOrderDate, toRecord } from '../../src/domain/orders';
 import { formatBRL, MODELS, PRINT_FEE, studioTotal } from '../../src/domain/pricing';
-import { generateSerial } from '../../src/domain/serial';
+import { generateSerial, SERIAL_PATTERN } from '../../src/domain/serial';
 import { isValidWord, validateCheckout } from '../../src/domain/validation';
 import { GLYPHS, layoutWord } from '../../src/domain/word-layout';
 
@@ -48,12 +49,25 @@ describe('pricing', () => {
 });
 
 describe('serial', () => {
-  it('segue o formato HRT-AAAAMMDD-XXXX', () => {
-    expect(generateSerial(new Date(2026, 0, 5), () => 0)).toBe('HRT-20260105-1000');
-    expect(generateSerial(new Date(2026, 11, 31), () => 0.9999)).toBe('HRT-20261231-9999');
+  const bytes =
+    (...values: number[]) =>
+    () =>
+      Uint8Array.from(values);
+
+  it('segue o formato HRT-AAAAMMDD-XXXXXX em base32 de Crockford', () => {
+    expect(generateSerial(new Date(2026, 0, 5), bytes(0, 1, 2, 3, 4, 5))).toBe('HRT-20260105-012345');
+    expect(generateSerial(new Date(2026, 11, 31), bytes(31, 30, 18, 63, 255, 10))).toBe('HRT-20261231-ZYJZZA');
   });
-  it('usa a data atual por padrão', () => {
-    expect(generateSerial()).toMatch(/^HRT-\d{8}-\d{4}$/);
+
+  it('usa crypto e a data atual por padrão, sem colisões em 2.000 seriais', () => {
+    const serials = new Set(Array.from({ length: 2000 }, () => generateSerial()));
+    expect(serials.size).toBe(2000);
+    for (const s of serials) expect(s).toMatch(SERIAL_PATTERN);
+  });
+
+  it('nunca usa letras ambíguas (I, L, O, U)', () => {
+    const all = Array.from({ length: 32 }, (_, i) => generateSerial(new Date(2026, 0, 1), bytes(i, i, i, i, i, i)));
+    expect(all.join('')).not.toMatch(/[ILOU]/);
   });
 });
 
@@ -122,5 +136,14 @@ describe('orders', () => {
 
   it('formata a data em pt-BR', () => {
     expect(formatOrderDate(new Date(2026, 9, 14))).toMatch(/14 de outubro de 2026/);
+  });
+});
+
+describe('escapeHtml', () => {
+  it('neutraliza tags e aspas', () => {
+    expect(escapeHtml('<img src=x onerror="alert(1)">')).toBe('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
+    expect(escapeHtml("O'Neil & Cia")).toBe('O&#39;Neil &amp; Cia');
+    expect(escapeHtml(undefined)).toBe('');
+    expect(escapeHtml(42)).toBe('42');
   });
 });

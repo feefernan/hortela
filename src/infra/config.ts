@@ -6,8 +6,11 @@ export const config = {
     templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? '',
     toEmail: import.meta.env.VITE_ORDERS_EMAIL ?? '',
   },
-  /** Vazio desativa o painel. Ainda é verificado no cliente — ver issue de segurança do painel. */
-  panelPassword: import.meta.env.VITE_PANEL_PASSWORD ?? '',
+  /**
+   * SHA-256 (hex) da senha do painel. Vazio desativa o painel e esconde o link.
+   * Mitigação: a verificação ainda é no navegador — autenticação real depende do backend (#22, #17).
+   */
+  panelPasswordHash: (import.meta.env.VITE_PANEL_PASSWORD_SHA256 ?? '').trim().toLowerCase(),
 };
 
 export const isEmailConfigured = (): boolean =>
