@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,7 +11,7 @@ const click = (sel: string) => $(sel).click();
 const isActive = (id: string) => $(`#${id}`).classList.contains('active');
 
 beforeAll(async () => {
-  vi.stubEnv('VITE_PANEL_PASSWORD', 'senha-de-teste');
+  vi.stubEnv('VITE_PANEL_PASSWORD_SHA256', createHash('sha256').update('senha-de-teste').digest('hex'));
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   document.body.innerHTML = body;
@@ -168,38 +169,44 @@ describe('checkout', () => {
     click('[data-action="submit-order"]');
     expect($('#toast-el').textContent).toBe('Preencha nome e e-mail');
 
-    $<HTMLInputElement>('#ck-name').value = 'Ana';
+    // Payload de XSS no nome: precisa aparecer como texto no painel (#18).
+    $<HTMLInputElement>('#ck-name').value = '<img src=x onerror="window.__xss=1">Ana';
     $<HTMLInputElement>('#ck-email').value = 'ana@site.com';
     click('[data-action="submit-order"]');
     await vi.waitFor(() => expect(isActive('confirmacao')).toBe(true));
-    expect($('#conf-serial').textContent).toMatch(/^HRT-\d{8}-\d{4}$/);
+    expect($('#conf-serial').textContent).toMatch(/^HRT-\d{8}-[0-9A-Z]{6}$/);
     expect($('#conf-stamps').textContent).toBe('Camanducaia');
 
     const saved = JSON.parse(localStorage.getItem('hortela_orders_v1') ?? '[]');
     expect(saved).toHaveLength(1);
-    expect(saved[0]).toMatchObject({ name: 'Ana', status: 'novo', hasSVG: true });
+    expect(saved[0]).toMatchObject({ status: 'novo', hasSVG: true });
+    expect(saved[0].name).toContain('Ana');
   });
 });
 
 describe('painel', () => {
-  it('recusa senha errada e mantém o painel fechado', () => {
+  it('recusa senha errada e mantém o painel fechado', async () => {
     click('[data-action="open-panel"]');
     expect($('#panel-login').classList.contains('open')).toBe(true);
     $<HTMLInputElement>('#panel-pw').value = 'errada';
     click('[data-action="panel-login"]');
+    await vi.waitFor(() => expect($('#panel-pw-err').style.opacity).toBe('1'));
     expect(isActive('painel')).toBe(false);
-    expect($('#panel-pw-err').style.opacity).toBe('1');
     click('[data-action="close-panel-login"]');
     expect($('#panel-login').classList.contains('open')).toBe(false);
   });
 
-  it('com a senha certa lista, muda status e apaga pedidos', () => {
+  it('com a senha certa lista (escapando dados do cliente), muda status e apaga', async () => {
     click('[data-action="open-panel"]');
     const pw = $<HTMLInputElement>('#panel-pw');
     pw.value = 'senha-de-teste';
     pw.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    expect(isActive('painel')).toBe(true);
+    await vi.waitFor(() => expect(isActive('painel')).toBe(true));
     expect($('#panel-count').textContent).toBe('1 pedido');
+    expect(document.querySelector('#panel-list img[src="x"]')).toBeNull();
+    expect($('#panel-list').textContent).toContain('<img src=x');
+    expect((window as unknown as { __xss?: number }).__xss).toBeUndefined();
+    expect(sessionStorage.getItem('hortela_panel_auth')).not.toBe('senha-de-teste');
 
     const select = $<HTMLSelectElement>('.pc-select');
     select.value = 'enviado';
