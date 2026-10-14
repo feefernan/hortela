@@ -1,5 +1,6 @@
 import './styles/main.css';
 import { createLocalOrderRepository } from './infra/local-order-repository';
+import { initTelemetry } from './infra/telemetry';
 import { installStampFallback } from './ui/art';
 import { initCart } from './ui/cart-badge';
 import { initCatalog } from './ui/catalog-view';
@@ -10,6 +11,8 @@ import { initRouter } from './ui/router';
 import { initStudio } from './ui/studio';
 
 const orders = createLocalOrderRepository();
+
+void initTelemetry();
 
 installStampFallback();
 bindActions();

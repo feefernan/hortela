@@ -3,6 +3,7 @@ import type { StudioConfig } from '../domain/orders';
 import { formatBRL, MODELS, type ModelId, studioTotal } from '../domain/pricing';
 import { isValidWord } from '../domain/validation';
 import { layoutWord } from '../domain/word-layout';
+import { track } from '../infra/telemetry';
 import { stampImageHTML } from './art';
 import { byId, onAction, onEnter, onInput, qsa, selectInGroup } from './dom';
 import { toast } from './toast';
@@ -273,10 +274,13 @@ export const initStudio = (onCheckout: () => void) => {
     resize = null;
   });
 
-  onAction('add-stamp', (el) => addStamp(el.dataset.stampId as string));
+  onAction('add-stamp', (el) => {
+    const id = el.dataset.stampId as string;
+    track('estudio.estampa', { estampa: id }, () => addStamp(id));
+  });
   onEnter('add-word', (el) => {
     const input = el as HTMLInputElement;
-    addWord(input.value);
+    track('estudio.palavra', { letras: input.value.trim().length }, () => addWord(input.value));
     input.value = '';
   });
   onAction('remove-stamp', (el, e) => {
