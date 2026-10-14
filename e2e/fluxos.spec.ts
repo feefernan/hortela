@@ -10,8 +10,7 @@ test.describe('fluxos principais', () => {
     expect(errors).toEqual([]);
   });
 
-  test('coleção → carrinho → pedido', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'Menu mobile quebrado — coberto pela issue de layout mobile');
+  test('coleção → carrinho → pedido', async ({ page }) => {
     await page.goto('/');
     await page.locator('#n-loja').click();
     await page.locator('.loja-card[data-product="floresta-3"]').click();
@@ -29,8 +28,7 @@ test.describe('fluxos principais', () => {
     await expect(page.locator('#conf-cert-btn')).toBeHidden();
   });
 
-  test('compõe no estúdio e finaliza o pedido', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'Estúdio sem layout mobile — coberto pela issue de layout mobile');
+  test('compõe no estúdio e finaliza o pedido', async ({ page }) => {
     await page.goto('/');
     await page.locator('#n-estudio').click();
     await page.locator('[data-stamp-id="s10"]').click();
@@ -43,5 +41,26 @@ test.describe('fluxos principais', () => {
     await page.locator('[data-action="submit-order"]').click();
     await expect(page.locator('#confirmacao')).toHaveClass(/active/);
     await expect(page.locator('#conf-serial')).toHaveText(/^HRT-\d{8}-[0-9A-Z]{6}$/);
+  });
+});
+
+test.describe('layout responsivo', () => {
+  test('sem rolagem horizontal em nenhuma página', async ({ page }) => {
+    await page.goto('/');
+    for (const id of ['n-home', 'n-loja', 'n-estudio', 'n-sobre']) {
+      await page.locator(`#${id}`).click();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow, id).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test('no celular, total e botão do Estúdio ficam visíveis', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'só no celular');
+    await page.goto('/');
+    await page.locator('#n-estudio').click();
+    await page.locator('[data-stamp-id="s10"]').click();
+    await page.mouse.wheel(0, 600);
+    await expect(page.locator('[data-action="add-studio"]')).toBeInViewport();
+    await expect(page.locator('#n-loja')).toBeInViewport();
   });
 });

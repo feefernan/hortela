@@ -1,5 +1,6 @@
 import './styles/main.css';
 import './styles/cart.css';
+import './styles/responsive.css';
 import './styles/motion.css';
 import { createCartStorage } from './infra/cart-storage';
 import { createLocalOrderRepository } from './infra/local-order-repository';

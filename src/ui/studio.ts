@@ -19,6 +19,8 @@ let selected: HTMLElement | null = null;
 let gesture: Gesture | null = null;
 let model: ModelId = 'oversized';
 let side: Side = 'frente';
+/** Escala visual do palco no celular (o palco tem 360×416 px de coordenadas). */
+let stageScale = 1;
 
 const SIDES: readonly Side[] = ['frente', 'costas'];
 const zoneFor = (s: Side) => byId(s === 'frente' ? 'drop-zone' : 'drop-zone-back');
@@ -308,17 +310,29 @@ export const readStudioConfig = (): StudioConfig => {
   };
 };
 
+const STAGE_W = 360;
+const STAGE_GUTTER = 32;
+
+/** Calcula a escala do palco para caber na largura da tela (só reduz, nunca amplia). */
+export const updateStageScale = (viewportWidth = window.innerWidth) => {
+  stageScale = Math.min(1, Math.max(0.5, (viewportWidth - STAGE_GUTTER) / STAGE_W));
+  document.documentElement.style.setProperty('--stage-scale', String(stageScale));
+};
+
 export const initStudio = (onCheckout: () => void) => {
   renderStampPicker();
+  updateStageScale();
+  window.addEventListener('resize', () => updateStageScale(), { passive: true });
 
   document.addEventListener('pointermove', (e) => {
     if (!gesture) return;
+    // Deltas da tela → coordenadas do palco (que pode estar escalado no celular).
     if (gesture.kind === 'drag') {
-      gesture.el.style.left = `${gesture.ox + e.clientX - gesture.sx}px`;
-      gesture.el.style.top = `${gesture.oy + e.clientY - gesture.sy}px`;
+      gesture.el.style.left = `${gesture.ox + (e.clientX - gesture.sx) / stageScale}px`;
+      gesture.el.style.top = `${gesture.oy + (e.clientY - gesture.sy) / stageScale}px`;
       return;
     }
-    const nw = Math.max(48, gesture.ow + e.clientX - gesture.sx);
+    const nw = Math.max(48, gesture.ow + (e.clientX - gesture.sx) / stageScale);
     const nh = nw / Number.parseFloat(gesture.el.dataset.ar || '1');
     gesture.el.style.width = `${nw}px`;
     gesture.el.style.height = `${nh}px`;
