@@ -6,6 +6,7 @@ import { layoutWord } from '../domain/word-layout';
 import { track } from '../infra/telemetry';
 import { stampImageHTML } from './art';
 import { byId, onAction, onEnter, onInput, qsa, selectInGroup } from './dom';
+import { removeWithExit } from './motion';
 import { toast } from './toast';
 
 let selected: HTMLElement | null = null;
@@ -14,7 +15,8 @@ let resize: { el: HTMLElement; sx: number; ow: number } | null = null;
 let model: ModelId = 'oversized';
 
 const zone = () => byId('drop-zone');
-const placedEls = () => qsa<HTMLElement>('.ps', zone());
+// Estampas saindo (animação de remoção) já não contam como camadas.
+const placedEls = () => qsa<HTMLElement>('.ps:not(.removing)', zone());
 const setHintVisible = (visible: boolean) => {
   byId('sc-hint').style.opacity = visible ? '1' : '0';
 };
@@ -22,6 +24,7 @@ const setHintVisible = (visible: boolean) => {
 const renderStampPicker = () => {
   const scroll = byId('stamps-scroll');
   scroll.innerHTML = '';
+  scroll.removeAttribute('aria-busy');
   let currentSeries = '';
   let grid: HTMLElement | null = null;
   for (const s of STAMPS.filter((x) => x.series !== 'Alfabeto')) {
@@ -36,7 +39,7 @@ const renderStampPicker = () => {
       currentSeries = s.series;
     }
     const tile = document.createElement('div');
-    tile.className = 'st';
+    tile.className = 'st is-loading';
     tile.title = s.name;
     tile.dataset.action = 'add-stamp';
     tile.dataset.stampId = s.id;
@@ -114,7 +117,7 @@ const addStamp = (id: string) => {
   el.dataset.sid = id;
   el.dataset.op = '1';
   el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;`;
-  el.innerHTML = stampImageHTML(s, size) + controlsHTML;
+  el.innerHTML = stampImageHTML(s, size, false) + controlsHTML;
   place(el);
   toast(`"${s.name}" adicionada`);
 };
@@ -155,8 +158,8 @@ const addWord = (raw: string): boolean => {
 };
 
 const removeStamp = (el: HTMLElement) => {
-  el.remove();
   if (selected === el) selected = null;
+  removeWithExit(el);
   renderLayers();
   if (!placedEls().length) setHintVisible(true);
 };
@@ -167,7 +170,7 @@ const layerThumb = (el: HTMLElement, stamp: Stamp | undefined): string => {
     const ar = Number.parseFloat(el.dataset.ar || '1');
     return `<svg viewBox="${svg?.getAttribute('viewBox')}" width="${Math.round(20 * ar)}" height="20">${svg?.innerHTML ?? ''}</svg>`;
   }
-  return stamp ? stampImageHTML(stamp, 20) : '';
+  return stamp ? stampImageHTML(stamp, 20, false) : '';
 };
 
 const renderLayers = () => {
@@ -211,9 +214,8 @@ const clearComposition = () => {
 
 const undo = () => {
   const els = placedEls();
-  els[els.length - 1]?.remove();
-  renderLayers();
-  if (!placedEls().length) setHintVisible(true);
+  const last = els[els.length - 1];
+  if (last) removeStamp(last);
 };
 
 const center = () => {
@@ -293,8 +295,8 @@ export const initStudio = (onCheckout: () => void) => {
     if (ps) select(ps);
   });
   onAction('remove-layer', (el) => {
-    placedEls()[Number(el.dataset.index)]?.remove();
-    renderLayers();
+    const ps = placedEls()[Number(el.dataset.index)];
+    if (ps) removeStamp(ps);
   });
   onAction('deselect', deselect);
   onInput('opacity', (el) => {

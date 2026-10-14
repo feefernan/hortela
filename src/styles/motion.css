@@ -1,0 +1,290 @@
+/*
+ * Sistema de motion — skill design-motion-principles (.claude/skills/design-motion-principles).
+ * Contexto: e-commerce → primário Jakub Krehel (polimento sutil), secundário Emil Kowalski (contenção).
+ *
+ * Regras: entrada = opacity + translateY pequeno + blur; saída mais sutil e mais rápida;
+ * nada de `ease`/`ease-in-out` puros; só transform/opacity/filter; interações de alta frequência
+ * (arrastar estampa, slider) não animam; prefers-reduced-motion desliga tudo (fim do arquivo).
+ */
+
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* chegada: rápida e assenta suave */
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45); /* saída: começa suave e acelera */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* mudança de estado visível */
+
+  --dur-press: 120ms;
+  --dur-fast: 160ms; /* saídas, micro-feedback */
+  --dur-base: 240ms; /* toasts, cards, camadas */
+  --dur-slow: 380ms; /* páginas, modais */
+
+  --enter-y: 8px;
+  --exit-y: -4px;
+  --enter-blur: 4px;
+  --stagger: 50ms;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--enter-y));
+    filter: blur(var(--enter-blur));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes exit {
+  to {
+    opacity: 0;
+    transform: translateY(var(--exit-y));
+    filter: blur(2px);
+  }
+}
+
+/* ── PÁGINAS ───────────────────────────────────── */
+.page.active {
+  animation: enter var(--dur-slow) var(--ease-out) both;
+}
+
+/* A página que sai fica sobreposta por um instante e some (ver ui/router.ts). */
+.page.page-leaving {
+  display: block;
+  position: absolute;
+  inset: 0 0 auto;
+  pointer-events: none;
+  animation: exit var(--dur-fast) var(--ease-in) both;
+}
+
+/* ── CARDS (entrada escalonada) ─────────────────── */
+.p-card,
+.loja-card {
+  animation: enter var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 8) * var(--stagger));
+}
+
+/* ── MODAIS ─────────────────────────────────────── */
+.modal-bg,
+.panel-login-bg {
+  display: flex;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    visibility 0s linear var(--dur-fast);
+}
+.modal-bg.open,
+.panel-login-bg.open {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    visibility 0s;
+}
+
+.modal,
+.panel-login-box {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  filter: blur(2px);
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in),
+    filter var(--dur-fast) var(--ease-in);
+}
+.modal-bg.open .modal,
+.panel-login-bg.open .panel-login-box {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
+}
+
+/* ── TOAST ──────────────────────────────────────── */
+/* Antes ficava 5px visível no rodapé (só translate). Agora some de verdade. */
+.toast {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(12px);
+  filter: blur(var(--enter-blur));
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in),
+    filter var(--dur-fast) var(--ease-in),
+    visibility 0s linear var(--dur-fast);
+}
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  filter: none;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    filter var(--dur-base) var(--ease-out),
+    visibility 0s;
+}
+
+/* ── FEEDBACK DE TOQUE ──────────────────────────── */
+button,
+.btn,
+.btn-cart,
+.sz,
+.mo,
+.sw,
+.st,
+.filter-pill {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out);
+}
+button:active:not(:disabled),
+.btn:active,
+.mo:active,
+.sw:active,
+.st:active,
+.filter-pill:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-press);
+}
+
+/* Contador do carrinho: pulso único ao mudar (não é loop). */
+.cart-n.bump {
+  animation: bump var(--dur-base) var(--ease-out);
+}
+@keyframes bump {
+  40% {
+    transform: scale(1.18);
+  }
+}
+
+/* ── ESTÚDIO ────────────────────────────────────── */
+/* Estampa nova "materializa"; arrastar/redimensionar não anima (alta frequência). */
+.ps {
+  animation: stamp-enter var(--dur-base) var(--ease-out) both;
+  transition: none;
+}
+@keyframes stamp-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(var(--enter-blur));
+  }
+}
+.ps.removing {
+  animation: exit var(--dur-fast) var(--ease-in) both;
+  pointer-events: none;
+}
+
+.layer-item {
+  animation: enter var(--dur-fast) var(--ease-out) both;
+}
+
+#sc-hint {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* ── SKELETON ───────────────────────────────────── */
+.skeleton,
+.is-loading {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--parchment);
+}
+.skeleton::after,
+.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in oklch, var(--white) 70%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+.skeleton-card .sk-art {
+  aspect-ratio: 1;
+}
+.skeleton-card .sk-line {
+  height: 10px;
+  margin: 14px 18px 0;
+  border-radius: 2px;
+}
+.skeleton-card .sk-line.short {
+  width: 40%;
+  margin-bottom: 18px;
+}
+.skeleton-tile {
+  aspect-ratio: 1;
+}
+
+/* Imagens com lazy loading: placeholder até carregar, depois fade-in. */
+img[data-lazy] {
+  opacity: 0;
+  filter: blur(var(--enter-blur));
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    filter var(--dur-base) var(--ease-out);
+}
+img[data-lazy].is-loaded {
+  opacity: 1;
+  filter: none;
+}
+
+/* ── PROGRESSO ──────────────────────────────────── */
+.has-progress {
+  position: relative;
+  overflow: hidden;
+}
+.has-progress .progress-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--lilas);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.progress-label {
+  display: inline-block;
+  animation: enter var(--dur-fast) var(--ease-out) both;
+}
+
+/* ── ACESSIBILIDADE: MOVIMENTO REDUZIDO ─────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after,
+  .is-loading::after {
+    animation: none;
+  }
+}

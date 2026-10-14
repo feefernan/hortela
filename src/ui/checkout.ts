@@ -7,6 +7,7 @@ import { captureComposition, exportProductionSVG } from './capture';
 import { addToCart } from './cart-badge';
 import { downloadCertificate } from './certificate';
 import { byId, onAction } from './dom';
+import { nextFrame, startButtonProgress } from './progress';
 import { go } from './router';
 import { readStudioConfig, studioTotalLabel } from './studio';
 import { toast } from './toast';
@@ -36,11 +37,18 @@ const showConfirmation = (order: Order) => {
   byId('conf-view').textContent = order.cfg.view;
   byId('conf-stamps').textContent = order.cfg.stamps.join(', ');
   byId('conf-obs').textContent = order.obs || '—';
+  const preview = byId<HTMLImageElement>('conf-preview');
+  const placeholder = byId('conf-preview-placeholder');
   if (order.imgB64) {
-    const preview = byId<HTMLImageElement>('conf-preview');
+    // Skeleton até a imagem decodificar; depois fade-in (img[data-lazy]).
+    placeholder.style.display = 'none';
+    preview.classList.remove('is-loaded');
+    preview.parentElement?.classList.add('is-loading');
     preview.src = order.imgB64;
     preview.style.display = 'block';
-    byId('conf-preview-placeholder').style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+    placeholder.style.display = '';
   }
   go('confirmacao');
 };
@@ -56,26 +64,31 @@ const submitOrder = async (repo: OrderRepository) => {
     toast(CHECKOUT_ERROR_MESSAGES[error]);
     return;
   }
-  const btn = byId<HTMLButtonElement>('ck-submit');
-  btn.textContent = 'Gerando...';
-  btn.disabled = true;
-
+  const progress = startButtonProgress(byId<HTMLButtonElement>('ck-submit'), 'Gerando sua composição…');
+  await nextFrame();
   const serial = generateSerial();
+  const imgB64 = await captureComposition();
+  progress.step(0.45, 'Preparando arquivo de produção…');
+  await nextFrame();
+  const svgData = exportProductionSVG(serial);
+  progress.step(0.8, 'Registrando o pedido…');
+  await nextFrame();
   const order: Order = {
     serial,
     ...input,
     cfg: readStudioConfig(),
-    imgB64: await captureComposition(),
-    svgData: exportProductionSVG(serial),
+    imgB64,
+    svgData,
     total: studioTotalLabel(),
     date: formatOrderDate(new Date()),
   };
   currentOrder = order;
   repo.save(order);
+  progress.step(1, 'Pronto');
+  await nextFrame();
 
   closeCheckout();
-  btn.textContent = 'Finalizar pedido';
-  btn.disabled = false;
+  progress.done();
   void sendOrderEmail(order).then((sent) => sent && toast('Pedido enviado por e-mail ✓'));
   showConfirmation(order);
   addToCart();
@@ -86,11 +99,19 @@ export const initCheckout = (repo: OrderRepository) => {
   onAction('submit-order', () => {
     track('pedido.finalizar', { origem: 'estudio' }, () => submitOrder(repo)).catch(reportError);
   });
-  onAction('download-certificate', () => {
+  onAction('download-certificate', (el) => {
     if (!currentOrder) {
       toast('Nenhum pedido ativo');
       return;
     }
-    void downloadCertificate(currentOrder).then(() => toast('Certificado baixado ✓'));
+    const progress = startButtonProgress(el as HTMLButtonElement, 'Gerando certificado…');
+    void nextFrame()
+      .then(() => downloadCertificate(currentOrder as Order))
+      .then(() => {
+        progress.step(1, 'Pronto');
+        toast('Certificado baixado ✓');
+      })
+      .catch(reportError)
+      .finally(() => setTimeout(progress.done, 400));
   });
 };

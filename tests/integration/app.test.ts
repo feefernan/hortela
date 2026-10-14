@@ -36,6 +36,21 @@ describe('navegação', () => {
   });
 });
 
+describe('carregamento', () => {
+  it('troca os skeletons pelo conteúdo e limpa aria-busy', () => {
+    expect(document.querySelectorAll('.skeleton-card')).toHaveLength(0);
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull();
+  });
+
+  it('cards entram escalonados (--i) e estampas usam lazy loading', () => {
+    const cards = document.querySelectorAll<HTMLElement>('#loja-grid .loja-card');
+    expect(cards[2].style.getPropertyValue('--i')).toBe('2');
+    const img = document.querySelector<HTMLImageElement>('#stamps-scroll img');
+    expect(img?.getAttribute('loading')).toBe('lazy');
+    expect(img?.hasAttribute('data-lazy')).toBe(true);
+  });
+});
+
 describe('coleção', () => {
   it('renderiza 3 peças na home e 6 na coleção', () => {
     expect(document.querySelectorAll('#home-grid .p-card')).toHaveLength(3);
@@ -61,6 +76,7 @@ describe('coleção', () => {
     click('[data-action="buy-product"]');
     expect($('#modal-bg').classList.contains('open')).toBe(false);
     expect($('#cn').textContent).toBe('1');
+    expect($('#cn').classList.contains('bump')).toBe(true);
   });
 
   it('o carrinho ainda é só um contador', () => {

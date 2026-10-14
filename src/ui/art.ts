@@ -47,8 +47,12 @@ const stampBlobSVG = (stamp: Stamp, size: number): string => {
   </svg>`;
 };
 
-export const stampImageHTML = (stamp: Stamp, size = 54): string =>
-  `<img src="${stamp.image}" width="${size}" height="${size}" data-stamp="${stamp.id}"
+/**
+ * `lazy` (padrão): carrega sob demanda com fade-in. Use `false` em elementos re-renderizados com
+ * frequência (miniaturas de camada) ou que já têm animação própria (estampa na camiseta).
+ */
+export const stampImageHTML = (stamp: Stamp, size = 54, lazy = true): string =>
+  `<img src="${stamp.image}" width="${size}" height="${size}" data-stamp="${stamp.id}"${lazy ? ' data-lazy loading="lazy" decoding="async"' : ''}
     style="width:${size}px;height:${size}px;object-fit:contain;display:block;pointer-events:none;"
     draggable="false" alt="${stamp.name}">`;
 
@@ -61,6 +65,7 @@ export const installStampFallback = () => {
       if (!(img instanceof HTMLImageElement) || !img.dataset.stamp) return;
       const stamp = findStamp(img.dataset.stamp);
       if (!stamp || stamp.series === 'Alfabeto') return;
+      img.closest('.is-loading')?.classList.remove('is-loading');
       img.outerHTML = stampBlobSVG(stamp, img.width || 54);
     },
     true,
