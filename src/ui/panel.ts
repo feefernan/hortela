@@ -95,7 +95,11 @@ export const initPanel = (repo: OrderRepository) => {
   // Sem senha configurada o painel não existe: some o link discreto do menu.
   if (!isEnabled()) document.getElementById('n-painel')?.closest('li')?.remove();
 
-  onAction('open-panel', () => (isAuthed() ? showPanel() : byId('panel-login').classList.add('open')));
+  onAction('open-panel', (_el, event) => {
+    event.preventDefault();
+    if (isAuthed()) showPanel();
+    else byId('panel-login').classList.add('open');
+  });
   onAction('close-panel-login', () => byId('panel-login').classList.remove('open'));
   onAction('panel-login', () => void login());
   onEnter('panel-login', () => void login());
