@@ -46,7 +46,9 @@
 
 /* ── PÁGINAS ───────────────────────────────────── */
 .page.active {
-  animation: enter var(--dur-slow) var(--ease-out) both;
+  /* backwards (não both): ao terminar, nada de transform/filter residual — senão a página vira
+     containing block e quebra elementos position: fixed dentro dela (barra de total no celular). */
+  animation: enter var(--dur-slow) var(--ease-out) backwards;
 }
 
 /* A página que sai fica sobreposta por um instante e some (ver ui/router.ts). */

@@ -319,6 +319,35 @@ describe('estúdio: frente, costas, modelo e gestos', () => {
   });
 });
 
+describe('palco no celular (#14)', () => {
+  it('reduz a escala para caber na tela e nunca amplia', async () => {
+    const { updateStageScale } = await import('../../src/ui/studio');
+    const scale = () => Number(document.documentElement.style.getPropertyValue('--stage-scale'));
+    updateStageScale(1280);
+    expect(scale()).toBe(1);
+    updateStageScale(320);
+    expect(scale()).toBeCloseTo((320 - 32) / 360);
+    updateStageScale(100);
+    expect(scale()).toBe(0.5);
+  });
+
+  it('arrastar respeita a escala do palco', async () => {
+    const { updateStageScale } = await import('../../src/ui/studio');
+    click('#n-estudio');
+    click('[data-action="clear"]');
+    click('[data-stamp-id="s1"]');
+    const el = document.querySelector<HTMLElement>('#drop-zone .ps') as HTMLElement;
+    const x0 = Number.parseFloat(el.style.left);
+    updateStageScale(212); // escala 0.5
+    el.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 0, clientY: 0 }));
+    document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 50, clientY: 0 }));
+    document.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }));
+    expect(Number.parseFloat(el.style.left)).toBe(x0 + 100);
+    updateStageScale(1280);
+    click('[data-action="clear"]');
+  });
+});
+
 describe('arquivo de produção', () => {
   it('inclui as aquarelas como <image> e os dois lados', async () => {
     click('#n-estudio');
