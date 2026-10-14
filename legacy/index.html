@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hortelã</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+
+/* ── TOKENS ─────────────────────────────────────── */
+:root {
+  --ink:       #1C1812;
+  --moss:      #3C4E2E;
+  --sage:      #7A9268;
+  --lilas:     #9B7FA8;
+  --dust:      #D6CCBA;
+  --parchment: #F3EDE0;
+  --white:     #FAFAF8;
+
+  --display: 'Cormorant Garamond', serif;
+  --body:    'EB Garamond', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--body);
+  background: var(--white);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px;
+  background: var(--white);
+  border-bottom: 1px solid var(--dust);
+}
+
+.logo {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 9px;
+}
+
+.logo-mark {
+  display: flex; align-items: center; justify-content: center;
+}
+
+.nav-center {
+  display: flex; gap: 36px; list-style: none;
+}
+
+.nav-center a {
+  font-family: var(--body);
+  font-size: 13.5px;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  opacity: .45;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity .18s;
+}
+.nav-center a:hover, .nav-center a.active { opacity: 1; }
+
+.nav-right {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--body);
+  font-size: 13.5px;
+  color: var(--ink);
+  opacity: .45;
+  cursor: pointer;
+  transition: opacity .18s;
+}
+.nav-right:hover { opacity: 1; }
+
+.cart-n {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--lilas);
+  color: white;
+  font-size: 10px;
+  display: none; align-items: center; justify-content: center;
+}
+.cart-n.on { display: flex; }
+
+/* ── PAGES ──────────────────────────────────────── */
+.page { display: none; padding-top: 58px; }
+.page.active { display: block; animation: up .28s ease; }
+@keyframes up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══════════════════════════════════════════════════
+   HOME
+══════════════════════════════════════════════════ */
+#home { background: var(--white); }
+
+/* ── hero: big art, centered, breathing room ── */
+.hero {
+  min-height: calc(100vh - 58px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 48px 64px;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  font-family: var(--body);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 36px;
+}
+
+.hero-art-frame {
+  width: 340px; height: 340px;
+  margin: 0 auto 44px;
+  position: relative;
+}
+
+.hero-shirt {
+  width: 100%; height: 100%;
+  animation: drift 6s ease-in-out infinite;
+  filter: drop-shadow(0 24px 48px rgba(28,24,18,.12));
+}
+
+@keyframes drift {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+.hero-h1 {
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+}
+.hero-h1 em { font-style: italic; color: var(--moss); }
+
+.hero-sub {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--sage);
+  max-width: 440px;
+  margin: 0 auto 40px;
+}
+
+.hero-btns {
+  display: flex; gap: 12px; justify-content: center;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: var(--body);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 13px 34px;
+  border: none; cursor: pointer;
+  transition: all .22s;
+}
+.btn-dark  { background: var(--ink);  color: var(--white); }
+.btn-dark:hover  { background: var(--moss); }
+.btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--dust); }
+.btn-ghost:hover { border-color: var(--ink); }
+
+/* ── collection strip ── */
+.strip-label {
+  display: flex; align-items: baseline;
+  justify-content: space-between;
+  padding: 0 48px;
+  margin-bottom: 2px;
+}
+.strip-label h2 {
+  font-family: var(--display);
+  font-weight: 300; font-style: italic;
+  font-size: 28px;
+}
+.strip-link {
+  font-family: var(--body);
+  font-size: 12px; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--sage);
+  cursor: pointer; transition: color .18s;
+  text-decoration: none;
+}
+.strip-link:hover { color: var(--ink); }
+
+.product-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 2px;
+  margin-bottom: 80px;
+}
+
+/* ── product card ── */
+.p-card {
+  cursor: pointer;
+  background: var(--parchment);
+  overflow: hidden;
+}
+
+.p-art {
+  aspect-ratio: 1 / 1;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.p-art-inner {
+  transition: transform .55s cubic-bezier(.25,.1,.25,1);
+}
+.p-card:hover .p-art-inner { transform: scale(1.04); }
+
+.p-badge {
+  position: absolute; top: 14px; left: 14px;
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 5px 10px;
+  background: var(--lilas); color: white;
+}
+
+.p-info {
+  padding: 16px 20px 18px;
+  background: var(--white);
+  border-top: 1px solid var(--dust);
+}
+
+.p-collection {
+  font-family: var(--body);
+  font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--sage); margin-bottom: 3px;
+}
+
+.p-name {
+  font-family: var(--display);
+  font-size: 20px; font-style: italic; font-weight: 400;
+  color: var(--ink); margin-bottom: 8px;
+}
+
+.p-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+
+.p-price {
+  font-family: var(--body);
+  font-size: 14px; color: var(--ink);
+}
+
+.p-edition {
+  font-family: var(--body);
+  font-size: 11px; color: var(--sage); letter-spacing: .04em;
+}
+
+/* ── studio teaser band ── */
+.teaser-band {
+  background: var(--parchment);
+  padding: 80px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.teaser-left h2 {
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: clamp(36px,4vw,58px);
+  line-height: 1.1; margin-bottom: 20px;
+}
+.teaser-left h2 em { color: var(--moss); }
+
+.teaser-left p {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 17px; line-height: 1.75;
+  color: var(--sage); margin-bottom: 36px;
+  max-width: 440px;
+}
+
+.teaser-right {
+  display: flex; align-items: center; justify-content: center;
+}
+
+.teaser-composer {
+  width: 100%;
+  max-width: 380px;
+  border: 1px solid var(--dust);
+  background: var(--white);
+}
+
+.composer-top {
+  border-bottom: 1px solid var(--dust);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.composer-top-label {
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--sage);
+}
+
+.composer-top-hint {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 11px; color: var(--dust);
+}
+
+.composer-stage {
+  height: 260px;
+  background: var(--parchment);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; cursor: pointer;
+}
+
+.composer-footer {
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.c-swatch {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid rgba(28,24,18,.1);
+  cursor: pointer; transition: box-shadow .15s;
+}
+.c-swatch.on { box-shadow: 0 0 0 2px var(--white), 0 0 0 3.5px var(--moss); }
+
+.c-label {
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--sage); margin-left: 4px;
+}
+
+/* ══════════════════════════════════════════════════
+   LOJA
+══════════════════════════════════════════════════ */
+#loja { background: var(--white); }
+
+.loja-top {
+  padding: 40px 48px 28px;
+  border-bottom: 1px solid var(--dust);
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+
+.loja-top h1 {
+  font-family: var(--display);
+  font-weight: 300; font-style: italic;
+  font-size: 44px; color: var(--ink);
+}
+
+.loja-top-right {
+  display: flex; gap: 6px;
+}
+
+.filter-pill {
+  font-family: var(--body);
+  font-size: 11.5px; letter-spacing: .06em;
+  padding: 7px 18px;
+  border: 1px solid var(--dust);
+  background: transparent; color: var(--sage);
+  cursor: pointer; transition: all .18s;
+}
+.filter-pill:hover, .filter-pill.on {
+  background: var(--ink); color: var(--white); border-color: var(--ink);
+}
+
+.loja-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 2px; padding: 2px 0;
+}
+
+.loja-card {
+  cursor: pointer; position: relative; overflow: hidden;
+  background: var(--parchment);
+}
+
+.loja-art {
+  aspect-ratio: 3/4;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.loja-art-inner {
+  transition: transform .55s cubic-bezier(.25,.1,.25,1);
+}
+.loja-card:hover .loja-art-inner { transform: scale(1.04); }
+
+.loja-info {
+  padding: 16px 20px 18px;
+  background: var(--white);
+  border-top: 1px solid var(--dust);
+}
+
+.loja-hover {
+  position: absolute; inset: 0;
+  background: rgba(28,24,18,.46);
+  display: flex; align-items: flex-end; padding: 24px;
+  opacity: 0; transition: opacity .25s;
+}
+.loja-card:hover .loja-hover { opacity: 1; }
+
+.btn-ver {
+  width: 100%; background: var(--white); color: var(--ink);
+  border: none; padding: 12px;
+  font-family: var(--body); font-size: 12px;
+  letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer; transition: all .18s;
+}
+.btn-ver:hover { background: var(--ink); color: var(--white); }
+
+/* ══════════════════════════════════════════════════
+   ESTÚDIO
+══════════════════════════════════════════════════ */
+#estudio { display: none; background: var(--white); }
+#estudio.active { display: block; }
+
+.studio-shell {
+  display: grid;
+  grid-template-columns: 256px 1fr 288px;
+  height: calc(100vh - 58px);
+  overflow: hidden;
+}
+
+/* LEFT */
+.sl {
+  border-right: 1px solid var(--dust);
+  display: flex; flex-direction: column;
+  background: var(--white); overflow: hidden;
+}
+
+.sl-head {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--dust);
+}
+
+.sl-head-label {
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--sage); margin-bottom: 12px;
+}
+
+.sl-tabs {
+  display: flex; border: 1px solid var(--dust);
+}
+
+.sl-tab {
+  flex: 1; padding: 8px 6px;
+  font-family: var(--body); font-size: 11px; letter-spacing: .06em;
+  border: none; background: transparent;
+  cursor: pointer; color: var(--sage); transition: all .15s;
+  border-right: 1px solid var(--dust);
+}
+.sl-tab:last-child { border-right: none; }
+.sl-tab.on, .sl-tab:hover { background: var(--ink); color: var(--white); }
+
+.stamps-scroll {
+  flex: 1; overflow-y: auto; padding: 12px;
+}
+
+.ser-label {
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--sage); padding: 10px 4px 6px;
+  border-top: 1px solid var(--dust); margin-top: 4px;
+}
+.ser-label:first-child { border-top: none; margin-top: 0; }
+
+.sg {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px; margin-top: 6px;
+}
+
+.st {
+  aspect-ratio: 1;
+  background: var(--parchment);
+  border: 1px solid var(--dust);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: border-color .15s, transform .12s;
+}
+.st:hover { border-color: var(--moss); transform: scale(1.03); }
+
+.st-name {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(28,24,18,.6));
+  color: white;
+  font-family: var(--body); font-size: 9px; letter-spacing: .05em;
+  padding: 12px 5px 4px;
+  opacity: 0; transition: opacity .18s;
+}
+.st:hover .st-name { opacity: 1; }
+
+/* CENTER */
+.sc {
+  display: flex; flex-direction: column;
+  background: #EDEBE6;
+}
+
+.sc-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--dust);
+  height: 46px;
+  display: flex; align-items: center;
+  padding: 0 18px; gap: 14px;
+}
+
+.sc-bar-lbl {
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--sage);
+}
+
+.sc-btn-group { display: flex; gap: 2px; }
+
+.sc-btn {
+  width: 30px; height: 30px;
+  border: 1px solid var(--dust); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--sage); font-size: 12px;
+  transition: all .14s;
+}
+.sc-btn:hover { background: var(--parchment); color: var(--ink); }
+.sc-btn.on { background: var(--moss); color: white; border-color: var(--moss); }
+
+.sc-sep { width: 1px; height: 20px; background: var(--dust); }
+
+.sc-surp {
+  margin-left: auto;
+  font-family: var(--body); font-size: 12px; letter-spacing: .08em;
+  background: transparent; border: 1px solid var(--lilas);
+  color: var(--lilas); padding: 5px 16px; cursor: pointer;
+  transition: all .18s;
+}
+.sc-surp:hover { background: var(--lilas); color: white; }
+
+.sc-stage {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+
+.shirt-wrap {
+  position: relative; width: 360px; height: 416px;
+  user-select: none;
+}
+
+.shirt-svg-el {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 14px 42px rgba(28,24,18,.15));
+}
+
+.drop-zone { position: absolute; inset: 0; }
+
+.ps {
+  position: absolute;
+  cursor: move; touch-action: none;
+}
+.ps.sel { outline: 1.5px dashed var(--moss); outline-offset: 5px; }
+.ps svg { pointer-events: none; display: block; }
+
+.ps-resize {
+  position: absolute; bottom: -7px; right: -7px;
+  width: 15px; height: 15px;
+  background: var(--white); border: 2px solid var(--moss); border-radius: 50%;
+  cursor: se-resize;
+}
+
+.ps-del {
+  position: absolute; top: -10px; right: -10px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--lilas); color: white; font-size: 10px;
+  border: none; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+}
+.ps.sel .ps-del { display: flex; }
+
+.sc-hint {
+  position: absolute; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--body); font-style: italic;
+  font-size: 13px; color: var(--sage);
+  background: rgba(250,250,248,.85);
+  padding: 8px 22px; border: 1px solid var(--dust);
+  white-space: nowrap; pointer-events: none;
+  transition: opacity .3s;
+}
+
+/* RIGHT */
+.sr {
+  border-left: 1px solid var(--dust);
+  display: flex; flex-direction: column;
+  background: var(--white); overflow-y: auto;
+}
+
+.sr-block {
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid var(--dust);
+}
+
+.sr-lbl {
+  font-family: var(--body);
+  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--sage); margin-bottom: 13px;
+}
+
+/* model */
+.model-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+
+.mo {
+  border: 1px solid var(--dust);
+  padding: 11px 8px; cursor: pointer;
+  text-align: center; transition: border-color .15s;
+}
+.mo.on, .mo:hover { border-color: var(--moss); }
+
+.mo-name {
+  font-family: var(--display);
+  font-style: italic; font-size: 15px;
+  color: var(--ink); margin-bottom: 2px;
+}
+
+.mo-meta {
+  font-family: var(--body);
+  font-size: 10px; color: var(--sage); letter-spacing: .04em;
+}
+
+/* colors */
+.sw-row { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.sw {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid rgba(28,24,18,.1);
+  cursor: pointer; transition: box-shadow .15s;
+}
+.sw.on { box-shadow: 0 0 0 2px var(--white), 0 0 0 3.5px var(--moss); }
+
+/* sizes */
+.sz-row { display: flex; gap: 4px; }
+
+.sz {
+  width: 36px; height: 36px;
+  border: 1px solid var(--dust); background: transparent;
+  font-family: var(--body); font-size: 13px;
+  cursor: pointer; color: var(--sage); transition: all .15s;
+}
+.sz.on, .sz:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+/* layers */
+.layers-wrap { display: flex; flex-direction: column; gap: 4px; }
+
+.layer-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 9px;
+  background: var(--parchment);
+  border: 1px solid transparent; cursor: pointer;
+  transition: border-color .14s;
+}
+.layer-item:hover { border-color: var(--dust); }
+.layer-item.hi { border-color: var(--sage); }
+
+.layer-thumb {
+  width: 28px; height: 28px;
+  background: var(--white); border: 1px solid var(--dust);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.layer-name {
+  flex: 1;
+  font-family: var(--display); font-style: italic;
+  font-size: 14px; color: var(--ink);
+}
+
+.layer-del {
+  border: none; background: transparent;
+  color: var(--sage); font-size: 11px; cursor: pointer;
+  transition: color .14s; width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.layer-del:hover { color: var(--lilas); }
+
+/* opacity */
+.op-row { display: flex; align-items: center; gap: 10px; }
+
+input[type=range] {
+  flex: 1; height: 2px;
+  -webkit-appearance: none;
+  background: var(--dust); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  background: var(--moss); border-radius: 50%; cursor: pointer;
+}
+
+.op-val {
+  font-family: var(--body); font-size: 12px;
+  color: var(--sage); width: 34px; text-align: right;
+}
+
+/* order */
+.order-block {
+  padding: 18px;
+  background: var(--parchment);
+  margin-top: auto;
+}
+
+.order-line {
+  display: flex; justify-content: space-between;
+  font-family: var(--body); font-size: 14px; color: var(--sage);
+  margin-bottom: 9px;
+}
+
+.order-total {
+  display: flex; justify-content: space-between;
+  font-family: var(--display); font-style: italic;
+  font-size: 22px; color: var(--ink);
+  border-top: 1px solid var(--dust); padding-top: 13px; margin-bottom: 6px;
+}
+
+.order-note {
+  font-family: var(--body); font-style: italic;
+  font-size: 11.5px; color: var(--sage);
+  line-height: 1.65; margin-bottom: 16px;
+}
+
+.btn-cart {
+  width: 100%;
+  background: var(--moss); color: var(--white);
+  border: none; padding: 16px;
+  font-family: var(--body); font-size: 12.5px;
+  letter-spacing: .1em; text-transform: uppercase;
+  cursor: pointer; transition: background .18s;
+}
+.btn-cart:hover { background: var(--ink); }
+
+/* ══════════════════════════════════════════════════
+   SOBRE
+══════════════════════════════════════════════════ */
+#sobre { background: var(--white); }
+
+.sobre-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 48px 96px;
+}
+
+.sobre-wrap h1 {
+  font-family: var(--display);
+  font-weight: 300; font-style: italic;
+  font-size: 52px; color: var(--moss);
+  margin-bottom: 48px;
+  border-bottom: 1px solid var(--dust);
+  padding-bottom: 24px;
+}
+
+.sobre-wrap p {
+  font-family: var(--body); font-size: 17px;
+  line-height: 1.85; color: var(--ink);
+  margin-bottom: 22px;
+}
+
+.sobre-vals {
+  margin-top: 56px;
+  display: flex; flex-direction: column; gap: 28px;
+}
+
+.sv {
+  padding-left: 18px;
+  border-left: 2px solid var(--sage);
+}
+
+.sv-lbl {
+  font-family: var(--body); font-size: 10px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--moss); margin-bottom: 5px;
+}
+
+.sv-txt {
+  font-family: var(--display); font-style: italic;
+  font-size: 18px; line-height: 1.6; color: var(--ink);
+}
+
+/* ── MODAL ──────────────────────────────────────── */
+.modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(28,24,18,.55);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  width: 820px; max-width: 95vw; max-height: 90vh;
+  display: grid; grid-template-columns: 1fr 1fr;
+  position: relative; overflow: hidden;
+}
+
+.modal-art {
+  background: var(--parchment);
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 40px; min-height: 420px;
+}
+
+.modal-info {
+  padding: 52px 40px;
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+}
+
+.mi-col {
+  font-family: var(--body); font-size: 10px;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--moss);
+}
+
+.mi-name {
+  font-family: var(--display);
+  font-weight: 300; font-style: italic;
+  font-size: 36px; line-height: 1.15; color: var(--ink);
+}
+
+.mi-story {
+  font-family: var(--body); font-style: italic;
+  font-size: 15px; line-height: 1.8; color: var(--sage);
+  border-left: 2px solid var(--dust); padding-left: 16px;
+}
+
+.mi-price {
+  font-family: var(--display); font-size: 28px; color: var(--ink);
+}
+
+.mi-sz-lbl {
+  font-family: var(--body); font-size: 10px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--sage); margin-bottom: 9px;
+}
+
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px;
+  border: 1px solid var(--dust); background: var(--white);
+  cursor: pointer; font-size: 13px; color: var(--sage);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+}
+.modal-close:hover { background: var(--ink); color: var(--white); }
+
+/* ── TOAST ──────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(64px);
+  background: var(--ink); color: var(--white);
+  font-family: var(--body); font-style: italic; font-size: 14px;
+  padding: 12px 28px; z-index: 500;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--dust); }
+
+
+/* ══════════════════════════════════════════════════
+   PAINEL DE PEDIDOS
+══════════════════════════════════════════════════ */
+#painel { background: var(--white); }
+
+.painel-header {
+  padding: 40px 48px 28px;
+  border-bottom: 1px solid var(--dust);
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+
+.painel-header h1 {
+  font-family: var(--display);
+  font-weight: 300; font-style: italic;
+  font-size: 44px; color: var(--ink);
+}
+
+.painel-meta {
+  display: flex; align-items: center; gap: 20px;
+}
+
+.panel-count-badge {
+  font-family: var(--body);
+  font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--sage);
+}
+
+.panel-logout {
+  font-family: var(--body);
+  font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--sage); cursor: pointer; transition: color .18s;
+  background: none; border: none; padding: 0;
+}
+.panel-logout:hover { color: var(--ink); }
+
+.panel-list {
+  padding: 2px 0;
+}
+
+.panel-empty {
+  display: none;
+  padding: 80px 48px;
+  text-align: center;
+}
+
+.panel-empty p {
+  font-family: var(--display); font-style: italic;
+  font-size: 22px; color: var(--sage);
+}
+
+.panel-card {
+  display: grid;
+  grid-template-columns: 140px 1fr 200px;
+  border-bottom: 1px solid var(--dust);
+  min-height: 180px;
+}
+
+.panel-card:first-child { border-top: 1px solid var(--dust); }
+
+.pc-thumb {
+  background: var(--parchment);
+  border-right: 1px solid var(--dust);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.pc-info {
+  padding: 22px 28px;
+  border-right: 1px solid var(--dust);
+}
+
+.pc-actions {
+  padding: 22px 20px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.pc-btn {
+  width: 100%;
+  font-family: var(--body); font-size: 11px;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 9px 12px; border: none; cursor: pointer;
+  transition: all .15s;
+}
+
+.pc-btn-primary {
+  background: var(--parchment); color: var(--ink);
+  border: 1px solid var(--dust);
+}
+.pc-btn-primary:hover { background: var(--moss); color: var(--white); border-color: var(--moss); }
+
+.pc-btn-danger {
+  background: transparent; color: var(--sage);
+  border: 1px solid var(--dust);
+  margin-top: 4px;
+}
+.pc-btn-danger:hover { background: #c0392b; color: white; border-color: #c0392b; }
+
+.pc-select {
+  width: 100%;
+  font-family: var(--body); font-size: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--dust); background: var(--white);
+  color: var(--ink); cursor: pointer; outline: none;
+}
+.pc-select:focus { border-color: var(--moss); }
+
+/* Login modal */
+.panel-login-bg {
+  display: none; position: fixed; inset: 0; z-index: 400;
+  background: rgba(28,24,18,.6); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.panel-login-bg.open { display: flex; }
+
+.panel-login-box {
+  background: var(--white);
+  width: 400px; padding: 52px 44px;
+  position: relative;
+}
+
+.panel-login-title {
+  font-family: var(--display); font-weight: 300; font-style: italic;
+  font-size: 34px; color: var(--ink); margin-bottom: 8px;
+}
+
+.panel-login-sub {
+  font-family: var(--body); font-style: italic;
+  font-size: 14px; color: var(--sage); margin-bottom: 28px;
+}
+
+.panel-login-input {
+  width: 100%;
+  border: 1px solid var(--dust); background: var(--parchment);
+  padding: 12px 14px;
+  font-family: var(--body); font-size: 15px; color: var(--ink);
+  outline: none; margin-bottom: 6px;
+  transition: border-color .18s;
+}
+.panel-login-input:focus { border-color: var(--moss); }
+
+.panel-pw-err {
+  font-family: var(--body); font-style: italic;
+  font-size: 12px; color: #c0392b;
+  opacity: 0; transition: opacity .2s; margin-bottom: 14px; height: 16px;
+}
+
+.panel-login-btn {
+  width: 100%;
+  background: var(--moss); color: var(--white);
+  border: none; padding: 15px;
+  font-family: var(--body); font-size: 12.5px;
+  letter-spacing: .1em; text-transform: uppercase;
+  cursor: pointer; transition: background .18s; margin-top: 8px;
+}
+.panel-login-btn:hover { background: var(--ink); }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="go('home')">
+    <div class="logo-mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M 4 18 Q 8 5 12 5 Q 16 5 18 14" stroke="#3C4E2E" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 8 20 Q 11 9 15 7" stroke="#3C4E2E" stroke-width="1.3" stroke-linecap="round" opacity=".55"/>
+        <line x1="5" y1="4" x2="19" y2="20" stroke="#7A9268" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="17.5" cy="5.5" r="2.2" fill="#9B7FA8"/>
+      </svg>
+    </div>
+    HORTELÃ
+  </div>
+
+  <ul class="nav-center">
+    <li><a id="n-home"    class="active" onclick="go('home')">Início</a></li>
+    <li><a id="n-loja"               onclick="go('loja')">Coleção</a></li>
+    <li><a id="n-estudio"            onclick="go('estudio')">Estúdio</a></li>
+    <li><a id="n-sobre"              onclick="go('sobre')">Sobre</a></li>
+    <li><a id="n-painel" style="opacity:.18!important;font-size:11px;" onclick="openPanel()" title="Acesso restrito">●</a></li>
+  </ul>
+
+  <div class="nav-right" onclick="toast('Carrinho vazio')">
+    Carrinho <div class="cart-n" id="cn">0</div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════ HOME ════════════════════ -->
+<div class="page" id="home">
+
+  <!-- hero: centered, clean -->
+  <div class="hero">
+    <div class="hero-eyebrow">Arte vestível em aquarela · @usehortela</div>
+
+    <div class="hero-art-frame">
+      <!-- large floating shirt with watercolor art -->
+      <svg class="hero-shirt" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="h1"><feGaussianBlur stdDeviation="10"/></filter>
+          <filter id="h2"><feGaussianBlur stdDeviation="4"/></filter>
+          <filter id="sh"><feDropShadow dx="0" dy="8" stdDeviation="18" flood-opacity=".1"/></filter>
+        </defs>
+        <!-- shirt shape, parchment fill -->
+        <g filter="url(#sh)">
+          <path d="M 100 30 L 28 76 L 58 98 L 58 300 L 282 300 L 282 98 L 312 76 L 240 30 Q 210 55 170 55 Q 130 55 100 30 Z"
+                fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1.2"/>
+          <path d="M 100 30 Q 130 62 170 55 Q 210 62 240 30 Q 210 80 170 72 Q 130 80 100 30 Z"
+                fill="#EBE5D5" stroke="#D6CCBA" stroke-width=".8"/>
+          <path d="M 100 30 L 28 76 L 58 98 L 74 68 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+          <path d="M 240 30 L 312 76 L 282 98 L 266 68 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+        </g>
+        <!-- large watercolor composition on shirt — the art IS the hero -->
+        <g clip-path="url(#shirt-clip)">
+          <clipPath id="shirt-clip">
+            <path d="M 100 30 L 28 76 L 58 98 L 58 300 L 282 300 L 282 98 L 312 76 L 240 30 Q 210 55 170 55 Q 130 55 100 30 Z"/>
+          </clipPath>
+          <!-- big watercolor wash -->
+          <ellipse cx="170" cy="185" rx="100" ry="80"  fill="#3C4E2E" opacity=".38" filter="url(#h1)"/>
+          <ellipse cx="145" cy="155" rx="72"  ry="58"  fill="#7A9268" opacity=".45" filter="url(#h1)"/>
+          <ellipse cx="195" cy="210" rx="55"  ry="45"  fill="#3C4E2E" opacity=".32" filter="url(#h2)"/>
+          <!-- main botanical shape -->
+          <path d="M 130 110 Q 175 68 220 108 Q 210 172 170 158 Q 125 144 130 110 Z"
+                fill="#3C4E2E" opacity=".5"/>
+          <!-- veins -->
+          <path d="M 130 110 Q 175 134 220 108" fill="none" stroke="#3C4E2E" stroke-width="1.4" opacity=".6"/>
+          <path d="M 172 70  Q 175 112 178 158"  fill="none" stroke="#3C4E2E" stroke-width="1"   opacity=".5"/>
+          <path d="M 148 92  Q 142 130 140 155"  fill="none" stroke="#3C4E2E" stroke-width=".9"  opacity=".4"/>
+          <path d="M 196 92  Q 200 128 198 155"  fill="none" stroke="#3C4E2E" stroke-width=".9"  opacity=".4"/>
+          <!-- lilas dot — the flower -->
+          <circle cx="218" cy="96" r="4.5" fill="#9B7FA8" opacity=".75"/>
+          <!-- secondary shape lower -->
+          <ellipse cx="148" cy="230" rx="38" ry="28" fill="#7A9268" opacity=".35" filter="url(#h2)" transform="rotate(-15 148 230)"/>
+        </g>
+      </svg>
+    </div>
+
+    <h1 class="hero-h1">Cada peça, <em>uma obra.</em></h1>
+    <p class="hero-sub">Estampas pintadas à mão que saem do papel e começam a andar pelo mundo.</p>
+    <div class="hero-btns">
+      <button class="btn btn-dark"  onclick="go('estudio')">Abrir estúdio</button>
+      <button class="btn btn-ghost" onclick="go('loja')">Ver coleção</button>
+    </div>
+  </div>
+
+  <!-- collection preview -->
+  <div class="strip-label">
+    <h2>Coleção</h2>
+    <a class="strip-link" onclick="go('loja')">Ver tudo →</a>
+  </div>
+  <div class="product-row" id="home-grid"></div>
+
+  <!-- studio teaser -->
+  <div class="teaser-band">
+    <div class="teaser-left">
+      <h2>Monte a sua <em>própria obra</em></h2>
+      <p>Escolha as aquarelas, combine camadas, posicione onde quiser. Cada composição existe uma única vez.</p>
+      <button class="btn btn-dark" onclick="go('estudio')">Entrar no estúdio →</button>
+    </div>
+    <div class="teaser-right">
+      <div class="teaser-composer">
+        <div class="composer-top">
+          <span class="composer-top-label">Estúdio de composição</span>
+          <span class="composer-top-hint">interativo</span>
+        </div>
+        <div class="composer-stage" onclick="go('estudio')">
+          <svg viewBox="0 0 200 230" width="140" height="160">
+            <defs><filter id="cs"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity=".1"/></filter></defs>
+            <g filter="url(#cs)">
+              <path d="M 58 18 L 16 46 L 34 60 L 34 200 L 166 200 L 166 60 L 184 46 L 142 18 Q 120 34 100 34 Q 80 34 58 18 Z"
+                    fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1"/>
+              <path d="M 58 18 Q 80 38 100 34 Q 120 38 142 18 Q 120 52 100 46 Q 80 52 58 18 Z" fill="#EBE5D5"/>
+            </g>
+            <ellipse cx="100" cy="118" rx="42" ry="34" fill="#3C4E2E" opacity=".35" filter="url(#cs)"/>
+            <ellipse cx="88"  cy="104" rx="30" ry="24" fill="#7A9268" opacity=".45" filter="url(#cs)"/>
+            <path d="M 76 82 Q 104 60 130 84 Q 124 120 100 110 Q 72 100 76 82 Z" fill="#3C4E2E" opacity=".5"/>
+            <circle cx="128" cy="72" r="3.5" fill="#9B7FA8" opacity=".7"/>
+          </svg>
+          <div style="position:absolute;bottom:12px;right:14px;font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);">clique para abrir →</div>
+        </div>
+        <div class="composer-footer">
+          <div class="c-swatch on"  style="background:#F3EDE0"></div>
+          <div class="c-swatch"     style="background:#3C4E2E"></div>
+          <div class="c-swatch"     style="background:#1C1812"></div>
+          <div class="c-swatch"     style="background:#7A9268"></div>
+          <div class="c-swatch"     style="background:#D6CCBA"></div>
+          <span class="c-label">cor da peça</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /home -->
+
+
+<!-- ════════════════════ LOJA ════════════════════ -->
+<div class="page" id="loja">
+  <div class="loja-top">
+    <h1>Coleção</h1>
+    <div class="loja-top-right">
+      <button class="filter-pill on"  onclick="filt(this)">Todas</button>
+      <button class="filter-pill"     onclick="filt(this)">Disponíveis</button>
+      <button class="filter-pill"     onclick="filt(this)">Últimas</button>
+    </div>
+  </div>
+  <div class="loja-grid" id="loja-grid"></div>
+</div>
+
+
+<!-- ════════════════════ ESTÚDIO ════════════════════ -->
+<div class="page" id="estudio">
+<div class="studio-shell">
+
+  <!-- LEFT -->
+  <div class="sl">
+    <div class="sl-head">
+      <div class="sl-head-label">Estampas</div>
+      <div class="sl-tabs">
+        <button class="sl-tab on"  onclick="stab(this)">Por série</button>
+        <button class="sl-tab"     onclick="stab(this)">Elementos</button>
+      </div>
+    </div>
+    <div class="stamps-scroll" id="stamps-scroll"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="sc">
+    <div class="sc-bar">
+      <span class="sc-bar-lbl">Vista:</span>
+      <div class="sc-btn-group">
+        <button class="sc-btn on" id="vf" title="Frente" onclick="setv('frente',this)">F</button>
+        <button class="sc-btn"    id="vc" title="Costas" onclick="setv('costas',this)">C</button>
+      </div>
+      <div class="sc-sep"></div>
+      <div class="sc-btn-group">
+        <button class="sc-btn" title="Desfazer"   onclick="undo()">↩</button>
+        <button class="sc-btn" title="Centralizar" onclick="center()">⊕</button>
+        <button class="sc-btn" title="Limpar"     onclick="clear()">✕</button>
+      </div>
+      <button class="sc-surp" onclick="surprise()">✦ Surpresa</button>
+    </div>
+
+    <div class="sc-stage" id="sc-stage" onclick="desel()">
+      <div class="shirt-wrap" id="shirt-wrap" onclick="event.stopPropagation()">
+        <svg class="shirt-svg-el" viewBox="0 0 360 416" id="shirt-el">
+          <defs><filter id="ss"><feDropShadow dx="0" dy="5" stdDeviation="13" flood-opacity=".13"/></filter></defs>
+          <g filter="url(#ss)">
+            <path id="shirt-body"
+              d="M 108 30 L 26 82 L 62 112 L 62 372 L 298 372 L 298 112 L 334 82 L 252 30 Q 216 57 180 57 Q 144 57 108 30 Z"
+              fill="#F3EDE0" stroke="#D6CCBA" stroke-width="1.3"/>
+            <path d="M 108 30 Q 144 66 180 57 Q 216 66 252 30 Q 216 88 180 78 Q 144 88 108 30 Z"
+                  fill="#EBE5D5" stroke="#D6CCBA" stroke-width="1"/>
+            <path d="M 108 30 L 26 82 L 62 112 L 80 78 Z"  fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+            <path d="M 252 30 L 334 82 L 298 112 L 280 78 Z" fill="#E8E1D0" stroke="#D6CCBA" stroke-width=".8"/>
+          </g>
+          <line x1="180" y1="78" x2="180" y2="372" stroke="#D6CCBA" stroke-width=".4" opacity=".5"/>
+        </svg>
+        <div class="drop-zone" id="drop-zone"></div>
+      </div>
+      <div class="sc-hint" id="sc-hint">Escolha uma estampa no painel ao lado</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="sr">
+
+    <div class="sr-block">
+      <div class="sr-lbl">Modelo</div>
+      <div class="model-row">
+        <div class="mo on" onclick="pickM(this,'Camiseta Oversized',120)">
+          <div class="mo-name">Camiseta</div>
+          <div class="mo-meta">Oversized · algodão</div>
+        </div>
+        <div class="mo" onclick="pickM(this,'Camisetão Long',140)">
+          <div class="mo-name">Camisetão</div>
+          <div class="mo-meta">Long · unissex</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Cor da peça</div>
+      <div class="sw-row">
+        <div class="sw on" style="background:#F3EDE0" title="Pergaminho" onclick="pickC(this,'#F3EDE0','Pergaminho')"></div>
+        <div class="sw"    style="background:#FAFAF8;border:1px solid #D6CCBA" title="Off-white"  onclick="pickC(this,'#FAFAF8','Off-white')"></div>
+        <div class="sw"    style="background:#3C4E2E" title="Musgo"      onclick="pickC(this,'#3C4E2E','Musgo')"></div>
+        <div class="sw"    style="background:#1C1812" title="Tinta"      onclick="pickC(this,'#1C1812','Tinta')"></div>
+        <div class="sw"    style="background:#7A9268" title="Sage"       onclick="pickC(this,'#7A9268','Sage')"></div>
+        <div class="sw"    style="background:#D6CCBA" title="Poeira"     onclick="pickC(this,'#D6CCBA','Poeira')"></div>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Tamanho</div>
+      <div class="sz-row">
+        <button class="sz"    onclick="pickS(this)">P</button>
+        <button class="sz"    onclick="pickS(this)">M</button>
+        <button class="sz on" onclick="pickS(this)">G</button>
+        <button class="sz"    onclick="pickS(this)">GG</button>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Camadas</div>
+      <div class="layers-wrap" id="layers-wrap">
+        <div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage);">
+          Nenhuma estampa adicionada
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-block">
+      <div class="sr-lbl">Opacidade da camada</div>
+      <div class="op-row">
+        <input type="range" min="20" max="100" value="100"
+               id="op-slider" oninput="setOp(this.value)">
+        <span class="op-val" id="op-val">100%</span>
+      </div>
+    </div>
+
+    <div class="order-block">
+      <div class="order-line">
+        <span id="o-model">Camiseta Oversized</span>
+        <span id="o-mprice">R$ 120</span>
+      </div>
+      <div class="order-line">
+        <span>Estampagem personalizada</span>
+        <span>R$ 80</span>
+      </div>
+      <div class="order-total">
+        <span>Total</span>
+        <span id="o-total">R$ 200</span>
+      </div>
+      <p class="order-note">Produção em até 12 dias úteis.<br>Composição salva com certificado único.</p>
+      <button class="btn-cart" onclick="addStudio()">Adicionar ao carrinho</button>
+    </div>
+  </div>
+
+</div>
+</div><!-- /estudio -->
+
+
+<!-- ════════════════════ SOBRE ════════════════════ -->
+<div class="page" id="sobre">
+  <div class="sobre-wrap">
+    <h1>Sobre a Hortelã</h1>
+    <p>Nascemos de um caderno de aquarelas e de uma pergunta: o que acontece quando uma obra sai do papel e começa a andar pelo mundo?</p>
+    <p>Cada estampa é pintada à mão antes de ir para o tecido. Nenhuma é perfeita. Nenhuma precisa ser.</p>
+    <p>A Hortelã não segue calendário de moda. Lançamos quando a obra estiver pronta, não quando o mercado espera. Quando esgota, esgotou — e a próxima coleção começa a ser construída em público.</p>
+    <div class="sobre-vals">
+      <div class="sv">
+        <div class="sv-lbl">Arte autoral</div>
+        <div class="sv-txt">Toda estampa nasce de uma aquarela original. A obra existe antes do produto.</div>
+      </div>
+      <div class="sv">
+        <div class="sv-lbl">Drops limitados</div>
+        <div class="sv-txt">No máximo 20 peças por coleção, numeradas. Quando esgota, não repõe.</div>
+      </div>
+      <div class="sv">
+        <div class="sv-lbl">Sob demanda</div>
+        <div class="sv-txt">Peças do estúdio feitas após o pedido. Sem estoque, sem desperdício.</div>
+      </div>
+      <div class="sv">
+        <div class="sv-lbl">Independência</div>
+        <div class="sv-txt">Uma marca de uma pessoa, feita à mão. Essa transparência não é fraqueza — é o produto.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeM()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeM()">✕</button>
+    <div class="modal-art" id="m-art"></div>
+    <div class="modal-info">
+      <div class="mi-col"   id="m-col"></div>
+      <div class="mi-name"  id="m-name"></div>
+      <div class="mi-story" id="m-story"></div>
+      <div class="mi-price" id="m-price"></div>
+      <div>
+        <div class="mi-sz-lbl">Tamanho</div>
+        <div class="sz-row">
+          <button class="sz"    onclick="msz(this)">P</button>
+          <button class="sz"    onclick="msz(this)">M</button>
+          <button class="sz on" onclick="msz(this)">G</button>
+          <button class="sz"    onclick="msz(this)">GG</button>
+        </div>
+      </div>
+      <div>
+        <div class="mi-sz-lbl" style="margin-bottom:4px;">Material</div>
+        <div style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);">100% algodão penteado · Oversized unissex</div>
+      </div>
+      <button class="btn-cart" onclick="buyM()">Adicionar ao carrinho</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────
+const PRODS = [
+  { name:'Floresta nº 3',   col:'Coleção Véspera',  ed:'Ed. 8 de 20',         story:'Pintada numa tarde de março, depois de uma caminhada não planejada. A floresta era vista de cima, como se o olhar fosse de pássaro antes da chuva.',  price:'R$ 210', st:'ok',  p:['#3C4E2E','#7A9268','#D6CCBA'] },
+  { name:'Tarde de outubro',col:'Série Memória',     ed:'Ed. 3 de 15',         story:'O terracota apareceu sozinho. Não havia plano de usar essa cor, mas a tarde pedia aquele calor específico — o tipo que vai embora antes de você perceber.', price:'R$ 195', st:'ok',  p:['#7A4030','#D69060','#7A9268'] },
+  { name:'Raízes',          col:'Série Botânica',    ed:'Ed. 1 de 10 · Última',story:'Uma série sobre o que sustenta. Galhos, raízes, fios invisíveis. O que cresce antes de aparecer.',                                                         price:'R$ 225', st:'last',p:['#3C4E2E','#7A9268','#F3EDE0'] },
+  { name:'Névoa',           col:'Coleção Véspera',   ed:'Ed. 12 de 20',        story:'Tem uma névoa específica da manhã que existe por um instante antes de desaparecer. Esta obra é esse instante.',                                              price:'R$ 190', st:'ok',  p:['#9AB0D0','#7A9268','#D6CCBA'] },
+  { name:'Chuva fina',      col:'Série Memória',     ed:'Ed. 7 de 15',         story:'Uma chuva que cai devagar, quase sem barulho. A pintura foi feita ouvindo ela.',                                                                             price:'R$ 200', st:'sold',p:['#5A7898','#D6CCBA','#7A9268'] },
+  { name:'Broto',           col:'Série Botânica',    ed:'Ed. 5 de 10',         story:'O início de algo. Menor que tudo ao redor, mas já cheio de intenção.',                                                                                       price:'R$ 185', st:'ok',  p:['#6A8E5A','#3C4E2E','#D6CCBA'] },
+];
+
+const STAMPS = [
+  { id:'s1', name:'Floresta nº 3',  ser:'Série Floresta', a:'#3C4E2E', b:'#7A9268' },
+  { id:'s2', name:'Floresta nº 5',  ser:'Série Floresta', a:'#4A6038', b:'#9AB080' },
+  { id:'s3', name:'Névoa',          ser:'Série Floresta', a:'#6080A0', b:'#9AB0D0' },
+  { id:'s4', name:'Véspera',        ser:'Série Floresta', a:'#3C4E2E', b:'#D6CCBA' },
+  { id:'s5', name:'Tarde out.',     ser:'Série Memória',  a:'#804030', b:'#C08060' },
+  { id:'s6', name:'Chuva fina',     ser:'Série Memória',  a:'#506080', b:'#9AB0D0' },
+  { id:'s7', name:'Raízes',         ser:'Série Botânica', a:'#3C4E2E', b:'#7A6040' },
+  { id:'s8', name:'Broto',          ser:'Série Botânica', a:'#6A8E5A', b:'#3C4E2E' },
+  { id:'s9', name:'Semente',        ser:'Série Botânica', a:'#907848', b:'#D6CCBA' },
+  { id:'s10', name:'Açucena',     ser:'Série Florescer', a:'#8060B0', b:'#B0A0F0' },
+  { id:'s11', name:'Camanducaia',  ser:'Série Florescer', a:'#203010', b:'#807050' },
+];
+
+const ALFABETO_LETTERS = {
+  A: '/images/alfabeto/A.png',
+  B: '/images/alfabeto/B.png',
+  C: '/images/alfabeto/C.png',
+  D: '/images/alfabeto/D.png',
+  E: '/images/alfabeto/E.png',
+  F: '/images/alfabeto/F.png',
+  G: '/images/alfabeto/G.png',
+  H: '/images/alfabeto/H.png',
+  I: '/images/alfabeto/I.png',
+  J: '/images/alfabeto/J.png',
+  K: '/images/alfabeto/K.png',
+  L: '/images/alfabeto/L.png',
+  M: '/images/alfabeto/M.png',
+  N: '/images/alfabeto/N.png',
+  O: '/images/alfabeto/O.png',
+  P: '/images/alfabeto/P.png',
+  Q: '/images/alfabeto/Q.png',
+  R: '/images/alfabeto/R.png',
+  S: '/images/alfabeto/S.png',
+  T: '/images/alfabeto/T.png',
+  U: '/images/alfabeto/U.png',
+  V: '/images/alfabeto/V.png',
+  W: '/images/alfabeto/W.png',
+  X: '/images/alfabeto/X.png',
+  Y: 'data:image/png;base64,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',
+  Z: '/images/alfabeto/Z.png'
+};
+
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(ch => {
+  STAMPS.push({ id:'lt'+ch, name:ch, ser:'Alfabeto', img: ALFABETO_LETTERS[ch] });
+});
+
+// ── SVG HELPERS ───────────────────────────────────
+function wcSVG(p, sz=160) {
+  const [c1,c2,c3] = p;
+  const id = 'wc'+(Math.random()*1e7|0);
+  return `<svg viewBox="0 0 200 200" width="${sz}" height="${sz}">
+    <defs>
+      <filter id="${id}a"><feGaussianBlur stdDeviation="9"/></filter>
+      <filter id="${id}b"><feGaussianBlur stdDeviation="4"/></filter>
+    </defs>
+    <ellipse cx="100" cy="100" rx="78" ry="62" fill="${c1}" opacity=".42" filter="url(#${id}a)"/>
+    <ellipse cx="82"  cy="82"  rx="52" ry="44" fill="${c2}" opacity=".48" filter="url(#${id}a)"/>
+    <ellipse cx="118" cy="126" rx="36" ry="28" fill="${c3}" opacity=".28" filter="url(#${id}b)"/>
+    <path d="M 72 55 Q 110 24 148 56 Q 138 112 100 98 Q 60 84 72 55 Z"
+          fill="${c1}" opacity=".5"/>
+    <path d="M 72 55 Q 110 72 148 56"
+          fill="none" stroke="${c1}" stroke-width="1.2" opacity=".6"/>
+    <path d="M 104 28 Q 108 62 112 98"
+          fill="none" stroke="${c1}" stroke-width=".9" opacity=".5"/>
+    <circle cx="144" cy="44" r="3.5" fill="#9B7FA8" opacity=".65"/>
+  </svg>`;
+}
+
+const PATHS = {
+  s1:`M 30 10 Q 52 8 56 28 Q 54 50 34 48 Q 12 46 14 26 Q 14 10 30 10 Z`,
+  s2:`M 18 30 Q 14 10 34 8 Q 54 6 58 26 Q 60 46 40 50 Q 18 54 18 30 Z`,
+  s3:`M 10 38 Q 18 12 38 10 Q 56 8 58 30 Q 60 52 42 54 Q 20 58 10 38 Z`,
+  s4:`M 30 12 Q 54 16 56 38 Q 58 56 38 56 Q 16 54 12 38 Q 8 20 30 12 Z`,
+  s5:`M 30 14 L 34 28 L 50 30 L 38 42 L 42 58 L 30 50 L 18 58 L 22 42 L 10 30 L 26 28 Z`,
+  s6:`M 30 8 Q 30 30 30 54 M 18 18 Q 30 26 42 18 M 14 34 Q 30 40 46 34`,
+  s7:`M 30 50 Q 30 26 30 12 Q 40 6 44 16 Q 46 28 34 30 Q 22 28 24 16 Q 28 6 30 12`,
+  s8:`M 30 50 Q 16 42 12 28 Q 8 14 20 8 Q 32 2 44 10 Q 56 18 50 32 Q 44 46 30 50 Z`,
+  s9:`M 30 30 m -18 0 a 18 18 0 1 0 36 0 a 18 18 0 1 0 -36 0`,
+};
+
+function stBlobSVG(s, sz) {
+  const uid = 'st'+s.id+(Math.random()*1e6|0);
+  const d   = PATHS[s.id] || PATHS.s1;
+  return `<svg viewBox="0 0 60 60" width="${sz}" height="${sz}">
+    <defs><filter id="${uid}"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
+    <ellipse cx="30" cy="30" rx="24" ry="22" fill="${s.a}" opacity=".28" filter="url(#${uid})"/>
+    <path d="${d}" fill="${s.a}" fill-opacity=".55"
+          stroke="${s.a}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${d}" fill="none" stroke="${s.b}" stroke-width=".8" opacity=".45" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function stSVG(s, sz=54) {
+  if (s.img) {
+    return `<img src="${s.img}" width="${sz}" height="${sz}"
+      style="width:${sz}px;height:${sz}px;object-fit:contain;display:block;pointer-events:none;"
+      draggable="false" alt="${s.name}">`;
+  }
+  return `<img src="/images/${s.id}.png" width="${sz}" height="${sz}"
+    style="width:${sz}px;height:${sz}px;object-fit:contain;display:block;pointer-events:none;"
+    draggable="false" alt="${s.name}"
+    onerror="this.outerHTML=window.stBlobSVG(STAMPS.find(x=>x.id==='${s.id}'),${sz})">`;
+}
+
+// ── BUILD PAGES ───────────────────────────────────
+
+function buildHome() {
+  document.getElementById('home-grid').innerHTML =
+    PRODS.slice(0,3).map((p,i) => cardHTML(p,i,'home')).join('');
+}
+
+function buildLoja() {
+  document.getElementById('loja-grid').innerHTML =
+    PRODS.map((p,i) => cardHTML(p,i,'loja')).join('');
+}
+
+function cardHTML(p, i, ctx) {
+  const badge = p.st === 'last' ? `<div class="p-badge">Última</div>`
+              : p.st === 'sold' ? `<div class="p-badge" style="background:var(--sage)">Esgotada</div>` : '';
+  const art   = wcSVG(p.p, ctx==='loja' ? 180 : 160);
+  if (ctx === 'loja') return `
+    <div class="loja-card" onclick="${p.st!=='sold'?`openM(${i})`:``}">
+      <div class="loja-art"><div class="loja-art-inner">${art}</div></div>
+      <div class="loja-info">
+        <div class="p-collection">${p.col}</div>
+        <div class="p-name">${p.name}</div>
+        <div class="p-row">
+          <span class="p-price">${p.price}</span>
+          <span class="p-edition">${p.ed}</span>
+        </div>
+      </div>
+      ${p.st!=='sold'?`<div class="loja-hover"><button class="btn-ver">Ver peça</button></div>`:''}
+      ${badge}
+    </div>`;
+  return `
+    <div class="p-card" onclick="openM(${i})">
+      <div class="p-art"><div class="p-art-inner">${art}</div></div>
+      <div class="p-info">
+        <div class="p-collection">${p.col}</div>
+        <div class="p-name">${p.name}</div>
+        <div class="p-row">
+          <span class="p-price">${p.price}</span>
+          <span class="p-edition">${p.ed}</span>
+        </div>
+      </div>
+      ${badge}
+    </div>`;
+}
+
+function buildStamps() {
+  const scroll = document.getElementById('stamps-scroll');
+  scroll.innerHTML = '';
+  let curSer = '', curGrid = null;
+  STAMPS.filter(s => s.ser !== 'Alfabeto').forEach(s => {
+    if (s.ser !== curSer) {
+      if (curGrid) scroll.appendChild(curGrid);
+      const lbl = document.createElement('div');
+      lbl.className = 'ser-label'; lbl.textContent = s.ser;
+      scroll.appendChild(lbl);
+      curGrid = document.createElement('div');
+      curGrid.className = 'sg';
+      curSer = s.ser;
+    }
+    const t = document.createElement('div');
+    t.className = 'st'; t.title = s.name;
+    t.onclick = () => addStamp(s.id);
+    t.innerHTML = stSVG(s, 52) + `<div class="st-name">${s.name}</div>`;
+    curGrid.appendChild(t);
+  });
+  if (curGrid) scroll.appendChild(curGrid);
+
+  const lbl2 = document.createElement('div');
+  lbl2.className = 'ser-label'; lbl2.textContent = 'Alfabeto';
+  scroll.appendChild(lbl2);
+
+  const wordBox = document.createElement('div');
+  wordBox.style.cssText = 'padding:4px 2px 14px;';
+  wordBox.innerHTML = `
+    <input id="word-input" type="text" placeholder="Escreva uma palavra"
+      style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--dust);
+        border-radius:4px;font-family:var(--body);font-size:13px;background:var(--white);"
+      onkeydown="if(event.key==='Enter'){addWord(this.value); this.value='';}">
+    <div id="word-err" style="opacity:0;color:#a33;font-size:11.5px;font-style:italic;margin-top:6px;">
+      Só letras de A a Z (sem acento, sem números).
+    </div>
+    <div style="font-size:11px;color:var(--sage);margin-top:6px;">Aperte Enter pra adicionar.</div>`;
+  scroll.appendChild(wordBox);
+}
+
+// ── NAV ───────────────────────────────────────────
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-center a').forEach(a => a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const n = document.getElementById('n-'+id);
+  if (n) n.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── MODAL ─────────────────────────────────────────
+function openM(i) {
+  const p = PRODS[i];
+  document.getElementById('m-col').textContent   = p.col + ' · ' + p.ed;
+  document.getElementById('m-name').textContent  = p.name;
+  document.getElementById('m-story').textContent = p.story;
+  document.getElementById('m-price').textContent = p.price;
+  document.getElementById('m-art').innerHTML     = wcSVG(p.p, 220);
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeM() { document.getElementById('modal-bg').classList.remove('open'); }
+function msz(b) { b.closest('.sz-row').querySelectorAll('.sz').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }
+function buyM() { addCart(); closeM(); }
+
+// ── FILTER ────────────────────────────────────────
+function filt(b) {
+  document.querySelectorAll('.filter-pill').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+}
+
+// ── STUDIO STATE ──────────────────────────────────
+let placed = [], selEl = null, drag = null, rsz = null, mPrice = 120;
+
+function addStamp(id) {
+  const s = STAMPS.find(x=>x.id===id); if(!s) return;
+  document.getElementById('sc-hint').style.opacity='0';
+
+  const wrap = document.getElementById('shirt-wrap');
+  const zone = document.getElementById('drop-zone');
+  const sz   = 96;
+  const x    = (wrap.offsetWidth  - sz)/2 + (Math.random()-.5)*64;
+  const y    = (wrap.offsetHeight - sz)/2 + (Math.random()-.5)*48;
+
+  const el = document.createElement('div');
+  el.className = 'ps'; el.dataset.sid = id; el.dataset.op = '1';
+  el.style.cssText = `left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;`;
+  el.innerHTML = stSVG(s, sz)
+    + `<div class="ps-resize"></div>`
+    + `<button class="ps-del" onclick="delS(event,this.parentElement)">✕</button>`;
+
+  el.addEventListener('mousedown', e => {
+    if (e.target.closest('.ps-resize')||e.target.closest('.ps-del')) return;
+    e.stopPropagation(); selEl=el; sel(el);
+    drag = {el, sx:e.clientX, sy:e.clientY, ox:el.offsetLeft, oy:el.offsetTop};
+    e.preventDefault();
+  });
+
+  el.querySelector('.ps-resize').addEventListener('mousedown', e => {
+    e.stopPropagation();
+    rsz = {el, sx:e.clientX, ow:el.offsetWidth};
+    e.preventDefault();
+  });
+
+  zone.appendChild(el);
+  placed.push(el);
+  sel(el);
+  layers();
+  toast('"'+s.name+'" adicionada');
+}
+
+// Cada letra tem largura/altura já normalizadas para que a "tinta" (o traço da
+// letra em si, sem contar decoração) tenha sempre a mesma altura visual — e um
+// deslocamento vertical (y) que alinha todas as letras numa linha de base comum,
+// como numa fonte tipográfica. "il"/"ir" marcam a borda esquerda/direita da tinta
+// dentro da imagem (sem contar decoração), usadas para espaçar pelas letras de
+// verdade, não pela ilustração ao redor. (Uma versão anterior dava um reforço de
+// altura extra pro L, pra compensar o traço fino — mas isso deixava o L mais alto
+// que as vizinhas e com a mesma base, parecendo "flutuar" acima da linha. Voltamos
+// pra altura de tinta 100% uniforme, que é o alinhamento correto.)
+const ALFABETO_GLYPHS = {
+  baseline: 110.21, rowH: 119.62,
+  letters: {
+    A:{w:72.86,h:64.74,y:45.96,il:0.49,ir:72.37},     B:{w:123.8,h:64.99,y:45.71,il:43.74,ir:92.17},
+    C:{w:94.15,h:80.8,y:36.57,il:28.42,ir:86.24},     D:{w:110.95,h:65.24,y:45.71,il:22.98,ir:85.75},
+    E:{w:85.99,h:76.11,y:34.59,il:35.34,ir:81.79},    F:{w:86.98,h:81.54,y:29.16,il:36.08,ir:79.57},
+    G:{w:100.08,h:64.74,y:45.96,il:36.57,ir:99.34},   H:{w:96.62,h:78.08,y:32.62,il:21.0,ir:92.91},
+    I:{w:83.03,h:97.11,y:13.59,il:44.97,ir:70.92},    J:{w:27.57,h:65.97,y:45.96,il:0.25,ir:24.86},
+    K:{w:129.48,h:82.04,y:28.91,il:32.37,ir:96.12},   L:{w:51.4,h:64.74,y:45.96,il:0.49,ir:50.66},
+    M:{w:130.22,h:85.0,y:25.7,il:22.24,ir:103.29},    N:{w:90.44,h:86.73,y:24.22,il:21.99,ir:89.95},
+    O:{w:70.42,h:64.74,y:45.96,il:3.95,ir:69.93},     P:{w:75.37,h:81.54,y:29.16,il:26.93,ir:74.87},
+    Q:{w:106.25,h:64.74,y:45.96,il:26.93,ir:81.54},   R:{w:88.96,h:81.79,y:28.91,il:21.99,ir:88.46},
+    S:{w:92.66,h:70.92,y:39.78,il:7.41,ir:44.48},     T:{w:113.42,h:110.7,y:0.0,il:24.22,ir:79.32},
+    U:{w:71.41,h:67.46,y:45.96,il:3.21,ir:69.19},     V:{w:101.07,h:84.76,y:25.95,il:31.88,ir:100.57},
+    W:{w:125.78,h:64.74,y:45.96,il:17.72,ir:112.98},  X:{w:121.58,h:83.77,y:26.93,il:19.03,ir:83.52},
+    Y:{w:48.24,h:64.0,y:46.21,il:0.0,ir:48.24},       Z:{w:57.08,h:78.08,y:39.78,il:2.97,ir:52.39}
+  }
+};
+
+function addWord(raw) {
+  const word = (raw||'').trim().toUpperCase();
+  const errEl = document.getElementById('word-err');
+  if (!word) return;
+  if (!/^[A-Z ]+$/.test(word)) {
+    if (errEl) errEl.style.opacity = '1';
+    return;
+  }
+  if (errEl) errEl.style.opacity = '0';
+  document.getElementById('sc-hint').style.opacity='0';
+
+  // Espaçamento pela largura real da letra (tinta), não pela imagem inteira —
+  // assim, decoração larga (flores, folhas) não empurra a próxima letra pra longe.
+  const GAP = 8, ROW_H = ALFABETO_GLYPHS.rowH;
+  let cursorX = 0;
+  const placed = [];
+  let minX = Infinity, maxX = -Infinity;
+  for (const ch of word) {
+    if (ch === ' ') { cursorX += ROW_H * 0.32; continue; }
+    const g = ALFABETO_GLYPHS.letters[ch];
+    if (!g) continue;
+    const href = ALFABETO_LETTERS[ch];
+    const imgX = cursorX - g.il;
+    placed.push({ href, x: imgX, y: g.y, w: g.w, h: g.h });
+    minX = Math.min(minX, imgX);
+    maxX = Math.max(maxX, imgX + g.w);
+    cursorX += (g.ir - g.il) + GAP;
+  }
+  if (!placed.length) return;
+  const shift = -minX;
+  const parts = placed.map(p =>
+    `<image href="${p.href}" x="${(p.x+shift).toFixed(2)}" y="${p.y}" width="${p.w}" height="${p.h}" />`
+  );
+  const totalW = Math.max(maxX - minX, ROW_H * 0.5);
+  const totalH = ROW_H;
+  const ar = totalW/totalH;
+
+  const wrap = document.getElementById('shirt-wrap');
+  const zone = document.getElementById('drop-zone');
+  const sz    = 140;
+  const dispH = sz/ar;
+  const x = (wrap.offsetWidth  - sz)/2    + (Math.random()-.5)*40;
+  const y = (wrap.offsetHeight - dispH)/2 + (Math.random()-.5)*30;
+
+  const el = document.createElement('div');
+  const wid = 'word'+(Math.random()*1e6|0);
+  el.className = 'ps'; el.dataset.sid = wid; el.dataset.op = '1';
+  el.dataset.ar = ar.toFixed(4); el.dataset.word = word;
+  el.style.cssText = `left:${x}px;top:${y}px;width:${sz}px;height:${dispH}px;`;
+  el.innerHTML = `<svg viewBox="0 0 ${totalW} ${totalH}" width="${sz}" height="${dispH}">${parts.join('')}</svg>`
+    + `<div class="ps-resize"></div>`
+    + `<button class="ps-del" onclick="delS(event,this.parentElement)">✕</button>`;
+
+  el.addEventListener('mousedown', e => {
+    if (e.target.closest('.ps-resize')||e.target.closest('.ps-del')) return;
+    e.stopPropagation(); selEl=el; sel(el);
+    drag = {el, sx:e.clientX, sy:e.clientY, ox:el.offsetLeft, oy:el.offsetTop};
+    e.preventDefault();
+  });
+
+  el.querySelector('.ps-resize').addEventListener('mousedown', e => {
+    e.stopPropagation();
+    rsz = {el, sx:e.clientX, ow:el.offsetWidth};
+    e.preventDefault();
+  });
+
+  zone.appendChild(el);
+  placed.push(el);
+  sel(el);
+  layers();
+  toast('"'+word+'" adicionada');
+}
+
+document.addEventListener('mousemove', e => {
+  if (drag) {
+    drag.el.style.left = (drag.ox + e.clientX - drag.sx)+'px';
+    drag.el.style.top  = (drag.oy + e.clientY - drag.sy)+'px';
+  }
+  if (rsz) {
+    const nw = Math.max(48, rsz.ow + e.clientX - rsz.sx);
+    const ar = parseFloat(rsz.el.dataset.ar || '1');
+    const nh = nw / ar;
+    rsz.el.style.width  = nw+'px';
+    rsz.el.style.height = nh+'px';
+    const sv = rsz.el.querySelector('svg, img');
+    if(sv){
+      sv.setAttribute('width',nw);sv.setAttribute('height',nh);
+      sv.style.width = nw+'px'; sv.style.height = nh+'px';
+    }
+  }
+});
+document.addEventListener('mouseup', ()=>{ drag=null; rsz=null; });
+
+function sel(el) {
+  document.querySelectorAll('.ps').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel'); selEl=el;
+  const op = parseFloat(el.dataset.op||1)*100;
+  document.getElementById('op-slider').value = op;
+  document.getElementById('op-val').textContent = Math.round(op)+'%';
+  layers();
+}
+
+function desel() {
+  document.querySelectorAll('.ps').forEach(e=>e.classList.remove('sel'));
+  selEl=null; layers();
+}
+
+function delS(e, el) {
+  e.stopPropagation(); el.remove();
+  placed=placed.filter(p=>p!==el);
+  if(selEl===el) selEl=null;
+  layers();
+  if(!document.querySelectorAll('.ps').length)
+    document.getElementById('sc-hint').style.opacity='1';
+}
+
+function setOp(v) {
+  document.getElementById('op-val').textContent=v+'%';
+  if(selEl){selEl.dataset.op=v/100; selEl.style.opacity=v/100;}
+}
+
+function layers() {
+  const wrap = document.getElementById('layers-wrap');
+  const els  = document.getElementById('drop-zone').querySelectorAll('.ps');
+  if(!els.length){
+    wrap.innerHTML=`<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage);">Nenhuma estampa adicionada</div>`;
+    return;
+  }
+  wrap.innerHTML = Array.from(els).reverse().map((el,ri)=>{
+    const idx    = els.length-1-ri;
+    const hi     = el.classList.contains('sel')?'hi':'';
+    const isWord = !!el.dataset.word;
+    const s      = isWord ? null : STAMPS.find(x=>x.id===el.dataset.sid);
+    let thumb, name;
+    if (isWord) {
+      const svgEl = el.querySelector('svg');
+      const ar = parseFloat(el.dataset.ar||'1');
+      const th = 20, tw = Math.round(20*ar);
+      thumb = `<svg viewBox="${svgEl.getAttribute('viewBox')}" width="${tw}" height="${th}">${svgEl.innerHTML}</svg>`;
+      name  = el.dataset.word;
+    } else {
+      thumb = stSVG(s,20);
+      name  = s?s.name:'Estampa';
+    }
+    return `<div class="layer-item ${hi}" onclick="sel(document.getElementById('drop-zone').querySelectorAll('.ps')[${idx}])">
+      <div class="layer-thumb">${thumb}</div>
+      <div class="layer-name">${name}</div>
+      <button class="layer-del" title="Remover"
+        onclick="event.stopPropagation();document.getElementById('drop-zone').querySelectorAll('.ps')[${idx}].remove();layers();">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function pickM(el, lbl, price) {
+  document.querySelectorAll('.mo').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on'); mPrice=price;
+  document.getElementById('o-model').textContent  = lbl;
+  document.getElementById('o-mprice').textContent = 'R$ '+price;
+  document.getElementById('o-total').textContent  = 'R$ '+(price+80);
+}
+
+function pickC(el, hex, name) {
+  document.querySelectorAll('.sr .sw').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('shirt-body').setAttribute('fill', hex);
+  toast('Cor: '+name);
+}
+
+function pickS(b){ b.closest('.sz-row').querySelectorAll('.sz').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }
+function setv(v,b){ document.querySelectorAll('.sc-btn[id^="v"]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); toast(v==='costas'?'Vista traseira':'Vista frontal'); }
+function stab(b){ document.querySelectorAll('.sl-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }
+
+function center(){
+  if(!selEl){toast('Selecione uma estampa');return;}
+  const w=document.getElementById('shirt-wrap');
+  selEl.style.left=(w.offsetWidth -selEl.offsetWidth )/2+'px';
+  selEl.style.top =(w.offsetHeight-selEl.offsetHeight)/2+'px';
+}
+
+function clear(){
+  document.getElementById('drop-zone').innerHTML='';
+  placed=[]; selEl=null; layers();
+  document.getElementById('sc-hint').style.opacity='1';
+  toast('Composição limpa');
+}
+
+function undo(){
+  const z=document.getElementById('drop-zone');
+  const els=z.querySelectorAll('.ps');
+  if(els.length){ els[els.length-1].remove(); layers(); }
+  if(!z.querySelectorAll('.ps').length)
+    document.getElementById('sc-hint').style.opacity='1';
+}
+
+function surprise(){
+  clear();
+  const sh=[...STAMPS].sort(()=>Math.random()-.5).slice(0,2+Math.floor(Math.random()*2));
+  sh.forEach((s,i)=>setTimeout(()=>addStamp(s.id),i*200));
+  toast('✦ Composição surpresa');
+}
+
+function addStudio(){
+  const z=document.getElementById('drop-zone');
+  if(!z.querySelectorAll('.ps').length){toast('Adicione pelo menos uma estampa');return;}
+  openCheckout();
+}
+
+// ── CART ──────────────────────────────────────────
+let cN=0;
+function addCart(){
+  cN++; const b=document.getElementById('cn');
+  b.textContent=cN; b.classList.add('on');
+}
+
+// ── TOAST ─────────────────────────────────────────
+function toast(msg){
+  const t=document.getElementById('toast-el');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(window._t);
+  window._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ══════════════════════════════════════════════════
+// CHECKOUT FLOW
+// ══════════════════════════════════════════════════
+
+// Generates a serial: HRT-YYYYMMDD-XXXX
+function genSerial(){
+  const d = new Date();
+  const ds = d.getFullYear().toString()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0');
+  const rnd = Math.floor(1000+Math.random()*9000);
+  return `HRT-${ds}-${rnd}`;
+}
+
+// Capture the current shirt composition as a base64 PNG via canvas
+function captureComposition(){
+  return new Promise(resolve => {
+    const wrap  = document.getElementById('shirt-wrap');
+    const svg   = document.getElementById('shirt-el');
+    const zone  = document.getElementById('drop-zone');
+    const W = wrap.offsetWidth, H = wrap.offsetHeight;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W * 2; canvas.height = H * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    ctx.fillStyle = '#FAFAF8';
+    ctx.fillRect(0, 0, W, H);
+
+    // Serialize the SVG shirt
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], {type:'image/svg+xml;charset=utf-8'});
+    const svgUrl  = URL.createObjectURL(svgBlob);
+    const img1    = new Image();
+
+    img1.onload = () => {
+      ctx.drawImage(img1, 0, 0, W, H);
+      URL.revokeObjectURL(svgUrl);
+
+      // Draw each placed stamp
+      const stamps = zone.querySelectorAll('.ps');
+      let pending = stamps.length;
+      if (!pending) { resolve(canvas.toDataURL('image/png')); return; }
+
+      stamps.forEach(el => {
+        const stampSVG = el.querySelector('svg');
+        const stampIMG = el.querySelector('img');
+        const l  = parseFloat(el.style.left)||0;
+        const t  = parseFloat(el.style.top)||0;
+        const w  = el.offsetWidth;
+        const h  = el.offsetHeight;
+        const op = parseFloat(el.dataset.op)||1;
+
+        if (stampSVG) {
+          const sd  = new XMLSerializer().serializeToString(stampSVG);
+          const sb  = new Blob([sd], {type:'image/svg+xml;charset=utf-8'});
+          const su  = URL.createObjectURL(sb);
+          const img = new Image();
+          img.onload = () => {
+            ctx.globalAlpha = op;
+            ctx.drawImage(img, l, t, w, h);
+            ctx.globalAlpha = 1;
+            URL.revokeObjectURL(su);
+            if (!--pending) resolve(canvas.toDataURL('image/png'));
+          };
+          img.onerror = () => { if(!--pending) resolve(canvas.toDataURL('image/png')); };
+          img.src = su;
+        } else if (stampIMG) {
+          // letter stamps: img already holds a data URI, draw directly
+          const img = new Image();
+          img.onload = () => {
+            ctx.globalAlpha = op;
+            ctx.drawImage(img, l, t, w, h);
+            ctx.globalAlpha = 1;
+            if (!--pending) resolve(canvas.toDataURL('image/png'));
+          };
+          img.onerror = () => { if(!--pending) resolve(canvas.toDataURL('image/png')); };
+          img.src = stampIMG.src;
+        } else {
+          if(!--pending) resolve(canvas.toDataURL('image/png'));
+        }
+      });
+    };
+    img1.onerror = () => resolve(null);
+    img1.src = svgUrl;
+  });
+}
+
+// Read current studio config
+function readConfig(){
+  const model = document.querySelector('.mo.on')?.querySelector('.mo-name')?.textContent || 'Camiseta Oversized';
+  const color = document.querySelector('.sr .sw.on')?.title || 'Pergaminho';
+  const size  = document.querySelector('.sz-row .sz.on')?.textContent || 'G';
+  const view  = document.getElementById('vf')?.classList.contains('on') ? 'Frente' : 'Costas';
+  const zone  = document.getElementById('drop-zone');
+  const stamps= Array.from(zone.querySelectorAll('.ps')).map(el => {
+    const s = STAMPS.find(x=>x.id===el.dataset.sid);
+    return s ? s.name : 'Estampa';
+  });
+  return { model, color, size, view, stamps };
+}
+
+// ── CHECKOUT MODAL ────────────────────────────────
+function openCheckout(){
+  const cfg = readConfig();
+  // populate summary
+  document.getElementById('ck-model').textContent = cfg.model;
+  document.getElementById('ck-color').textContent = cfg.color;
+  document.getElementById('ck-size').textContent  = cfg.size;
+  document.getElementById('ck-view').textContent  = cfg.view;
+  document.getElementById('ck-stamps').textContent= cfg.stamps.join(', ');
+  document.getElementById('ck-total').textContent =
+    document.getElementById('o-total').textContent;
+
+  document.getElementById('checkout-modal').classList.add('open');
+}
+
+function closeCheckout(){
+  document.getElementById('checkout-modal').classList.remove('open');
+}
+
+async function submitOrder(){
+  const name  = document.getElementById('ck-name').value.trim();
+  const email = document.getElementById('ck-email').value.trim();
+  const obs   = document.getElementById('ck-obs').value.trim();
+
+  if(!name || !email){
+    toast('Preencha nome e e-mail'); return;
+  }
+  if(!/\S+@\S+\.\S+/.test(email)){
+    toast('E-mail inválido'); return;
+  }
+
+  const btn = document.getElementById('ck-submit');
+  btn.textContent = 'Gerando...'; btn.disabled = true;
+
+  const serial  = genSerial();
+  const cfg     = readConfig();
+  const imgB64  = await captureComposition();
+  const svgData = exportProductionSVG();   // ← vector export for production
+
+  // Store for confirmation page + panel
+  window._orderData = { serial, name, email, obs, cfg, imgB64, svgData,
+    total: document.getElementById('o-total').textContent,
+    date:  new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})
+  };
+
+  // Save to persistent orders list (localStorage)
+  saveOrder(window._orderData);
+
+  closeCheckout();
+  showConfirmation(serial, name, cfg, imgB64);
+  addCart();
+}
+
+// ── CONFIRMATION PAGE ─────────────────────────────
+function showConfirmation(serial, name, cfg, imgB64){
+  document.getElementById('conf-serial').textContent = serial;
+  document.getElementById('conf-name').textContent   = name;
+  document.getElementById('conf-model').textContent  = cfg.model;
+  document.getElementById('conf-color').textContent  = cfg.color;
+  document.getElementById('conf-size').textContent   = cfg.size;
+  document.getElementById('conf-view').textContent   = cfg.view;
+  document.getElementById('conf-stamps').textContent = cfg.stamps.join(', ');
+  document.getElementById('conf-obs').textContent    =
+    window._orderData.obs || '—';
+
+  if(imgB64){
+    document.getElementById('conf-preview').src = imgB64;
+    document.getElementById('conf-preview').style.display = 'block';
+  }
+
+  // populate serial footer
+  const s2 = document.getElementById('conf-serial-2');
+  if(s2) s2.textContent = serial;
+
+  // hide placeholder when image present
+  if(imgB64){
+    const ph = document.getElementById('conf-preview-placeholder');
+    if(ph) ph.style.display='none';
+  }
+
+  // Reset button state
+  const btn = document.getElementById('ck-submit');
+  btn.textContent = 'Finalizar pedido'; btn.disabled = false;
+
+  // send email (non-blocking)
+  sendOrderEmail(window._orderData, document.getElementById('o-total').textContent);
+
+  go('confirmacao');
+}
+
+// ── CERTIFICATE GENERATION ────────────────────────
+function downloadCertificate(){
+  const d = window._orderData;
+  if(!d){ toast('Nenhum pedido ativo'); return; }
+
+  const canvas = document.createElement('canvas');
+  // A5 landscape at 150dpi ≈ 1240×874
+  canvas.width  = 1240;
+  canvas.height = 874;
+  const ctx = canvas.getContext('2d');
+
+  // ── Background ──
+  ctx.fillStyle = '#F3EDE0'; // parchment
+  ctx.fillRect(0, 0, 1240, 874);
+
+  // thin border
+  ctx.strokeStyle = '#D6CCBA';
+  ctx.lineWidth   = 1.5;
+  ctx.strokeRect(28, 28, 1184, 818);
+
+  // inner border (subtle)
+  ctx.strokeStyle = '#D6CCBA';
+  ctx.lineWidth   = .5;
+  ctx.strokeRect(38, 38, 1164, 798);
+
+  // ── LEFT HALF: composition preview ──
+  const leftW = 520;
+
+  if(d.imgB64){
+    const img = new Image();
+    img.onload = () => {
+      // draw shirt preview centered in left panel
+      const maxW = leftW - 80, maxH = 680;
+      const ratio = Math.min(maxW/img.width, maxH/img.height);
+      const iw = img.width*ratio, ih = img.height*ratio;
+      const ix = 60 + (leftW-80-iw)/2;
+      const iy = 97 + (680-ih)/2;
+      ctx.drawImage(img, ix, iy, iw, ih);
+      drawCertRight(ctx, d, canvas);
+    };
+    img.src = d.imgB64;
+  } else {
+    drawCertRight(ctx, d, canvas);
+  }
+}
+
+function drawCertRight(ctx, d, canvas){
+  const leftW = 520;
+
+  // Divider line
+  ctx.strokeStyle = '#D6CCBA';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(leftW, 60); ctx.lineTo(leftW, 814);
+  ctx.stroke();
+
+  // ── Symbol (drawn) ──
+  const sx = leftW + 56, sy = 72;
+  ctx.strokeStyle = '#3C4E2E'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+
+  // arc 1
+  ctx.beginPath();
+  ctx.moveTo(sx+2, sy+20); ctx.quadraticCurveTo(sx+10,sy+4, sx+16,sy+4);
+  ctx.quadraticCurveTo(sx+22,sy+4, sx+26,sy+16);
+  ctx.stroke();
+  // arc 2 (lighter)
+  ctx.strokeStyle = '#3C4E2E'; ctx.globalAlpha = .5; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(sx+7, sy+22); ctx.quadraticCurveTo(sx+14,sy+8, sx+20,sy+7);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // diagonal
+  ctx.strokeStyle = '#7A9268'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(sx+4,sy+2); ctx.lineTo(sx+26,sy+24); ctx.stroke();
+  // lilas dot
+  ctx.fillStyle = '#9B7FA8';
+  ctx.beginPath(); ctx.arc(sx+25,sy+4, 3.5, 0, Math.PI*2); ctx.fill();
+
+  const rx = leftW + 56;
+
+  // HORTELÃ wordmark
+  ctx.font = '600 13px serif'; // fallback — canvas can't load Google Fonts
+  // We'll use letter-spaced caps approximation
+  ctx.fillStyle = '#1C1812';
+  ctx.font = 'bold 14px Georgia, serif';
+  ctx.letterSpacing = '8px';
+  ctx.fillText('HORTELÃ', rx + 38, sy + 18);
+  ctx.letterSpacing = '0px';
+
+  // Arte vestível
+  ctx.font = 'italic 11px Georgia, serif';
+  ctx.fillStyle = '#7A9268';
+  ctx.fillText('Arte vestível em aquarela', rx + 38, sy + 34);
+
+  // ── CERTIFICADO heading ──
+  ctx.font = 'italic 38px Georgia, serif';
+  ctx.fillStyle = '#3C4E2E';
+  ctx.fillText('Certificado', rx, 150);
+
+  ctx.font = 'italic 20px Georgia, serif';
+  ctx.fillStyle = '#7A9268';
+  ctx.fillText('de composição autoral', rx, 178);
+
+  // divider
+  ctx.strokeStyle = '#D6CCBA'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(rx, 196); ctx.lineTo(rx+640, 196); ctx.stroke();
+
+  // ── Serial ──
+  ctx.font = 'bold 12px "Courier New", monospace';
+  ctx.fillStyle = '#9B7FA8';
+  ctx.fillText(d.serial, rx, 228);
+
+  // ── Body text ──
+  const lineH = 32;
+  let y = 272;
+
+  function row(label, value){
+    ctx.font = '10px Georgia, serif';
+    ctx.fillStyle = '#7A9268';
+    ctx.fillText(label.toUpperCase(), rx, y);
+    ctx.font = 'italic 16px Georgia, serif';
+    ctx.fillStyle = '#1C1812';
+    ctx.fillText(value, rx, y + 16);
+    y += lineH + 8;
+  }
+
+  row('Cliente',      d.name);
+  row('Modelo',       d.cfg.model);
+  row('Cor da peça',  d.cfg.color);
+  row('Tamanho',      d.cfg.size);
+  row('Posição',      d.cfg.view);
+  row('Estampas',     d.cfg.stamps.join(', '));
+  if(d.obs) row('Observações', d.obs);
+
+  // ── Footer text ──
+  const fy = 750;
+  ctx.font = 'italic 13px Georgia, serif';
+  ctx.fillStyle = '#7A9268';
+  const txt = 'Esta composição foi criada uma única vez. A arte pertence a quem a veste.';
+  ctx.fillText(txt, rx, fy);
+
+  // date
+  const dateStr = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  ctx.font = '11px Georgia, serif';
+  ctx.fillStyle = '#D6CCBA';
+  ctx.fillText(dateStr, rx, fy + 22);
+
+  // ── Download ──
+  const link = document.createElement('a');
+  link.download = `hortelã-certificado-${d.serial}.png`;
+  link.href = canvas.toDataURL('image/png', 1.0);
+  link.click();
+
+  toast('Certificado baixado ✓');
+}
+
+// ── EMAIL VIA EMAILJS ─────────────────────────────
+// Instructions for Felipe:
+// 1. Create free account at emailjs.com
+// 2. Add Email Service (Gmail recommended)
+// 3. Create template with these variables:
+//    {{to_email}} {{serial}} {{client_name}} {{client_email}}
+//    {{model}} {{color}} {{size}} {{view}} {{stamps}} {{obs}} {{total}}
+// 4. Replace the 3 placeholders below with your real IDs
+
+const EMAILJS_CONFIG = {
+  publicKey:  'SEU_PUBLIC_KEY',      // Account > API Keys
+  serviceId:  'SEU_SERVICE_ID',      // Email Services tab
+  templateId: 'SEU_TEMPLATE_ID',     // Email Templates tab
+  yourEmail:  'seuemail@gmail.com',  // where YOU receive orders
+};
+
+async function sendOrderEmail(d, total){
+  // Load EmailJS SDK dynamically
+  if(!window.emailjs){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+    window.emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+  }
+
+  const params = {
+    to_email:     EMAILJS_CONFIG.yourEmail,
+    serial:       d.serial,
+    client_name:  d.name,
+    client_email: d.email,
+    model:        d.cfg.model,
+    color:        d.cfg.color,
+    size:         d.cfg.size,
+    view:         d.cfg.view,
+    stamps:       d.cfg.stamps.join(', '),
+    obs:          d.obs || '—',
+    total:        total,
+  };
+
+  try {
+    await window.emailjs.send(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.templateId,
+      params
+    );
+    toast('Pedido enviado por e-mail ✓');
+  } catch(err){
+    console.warn('EmailJS não configurado — modo protótipo ativo', err);
+    // In prototype mode: still show confirmation, just no real email
+  }
+}
+
+
+// ══════════════════════════════════════════════════
+// SVG PRODUCTION EXPORT
+// ══════════════════════════════════════════════════
+
+// Exports a clean, production-ready SVG of the full composition.
+// Contains only the shirt outline + stamp artwork — no filters,
+// shadows or UI chrome. Ready to open in Illustrator / Inkscape
+// and scale to any print resolution.
+function exportProductionSVG(){
+  const wrap    = document.getElementById('shirt-wrap');
+  const W       = wrap.offsetWidth;
+  const H       = wrap.offsetHeight;
+  const shirtEl = document.getElementById('shirt-el');
+  const zone    = document.getElementById('drop-zone');
+
+  // Serialize base shirt
+  const shirtSrc = new XMLSerializer().serializeToString(shirtEl);
+
+  // Collect each placed stamp with its transform
+  const stampParts = [];
+  zone.querySelectorAll('.ps').forEach(el => {
+    const stampSVG = el.querySelector('svg');
+    if(!stampSVG) return;
+    const x  = parseFloat(el.style.left) || 0;
+    const y  = parseFloat(el.style.top)  || 0;
+    const w  = el.offsetWidth;
+    const h  = el.offsetHeight;
+    const op = parseFloat(el.dataset.op) || 1;
+    // Inline the stamp SVG with a group transform
+    const inner = stampSVG.innerHTML;
+    const vb    = stampSVG.getAttribute('viewBox') || `0 0 ${w} ${h}`;
+    stampParts.push(
+      `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})" opacity="${op}">` +
+      `<svg viewBox="${vb}" width="${w}" height="${h}" overflow="visible">${inner}</svg>` +
+      `</g>`
+    );
+  });
+
+  // Build the final production SVG
+  // We use a 3x scale so 1px in the design = 3px in the file (for ~216dpi at 72dpi base)
+  const SCALE = 3;
+  const svg = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<!-- Hortelã Production File -->`,
+    `<!-- Serial: ${window._orderData ? window._orderData.serial : 'preview'} -->`,
+    `<!-- Generated: ${new Date().toISOString()} -->`,
+    `<svg xmlns="http://www.w3.org/2000/svg"`,
+    `     viewBox="0 0 ${W} ${H}"`,
+    `     width="${W * SCALE}" height="${H * SCALE}">`,
+    // Shirt layer
+    `  <g id="shirt-base">${shirtSrc}</g>`,
+    // Stamps layer
+    `  <g id="composition">${stampParts.join('\n  ')}</g>`,
+    `</svg>`
+  ].join('\n');
+
+  return svg;
+}
+
+// Download the production SVG directly
+function downloadProductionSVG(svgData, serial){
+  const blob = new Blob([svgData], {type:'image/svg+xml;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `hortela-producao-${serial}.svg`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('SVG de produção baixado ✓');
+}
+
+// ══════════════════════════════════════════════════
+// ORDER STORAGE  (localStorage — persists across sessions)
+// ══════════════════════════════════════════════════
+
+const ORDERS_KEY = 'hortela_orders_v1';
+
+function saveOrder(order){
+  const orders = loadOrders();
+  // Store without the full imgB64 in the list (too heavy) — keep separately
+  const record = {
+    serial:  order.serial,
+    name:    order.name,
+    email:   order.email,
+    obs:     order.obs,
+    cfg:     order.cfg,
+    total:   order.total,
+    date:    order.date,
+    status:  'novo',        // novo | em produção | enviado
+    // store image refs under their own keys to keep list lean
+    hasImg:  !!order.imgB64,
+    hasSVG:  !!order.svgData,
+  };
+  orders.unshift(record); // newest first
+  try {
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    // Store heavy data separately
+    if(order.imgB64)  localStorage.setItem(`hortela_img_${order.serial}`,  order.imgB64);
+    if(order.svgData) localStorage.setItem(`hortela_svg_${order.serial}`,  order.svgData);
+  } catch(e) {
+    console.warn('localStorage full or unavailable:', e);
+  }
+}
+
+function loadOrders(){
+  try {
+    return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+  } catch(e){ return []; }
+}
+
+function loadOrderAsset(serial, type){
+  try {
+    return localStorage.getItem(`hortela_${type}_${serial}`) || null;
+  } catch(e){ return null; }
+}
+
+function updateOrderStatus(serial, status){
+  const orders = loadOrders();
+  const idx    = orders.findIndex(o=>o.serial===serial);
+  if(idx >= 0){
+    orders[idx].status = status;
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  }
+}
+
+function deleteOrder(serial){
+  const orders = loadOrders().filter(o=>o.serial!==serial);
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  try{localStorage.removeItem(`hortela_img_${serial}`);}catch(e){}
+  try{localStorage.removeItem(`hortela_svg_${serial}`);}catch(e){}
+}
+
+// ══════════════════════════════════════════════════
+// PAINEL DE PEDIDOS
+// ══════════════════════════════════════════════════
+
+const PANEL_PASSWORD = '***removido***'; // change to whatever you want
+
+function openPanel(){
+  const stored = sessionStorage.getItem('hortela_panel_auth');
+  if(stored === PANEL_PASSWORD){
+    go('painel'); buildPanel();
+  } else {
+    document.getElementById('panel-login').classList.add('open');
+  }
+}
+
+function closePanelLogin(){
+  document.getElementById('panel-login').classList.remove('open');
+}
+
+function submitPanelLogin(){
+  const pw = document.getElementById('panel-pw').value;
+  if(pw === PANEL_PASSWORD){
+    sessionStorage.setItem('hortela_panel_auth', pw);
+    document.getElementById('panel-pw').value = '';
+    closePanelLogin();
+    go('painel');
+    buildPanel();
+  } else {
+    document.getElementById('panel-pw-err').style.opacity='1';
+    setTimeout(()=>document.getElementById('panel-pw-err').style.opacity='0', 2000);
+  }
+}
+
+function buildPanel(){
+  const orders = loadOrders();
+  const list   = document.getElementById('panel-list');
+  const empty  = document.getElementById('panel-empty');
+  const count  = document.getElementById('panel-count');
+
+  count.textContent = orders.length + (orders.length===1?' pedido':' pedidos');
+
+  if(!orders.length){
+    list.style.display  = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+
+  list.style.display  = 'block';
+  empty.style.display = 'none';
+
+  const STATUS_COLORS = {
+    'novo':        '#9B7FA8',
+    'em produção': '#7A9268',
+    'enviado':     '#3C4E2E',
+  };
+
+  list.innerHTML = orders.map(o => {
+    const sc = STATUS_COLORS[o.status] || '#D6CCBA';
+    const imgKey = o.hasImg ? loadOrderAsset(o.serial,'img') : null;
+    return `
+    <div class="panel-card" id="pc-${o.serial}">
+      <!-- preview thumb -->
+      <div class="pc-thumb">
+        ${imgKey
+          ? `<img src="${imgKey}" style="width:100%;height:100%;object-fit:contain;padding:8px;">`
+          : `<div style="font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);text-align:center;padding:12px;">${o.cfg.stamps.slice(0,2).join('<br>')}</div>`
+        }
+      </div>
+      <!-- info -->
+      <div class="pc-info">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="font-family:'Courier New',monospace;font-size:11px;color:var(--lilas);letter-spacing:.06em;">${o.serial}</div>
+          <div style="font-family:var(--body);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;background:${sc};color:white;">${o.status}</div>
+          <div style="font-family:var(--body);font-size:11px;color:var(--sage);margin-left:auto;">${o.date}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 20px;margin-bottom:14px;">
+          ${pcRow('Cliente', o.name)}
+          ${pcRow('E-mail',  o.email)}
+          ${pcRow('Total',   o.total)}
+          ${pcRow('Modelo',  o.cfg.model)}
+          ${pcRow('Cor',     o.cfg.color)}
+          ${pcRow('Tamanho', o.cfg.size)}
+          ${pcRow('Posição', o.cfg.view)}
+          ${pcRow('Estampas',o.cfg.stamps.join(', '))}
+          ${o.obs ? pcRow('Observações', o.obs) : ''}
+        </div>
+      </div>
+      <!-- actions -->
+      <div class="pc-actions">
+        ${o.hasSVG ? `<button class="pc-btn pc-btn-primary" onclick="panelDownloadSVG('${o.serial}')">↓ SVG produção</button>` : ''}
+        ${o.hasImg ? `<button class="pc-btn pc-btn-primary" onclick="panelDownloadImg('${o.serial}')">↓ Preview PNG</button>` : ''}
+        <button class="pc-btn pc-btn-primary" onclick="panelDownloadCert('${o.serial}')">↓ Certificado</button>
+        <div style="margin-top:8px;">
+          <select class="pc-select" onchange="updateOrderStatus('${o.serial}',this.value);buildPanel();">
+            <option value="novo"        ${o.status==='novo'?'selected':''}>Novo</option>
+            <option value="em produção" ${o.status==='em produção'?'selected':''}>Em produção</option>
+            <option value="enviado"     ${o.status==='enviado'?'selected':''}>Enviado</option>
+          </select>
+        </div>
+        <button class="pc-btn pc-btn-danger" onclick="if(confirm('Apagar pedido ${o.serial}?')){deleteOrder('${o.serial}');buildPanel();}">Apagar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pcRow(label, value){
+  return `<div>
+    <div style="font-family:var(--body);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:2px;">${label}</div>
+    <div style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--ink);">${value||'—'}</div>
+  </div>`;
+}
+
+function panelDownloadSVG(serial){
+  const svg = loadOrderAsset(serial,'svg');
+  if(!svg){ toast('SVG não encontrado'); return; }
+  downloadProductionSVG(svg, serial);
+}
+
+function panelDownloadImg(serial){
+  const img = loadOrderAsset(serial,'img');
+  if(!img){ toast('Imagem não encontrada'); return; }
+  const a = document.createElement('a');
+  a.href     = img;
+  a.download = `hortela-preview-${serial}.png`;
+  a.click();
+  toast('Preview baixado ✓');
+}
+
+function panelDownloadCert(serial){
+  // Reconstruct minimal order data for certificate generation
+  const orders = loadOrders();
+  const o = orders.find(x=>x.serial===serial);
+  if(!o){ toast('Pedido não encontrado'); return; }
+  const img = loadOrderAsset(serial,'img');
+  // Temporarily set _orderData and call existing cert generator
+  window._orderData = { serial:o.serial, name:o.name, email:o.email,
+    obs:o.obs, cfg:o.cfg, imgB64:img };
+  downloadCertificate();
+}
+
+// ── INIT ──────────────────────────────────────────
+buildHome(); buildLoja(); buildStamps(); go('home');
+</script>
+
+
+<!-- ════════════════════ CHECKOUT MODAL ════════════════════ -->
+<div class="modal-bg" id="checkout-modal" onclick="closeCheckout()">
+<div class="modal" style="grid-template-columns:1fr 1fr;max-width:780px;" onclick="event.stopPropagation()">
+  <button class="modal-close" onclick="closeCheckout()">✕</button>
+
+  <!-- LEFT: order summary -->
+  <div style="background:var(--parchment);padding:48px 36px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;">
+    <div style="font-family:var(--body);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--moss);margin-bottom:4px;">Resumo do pedido</div>
+    <div style="font-family:var(--display);font-style:italic;font-size:30px;color:var(--ink);margin-bottom:12px;">Sua composição</div>
+
+    <div style="border-top:1px solid var(--dust);padding-top:16px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Modelo</span><span id="ck-model" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Cor</span><span id="ck-color" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Tamanho</span><span id="ck-size" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Posição</span><span id="ck-view" style="color:var(--ink)"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;font-family:var(--body);font-size:14px;color:var(--sage);">
+        <span>Estampas</span>
+        <span id="ck-stamps" style="color:var(--ink);text-align:right;max-width:180px;font-style:italic;"></span>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--dust);padding-top:14px;display:flex;justify-content:space-between;font-family:var(--display);font-style:italic;font-size:22px;color:var(--ink);">
+      <span>Total</span><span id="ck-total"></span>
+    </div>
+
+    <div style="font-family:var(--body);font-style:italic;font-size:11.5px;color:var(--sage);line-height:1.65;margin-top:4px;">
+      Um certificado com o código serial da sua obra será gerado ao finalizar.
+    </div>
+  </div>
+
+  <!-- RIGHT: client info form -->
+  <div style="background:var(--white);padding:48px 36px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;">
+    <div style="font-family:var(--body);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Seus dados</div>
+    <div style="font-family:var(--display);font-style:italic;font-size:26px;color:var(--ink);margin-bottom:8px;">Finalizar pedido</div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">Nome</label>
+      <input id="ck-name" type="text" placeholder="Seu nome completo"
+        style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-size:14px;color:var(--ink);outline:none;transition:border-color .18s;"
+        onfocus="this.style.borderColor='var(--moss)'"
+        onblur="this.style.borderColor='var(--dust)'">
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">E-mail</label>
+      <input id="ck-email" type="email" placeholder="seu@email.com"
+        style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-size:14px;color:var(--ink);outline:none;transition:border-color .18s;"
+        onfocus="this.style.borderColor='var(--moss)'"
+        onblur="this.style.borderColor='var(--dust)'">
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">Observações <span style="opacity:.5;">(opcional)</span></label>
+      <textarea id="ck-obs" rows="3" placeholder="Alguma instrução especial para a produção..."
+        style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-style:italic;font-size:14px;color:var(--ink);outline:none;resize:vertical;transition:border-color .18s;"
+        onfocus="this.style.borderColor='var(--moss)'"
+        onblur="this.style.borderColor='var(--dust)'"></textarea>
+    </div>
+
+    <div style="font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);line-height:1.6;padding:10px 14px;border-left:2px solid var(--dust);">
+      Ao finalizar, você receberá um certificado para baixar e eu recebo os dados do pedido para iniciar a confecção.
+    </div>
+
+    <button id="ck-submit" onclick="submitOrder()"
+      style="background:var(--moss);color:var(--white);border:none;padding:17px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s;margin-top:4px;"
+      onmouseover="this.style.background='var(--ink)'"
+      onmouseout="this.style.background='var(--moss)'">
+      Finalizar pedido
+    </button>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════ CONFIRMAÇÃO ════════════════════ -->
+<div class="page" id="confirmacao" style="background:var(--white);min-height:100vh;">
+<div style="max-width:800px;margin:0 auto;padding:64px 48px 96px;">
+
+  <!-- header -->
+  <div style="text-align:center;margin-bottom:56px;">
+    <div style="font-family:var(--body);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss);margin-bottom:12px;">Pedido confirmado</div>
+    <h1 style="font-family:var(--display);font-weight:300;font-style:italic;font-size:52px;color:var(--ink);margin-bottom:16px;">Obrigado.</h1>
+    <div style="font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--lilas);padding:10px 20px;display:inline-block;border:1px solid var(--lilas);letter-spacing:.2em;" id="conf-serial">—</div>
+  </div>
+
+  <!-- composition preview -->
+  <div style="background:var(--parchment);border:1px solid var(--dust);display:flex;align-items:center;justify-content:center;padding:40px;margin-bottom:2px;min-height:280px;">
+    <img id="conf-preview" src="" alt="Sua composição"
+      style="display:none;max-width:280px;max-height:320px;object-fit:contain;filter:drop-shadow(0 12px 28px rgba(28,24,18,.12));">
+    <div id="conf-preview-placeholder" style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);">Sua composição</div>
+  </div>
+
+  <!-- order details -->
+  <div style="border:1px solid var(--dust);border-top:none;background:var(--white);padding:28px 32px;margin-bottom:32px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 40px;">
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Cliente</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-name"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Modelo</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-model"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Cor</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-color"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Tamanho</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-size"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Posição da estampa</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-view"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Estampas</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-stamps"></div>
+      </div>
+      <div style="grid-column:1/-1;">
+        <div style="font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Observações</div>
+        <div style="font-family:var(--display);font-style:italic;font-size:17px;color:var(--ink);" id="conf-obs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- actions -->
+  <div style="display:flex;gap:12px;justify-content:center;margin-bottom:40px;">
+    <button onclick="downloadCertificate()"
+      style="background:var(--moss);color:var(--white);border:none;padding:15px 36px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s;"
+      onmouseover="this.style.background='var(--ink)'"
+      onmouseout="this.style.background='var(--moss)'">
+      ↓ Baixar certificado
+    </button>
+    <button onclick="go('estudio')"
+      style="background:transparent;color:var(--ink);border:1px solid var(--dust);padding:15px 36px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .18s;"
+      onmouseover="this.style.borderColor='var(--ink)'"
+      onmouseout="this.style.borderColor='var(--dust)'">
+      Nova composição
+    </button>
+  </div>
+
+  <!-- note about email -->
+  <div style="text-align:center;padding:20px;border:1px solid var(--dust);background:var(--parchment);">
+    <div style="font-family:var(--body);font-style:italic;font-size:14px;color:var(--sage);line-height:1.7;">
+      Os dados deste pedido serão enviados para a Hortelã assim que o e-mail estiver configurado.<br>
+      <span style="font-size:12px;color:var(--lilas);">→ Guarde o código serial: <strong id="conf-serial-2" style="color:var(--lilas);font-style:normal;"></strong></span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+
+<!-- ════════════════════ PAINEL DE PEDIDOS ════════════════════ -->
+<div class="page" id="painel">
+  <div class="painel-header">
+    <h1>Pedidos</h1>
+    <div class="painel-meta">
+      <span class="panel-count-badge" id="panel-count">0 pedidos</span>
+      <button class="panel-logout" onclick="sessionStorage.removeItem('hortela_panel_auth');go('home');">Sair</button>
+    </div>
+  </div>
+  <div class="panel-list" id="panel-list"></div>
+  <div class="panel-empty" id="panel-empty">
+    <p>Nenhum pedido ainda.</p>
+  </div>
+</div>
+
+<!-- PANEL LOGIN MODAL -->
+<div class="panel-login-bg" id="panel-login" onclick="closePanelLogin()">
+  <div class="panel-login-box" onclick="event.stopPropagation()">
+    <div class="panel-login-title">Painel Hortelã</div>
+    <div class="panel-login-sub">Acesso restrito — insira a senha para continuar.</div>
+    <input class="panel-login-input" id="panel-pw" type="password" placeholder="Senha"
+      onkeydown="if(event.key==='Enter')submitPanelLogin()"
+      onfocus="this.style.borderColor='var(--moss)'"
+      onblur="this.style.borderColor='var(--dust)'">
+    <div class="panel-pw-err" id="panel-pw-err">Senha incorreta</div>
+    <button class="panel-login-btn" onclick="submitPanelLogin()">Entrar</button>
+  </div>
+</div>
+
+</body>
+</html>
