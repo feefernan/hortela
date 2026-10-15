@@ -1,4 +1,4 @@
-import { bindings, defineConfig } from 'cf/config';
+import { bindings, defineConfig, triggers } from 'cf/config';
 import * as entrypoint from './src/entry.ts' with { type: 'cf-worker' };
 
 export default defineConfig({
@@ -7,6 +7,9 @@ export default defineConfig({
     name: 'hortela-pedidos',
     compatibilityDate: '2026-10-12',
     entrypoint,
+    // A API mora no domínio do site (/api/*), sem subdomínio workers.dev.
+    workersDev: false,
+    triggers: [triggers.fetch({ pattern: 'usehortela.art.br/api/*', zone: 'usehortela.art.br' })],
     observability: { enabled: true, logs: { enabled: true }, traces: { enabled: true } },
     env: {
       // Origens do site que podem chamar a API (separadas por vírgula).
