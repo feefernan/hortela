@@ -1,6 +1,6 @@
 # Hortelã
 
-Arte vestível em aquarela — [usehortela.comercial.ws](http://usehortela.comercial.ws) · [@usehortela](https://instagram.com/usehortela)
+Arte vestível em aquarela — [usehortela.art.br](https://usehortela.art.br) · [@usehortela](https://instagram.com/usehortela)
 
 ```bash
 npm install

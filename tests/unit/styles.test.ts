@@ -23,3 +23,13 @@ describe('regras de motion e mobile', () => {
     expect(css).toMatch(/\.page\.active\s*\{[^}]*backwards/);
   });
 });
+
+describe('domínio público (#46)', () => {
+  it('canonical, Open Graph, sitemap e robots usam https://usehortela.art.br', () => {
+    const files = [read('index.html'), read('public/sitemap.xml'), read('public/robots.txt')].join('\n');
+    expect(files).toContain('<link rel="canonical" href="https://usehortela.art.br/">');
+    expect(files).toContain('https://usehortela.art.br/og.png');
+    expect(files).toContain('Sitemap: https://usehortela.art.br/sitemap.xml');
+    expect(files).not.toMatch(/http:\/\/usehortela|comercial\.ws/);
+  });
+});
