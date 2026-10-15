@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "includes": ["**", "!legacy", "!.claude", "!public", "!dist", "!coverage", "!reports"] },
+  "files": { "includes": ["**", "!.claude", "!public", "!dist", "!coverage", "!reports"] },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
   "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "all" } },
   "css": { "linter": { "enabled": true }, "formatter": { "enabled": false } },

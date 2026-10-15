@@ -9,6 +9,7 @@ import {
   maxQty,
   parseCart,
   removeLine,
+  withCurrentCatalog,
 } from '../../src/domain/cart';
 import { findProduct, PRODUCTS, type Product } from '../../src/domain/catalog';
 import { filterProducts } from '../../src/domain/collection-filter';
@@ -68,6 +69,29 @@ describe('carrinho', () => {
     ).toHaveLength(1);
     expect(isGarmentSize('GG')).toBe(true);
     expect(isGarmentSize('XG')).toBe(false);
+  });
+});
+
+describe('carrinho salvo x catálogo atual (#41)', () => {
+  it('atualiza preço e nome, descarta esgotadas e desconhecidas e respeita o limite', () => {
+    const saved: Cart = [
+      { productId: 'floresta-3', name: 'Nome antigo', size: 'G', unitPrice: 1, qty: 2 },
+      { productId: 'chuva-fina', name: 'Chuva fina', size: 'M', unitPrice: 200, qty: 1 },
+      { productId: 'nao-existe', name: 'X', size: 'P', unitPrice: 10, qty: 1 },
+      { productId: 'raizes', name: 'Raízes', size: 'P', unitPrice: 225, qty: 3 },
+    ];
+    expect(withCurrentCatalog(saved)).toEqual([
+      { productId: 'floresta-3', name: 'Floresta nº 3', size: 'G', unitPrice: 210, qty: 2 },
+      { productId: 'raizes', name: 'Raízes', size: 'P', unitPrice: 225, qty: 1 },
+    ]);
+  });
+
+  it('o storage já devolve o carrinho atualizado', () => {
+    const data = new Map([
+      [CART_KEY, JSON.stringify([{ productId: 'broto', name: 'B', size: 'G', unitPrice: 1, qty: 1 }])],
+    ]);
+    const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: () => {} } as unknown as Storage;
+    expect(createCartStorage(storage).load()[0].unitPrice).toBe(185);
   });
 });
 

@@ -282,8 +282,10 @@ const surprise = () => {
   clearComposition(true);
   const artwork = STAMPS.filter((s) => s.series !== 'Alfabeto');
   const pool = [...artwork].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
+  const target = side;
   pool.forEach((s, i) => {
-    setTimeout(() => addStamp(s.id), i * 200);
+    // Se a pessoa trocar de lado antes de terminar, o resto da surpresa não vai para o outro lado.
+    setTimeout(() => side === target && addStamp(s.id), i * 200);
   });
   toast('✦ Composição surpresa');
 };

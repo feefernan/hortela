@@ -1,4 +1,4 @@
-import type { Product } from './catalog';
+import { findProduct, type Product } from './catalog';
 
 const SIZES = ['P', 'M', 'G', 'GG'] as const;
 export type GarmentSize = (typeof SIZES)[number];
@@ -62,3 +62,11 @@ export const parseCart = (raw: unknown): Cart => {
       l.qty > 0,
   );
 };
+
+/** Atualiza um carrinho salvo pelo catálogo atual: preço e nome novos, sem esgotadas/desconhecidas, dentro do limite. */
+export const withCurrentCatalog = (cart: Cart): Cart =>
+  cart.flatMap((l) => {
+    const p = findProduct(l.productId);
+    if (!p || p.status === 'sold') return [];
+    return [{ ...l, name: p.name, unitPrice: p.price, qty: Math.min(l.qty, maxQty(p)) }];
+  });
