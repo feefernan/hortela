@@ -56,7 +56,6 @@
     <li><a href="#/colecao" id="n-loja"               data-action="go" data-page="loja">Coleção</a></li>
     <li><a href="#/estudio" id="n-estudio"            data-action="go" data-page="estudio">Estúdio</a></li>
     <li><a href="#/sobre" id="n-sobre"              data-action="go" data-page="sobre">Sobre</a></li>
-    <li><a id="n-painel" href="#/painel" style="opacity:.18!important;font-size:11px;" data-action="open-panel" title="Acesso restrito">●</a></li>
   </ul>
 
   <button type="button" class="nav-right" data-action="open-cart" aria-controls="cart-drawer" aria-expanded="false">
@@ -545,33 +544,6 @@
 </div>
 
 
-
-<!-- ════════════════════ PAINEL DE PEDIDOS ════════════════════ -->
-<div class="page" id="painel">
-  <div class="painel-header">
-    <h1>Pedidos</h1>
-    <div class="painel-meta">
-      <span class="panel-count-badge" id="panel-count">0 pedidos</span>
-      <button type="button" class="panel-logout" data-action="panel-logout">Sair</button>
-    </div>
-  </div>
-  <div class="panel-list" id="panel-list"></div>
-  <div class="panel-empty" id="panel-empty">
-    <p>Nenhum pedido ainda.</p>
-  </div>
-</div>
-
-<!-- PANEL LOGIN MODAL -->
-<div class="panel-login-bg" id="panel-login" data-action="close-panel-login">
-  <div class="panel-login-box" data-stop>
-    <div class="panel-login-title">Painel Hortelã</div>
-    <div class="panel-login-sub">Acesso restrito — insira a senha para continuar.</div>
-    <input class="panel-login-input" id="panel-pw" type="password" placeholder="Senha"
-      data-enter-action="panel-login">
-    <div class="panel-pw-err" id="panel-pw-err">Senha incorreta</div>
-    <button type="button" class="panel-login-btn" data-action="panel-login">Entrar</button>
-  </div>
-</div>
 
 <script type="module" src="/src/main.ts"></script>
 </body>

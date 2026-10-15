@@ -2,7 +2,7 @@
  * Rotas por hash (#/colecao, #/peca/floresta-3…) — funcionam em hospedagem estática (FTP),
  * sem configurar o servidor, e geram links compartilháveis.
  */
-export type PageId = 'home' | 'loja' | 'estudio' | 'sobre' | 'confirmacao' | 'painel';
+export type PageId = 'home' | 'loja' | 'estudio' | 'sobre' | 'confirmacao';
 
 export interface Route {
   page: PageId;
@@ -15,7 +15,6 @@ const SLUG: Record<PageId, string> = {
   estudio: 'estudio',
   sobre: 'sobre',
   confirmacao: 'pedido',
-  painel: 'painel',
 };
 
 const PAGE_BY_SLUG = new Map(Object.entries(SLUG).map(([page, slug]) => [slug, page as PageId]));
@@ -35,7 +34,6 @@ const TITLES: Record<PageId, string> = {
   estudio: 'Estúdio — monte sua obra · Hortelã',
   sobre: 'Sobre — Hortelã',
   confirmacao: 'Pedido confirmado — Hortelã',
-  painel: 'Pedidos — Hortelã',
 };
 
 export const pageTitle = (route: Route, productName?: string): string =>

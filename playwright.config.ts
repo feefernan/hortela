@@ -15,5 +15,7 @@ export default defineConfig({
     command: 'npm run build && npm run preview',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
+    // A API de pedidos é simulada nos testes com page.route (ver e2e/fluxos.spec.ts).
+    env: { VITE_ORDERS_API: 'https://api.test' },
   },
 });

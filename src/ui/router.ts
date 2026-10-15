@@ -59,8 +59,8 @@ export const initRouter = () => {
   });
   const fromLocation = () => {
     const route = parseHash(window.location.hash);
-    // Confirmação e painel não fazem sentido abertos direto por link.
-    apply(route.page === 'confirmacao' || route.page === 'painel' ? { page: 'home' } : route);
+    // A confirmação não faz sentido aberta direto por link.
+    apply(route.page === 'confirmacao' ? { page: 'home' } : route);
   };
   window.addEventListener('popstate', fromLocation);
   window.addEventListener('hashchange', fromLocation);

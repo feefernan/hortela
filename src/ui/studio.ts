@@ -290,6 +290,8 @@ const surprise = () => {
   toast('✦ Composição surpresa');
 };
 
+export const studioModel = (): ModelId => model;
+
 export const studioTotalLabel = () => byId('o-total').textContent ?? formatBRL(studioTotal(model));
 
 const hasStamps = () => sidesWithStamps().length > 0;

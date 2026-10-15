@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   deploy:
+    needs: worker
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -31,11 +32,7 @@ jobs:
       - run: npm run check
       - run: npm run build
         env:
-          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
-          VITE_EMAILJS_SERVICE_ID: ${{ secrets.VITE_EMAILJS_SERVICE_ID }}
-          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
-          VITE_ORDERS_EMAIL: ${{ secrets.VITE_ORDERS_EMAIL }}
-          VITE_PANEL_PASSWORD_SHA256: ${{ secrets.VITE_PANEL_PASSWORD_SHA256 }}
+          VITE_ORDERS_API: ${{ vars.VITE_ORDERS_API }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           VITE_OTEL_EXPORTER_URL: ${{ vars.VITE_OTEL_EXPORTER_URL }}
           VITE_RELEASE: ${{ github.sha }}
@@ -60,3 +57,44 @@ jobs:
           local-dir: ./dist/
           server-dir: ${{ vars.FTP_SERVER_DIR || './' }}
           dangerous-clean-slate: false
+
+  worker:
+    name: Worker de pedidos (Cloudflare)
+    # Publica a API de pedidos. Precisa dos secrets CLOUDFLARE_API_TOKEN e NOTION_TOKEN;
+    # sem eles o job avisa e pula. Roda antes do site, que depende dela.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CF_SEND_TELEMETRY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: worker/package-lock.json }
+      - name: Verificar credenciais
+        id: cred
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$NOTION_TOKEN" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN ou NOTION_TOKEN ausente — Worker não publicado."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.cred.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.cred.outputs.ready == 'true'
+        run: npx cf build
+      - name: Publicar
+        if: steps.cred.outputs.ready == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          umask 077
+          node -e 'require("fs").writeFileSync(process.env.RUNNER_TEMP + "/secrets.json", JSON.stringify({ NOTION_TOKEN: process.env.NOTION_TOKEN }))'
+          npx cf deploy --prebuilt --secrets-file "$RUNNER_TEMP/secrets.json" --message "${{ github.sha }}"
+          rm -f "$RUNNER_TEMP/secrets.json"

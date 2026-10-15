@@ -1,5 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+// Worker de pedidos simulado: devolve serial e total como a API real.
+test.beforeEach(async ({ page }) => {
+  await page.route('https://api.test/api/orders', async (route) => {
+    const body = route.request().postDataJSON() as { kind: string };
+    await route.fulfill({
+      status: 201,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      json: { serial: 'HRT-20261015-E2E000', total: body.kind === 'colecao' ? 210 : 200 },
+    });
+  });
+});
+
 test.describe('fluxos principais', () => {
   test('home carrega sem erros de console', async ({ page }) => {
     const errors: string[] = [];
@@ -40,7 +52,7 @@ test.describe('fluxos principais', () => {
     await page.locator('#ck-email').fill('ana@site.com');
     await page.locator('[data-action="submit-order"]').click();
     await expect(page.locator('#confirmacao')).toHaveClass(/active/);
-    await expect(page.locator('#conf-serial')).toHaveText(/^HRT-\d{8}-[0-9A-Z]{6}$/);
+    await expect(page.locator('#conf-serial')).toHaveText('HRT-20261015-E2E000');
   });
 });
 

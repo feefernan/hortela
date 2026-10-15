@@ -39,20 +39,32 @@ Ideais da marca (Notion): sustentabilidade, minimalismo, fauna e flora, saúde e
 | Unidade + integração | `npm test` · `npm run test:coverage` |
 | End-to-end | `npm run test:e2e` (Playwright, desktop + mobile) |
 | Testes de mutação | `npm run test:mutation` (Stryker, só `src/domain`) |
+| Worker de pedidos (em `worker/`) | `npx cf dev` · `npm run typecheck` · `npx cf deploy --dry-run` |
 
 ## Arquitetura (contratos verificados no CI)
 
 ```
 src/
   domain/   regras puras: catálogo, preços, edição, serial, validação, layout de palavras, contratos de pedido
-  infra/    integrações: storage, e-mail, config de ambiente, telemetria
-  ui/       DOM e interação (um módulo por área: catálogo, estúdio, checkout, painel…)
+  infra/    integrações: storage do carrinho, API de pedidos, telemetria
+  ui/       DOM e interação (um módulo por área: catálogo, estúdio, carrinho, checkout…)
   styles/   CSS
   main.ts   composição/bootstrap — ninguém importa main.ts
+worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.config.ts)
+  src/app.ts     rotas, CORS, rate limit, gravação no Notion
+  src/order.ts   valida e recalcula o pedido reaproveitando src/domain
+  src/notion.ts  cliente mínimo da API do Notion
+  src/entry.ts   ponto de entrada; confere o Env local contra os tipos gerados
 ```
+
+**Fluxo do pedido:** o site envia o pedido (sem preço, total nem serial) para `POST /api/orders` no Worker →
+o Worker valida, recalcula tudo com `src/domain`, gera o serial, sobe preview PNG e SVG de produção e cria a
+página no banco **Pedidos** do Notion → devolve `{ serial, total }`. Se o Worker falhar, o site mostra o erro e
+mantém formulário, carrinho e composição para tentar de novo. Dinheiro e serial **nunca** são decididos no navegador.
 
 - `domain/` **não importa** `infra/` nem `ui/` e não toca no DOM. Toda regra de negócio nova nasce aqui, com teste.
 - `infra/` **não importa** `ui/`.
+- `worker/src` **só importa** `src/domain/` (nada de DOM, `ui/` ou `infra/` do site).
 - Sem dependências circulares.
 - Eventos: o HTML declara `data-action="nome"` e o módulo registra `onAction('nome', handler)` (`src/ui/dom.ts`).
   **Não use** `onclick="..."` inline nem funções globais em `window`.
@@ -109,6 +121,9 @@ Regras:
 
 - Nada de senhas, chaves ou e-mails pessoais no código. Use `.env.local` (não versionado) e GitHub Secrets.
   Variáveis documentadas em `.env.example`.
+- Worker: o token do Notion é secret (`NOTION_TOKEN`, declarado com `bindings.secret()`), enviado no deploy via
+  `cf deploy --secrets-file` a partir do GitHub Secret de mesmo nome. Deploy pelo CI usa `CLOUDFLARE_API_TOKEN`.
+  Valores públicos (ID do banco, origens permitidas) ficam em `worker/cloudflare.config.ts`.
 - O site antigo (antes da refatoração) está no commit `e4a1052` (`legacy/index.html`), se precisar consultar.
 
 ## Idioma

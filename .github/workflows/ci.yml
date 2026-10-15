@@ -81,3 +81,20 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with: { name: playwright-report, path: playwright-report, retention-days: 14 }
+
+  worker:
+    name: Worker de pedidos (tipos + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CF_SEND_TELEMETRY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: worker/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx cf build
+      - run: npx cf deploy --prebuilt --dry-run
