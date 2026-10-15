@@ -18,3 +18,4 @@ Closes #
 - [ ] Teste novo cobre a mudança (todo bug corrigido ganha teste)
 - [ ] Motion segue `.claude/skills/design-motion-principles` e respeita `prefers-reduced-motion` (se houver UI)
 - [ ] Sem segredos ou dados pessoais no código
+- [ ] `ponytail-review` rodada — Verdict: 

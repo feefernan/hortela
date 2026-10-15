@@ -6,3 +6,4 @@ As regras deste projeto estão em [AGENTS.md](AGENTS.md) e valem para qualquer a
 - Merge na `main` faz deploy em produção — só com CI verde.
 - Motion: use a skill `.claude/skills/design-motion-principles` (e-commerce → Jakub primário, Emil secundário),
   com skeleton, lazy loading, entrada/saída/carregamento/progresso e `prefers-reduced-motion`.
+- Código: siga a skill `.claude/skills/ponytail` (nível full) e rode a `ponytail-review` antes de pedir merge.
