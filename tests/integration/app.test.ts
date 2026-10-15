@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,8 +9,22 @@ const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySe
 const click = (sel: string) => $(sel).click();
 const isActive = (id: string) => $(`#${id}`).classList.contains('active');
 
+/** API de pedidos falsa: guarda o que o site enviou e responde como o Worker. */
+const api = {
+  sent: [] as Record<string, unknown>[],
+  fail: null as null | { status: number; error: string },
+};
+const apiFetch = vi.fn(async (_url: string, init: RequestInit) => {
+  const body = JSON.parse(String(init.body));
+  api.sent.push(body);
+  if (api.fail) return Response.json({ error: api.fail.error }, { status: api.fail.status });
+  const total = body.kind === 'colecao' ? 185 : 200;
+  return Response.json({ serial: 'HRT-20261015-ABC123', total }, { status: 201 });
+});
+
 beforeAll(async () => {
-  vi.stubEnv('VITE_PANEL_PASSWORD_SHA256', createHash('sha256').update('senha-de-teste').digest('hex'));
+  vi.stubEnv('VITE_ORDERS_API', 'https://api.test');
+  vi.stubGlobal('fetch', apiFetch);
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   document.body.innerHTML = body;
@@ -89,13 +102,10 @@ describe('rotas e URLs compartilháveis (#15)', () => {
     expect(isActive('estudio')).toBe(true);
   });
 
-  it('confirmação e painel não abrem por link direto', () => {
+  it('confirmação não abre por link direto', () => {
     history.replaceState(null, '', '#/pedido');
     window.dispatchEvent(new HashChangeEvent('hashchange'));
     expect(isActive('home')).toBe(true);
-    history.replaceState(null, '', '#/painel');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-    expect(isActive('painel')).toBe(false);
   });
 
   it('cards de peça são links reais', () => {
@@ -202,11 +212,10 @@ describe('checkout do carrinho', () => {
     expect($('#conf-stamps-label').textContent).toBe('Itens');
     expect($('#conf-cert-btn').hidden).toBe(true);
     expect($('#cn').classList.contains('on')).toBe(false);
-    const saved = JSON.parse(localStorage.getItem('hortela_orders_v1') ?? '[]');
-    expect(saved[0]).toMatchObject({ kind: 'colecao', total: 'R$ 185', hasImg: false });
-    expect(saved[0].items).toHaveLength(1);
-    // limpa para os próximos testes
-    localStorage.removeItem('hortela_orders_v1');
+    const sent = api.sent.at(-1) as { kind: string; items: { productId: string; size: string }[] };
+    expect(sent.kind).toBe('colecao');
+    expect(sent.items).toMatchObject([{ productId: 'broto', size: 'G', qty: 1 }]);
+    expect(sent).not.toHaveProperty('total');
   });
 });
 
@@ -443,7 +452,7 @@ describe('arquivo de produção', () => {
 });
 
 describe('checkout', () => {
-  it('valida os dados e finaliza o pedido salvando no repositório', async () => {
+  it('valida os dados, envia ao Worker e mostra o serial que ele devolveu', async () => {
     click('#n-estudio');
     click('[data-action="clear"]');
     click('[data-stamp-id="s11"]');
@@ -454,59 +463,46 @@ describe('checkout', () => {
     click('[data-action="submit-order"]');
     expect($('#toast-el').textContent).toBe('Preencha nome e e-mail');
 
-    // Payload de XSS no nome: precisa aparecer como texto no painel (#18).
-    $<HTMLInputElement>('#ck-name').value = '<img src=x onerror="window.__xss=1">Ana';
+    $<HTMLInputElement>('#ck-name').value = 'Ana';
     $<HTMLInputElement>('#ck-email').value = 'ana@site.com';
     click('[data-action="submit-order"]');
     await vi.waitFor(() => expect(isActive('confirmacao')).toBe(true));
-    expect($('#conf-serial').textContent).toMatch(/^HRT-\d{8}-[0-9A-Z]{6}$/);
+    expect($('#conf-serial').textContent).toBe('HRT-20261015-ABC123');
     expect($('#conf-stamps').textContent).toBe('Camanducaia');
-
-    const saved = JSON.parse(localStorage.getItem('hortela_orders_v1') ?? '[]');
-    expect(saved).toHaveLength(1);
-    expect(saved[0]).toMatchObject({ kind: 'estudio', status: 'novo', hasSVG: true });
     expect($('#conf-cert-btn').hidden).toBe(false);
-    expect(saved[0].name).toContain('Ana');
+
+    const sent = api.sent.at(-1) as {
+      kind: string;
+      studio: { model: string; stamps: string[] };
+      productionSvg: string;
+    };
+    expect(apiFetch).toHaveBeenLastCalledWith(
+      'https://api.test/api/orders',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(sent.kind).toBe('estudio');
+    expect(sent.studio).toMatchObject({ model: 'oversized', stamps: ['Camanducaia'] });
+    expect(sent.productionSvg).toContain('Serial: __SERIAL__');
+    expect(sent).not.toHaveProperty('total');
+    expect(sent).not.toHaveProperty('serial');
   });
-});
 
-describe('painel', () => {
-  it('recusa senha errada e mantém o painel fechado', async () => {
-    click('[data-action="open-panel"]');
-    expect($('#panel-login').classList.contains('open')).toBe(true);
-    $<HTMLInputElement>('#panel-pw').value = 'errada';
-    click('[data-action="panel-login"]');
-    await vi.waitFor(() => expect($('#panel-pw-err').style.opacity).toBe('1'));
-    expect(isActive('painel')).toBe(false);
-    click('[data-action="close-panel-login"]');
-    expect($('#panel-login').classList.contains('open')).toBe(false);
-  });
-
-  it('com a senha certa lista (escapando dados do cliente), muda status e apaga', async () => {
-    click('[data-action="open-panel"]');
-    const pw = $<HTMLInputElement>('#panel-pw');
-    pw.value = 'senha-de-teste';
-    pw.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    await vi.waitFor(() => expect(isActive('painel')).toBe(true));
-    expect($('#panel-count').textContent).toBe('1 pedido');
-    expect(document.querySelector('#panel-list img[src="x"]')).toBeNull();
-    expect($('#panel-list').textContent).toContain('<img src=x');
-    expect((window as unknown as { __xss?: number }).__xss).toBeUndefined();
-    expect(sessionStorage.getItem('hortela_panel_auth')).not.toBe('senha-de-teste');
-
-    const select = $<HTMLSelectElement>('.pc-select');
-    select.value = 'enviado';
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-    expect(JSON.parse(localStorage.getItem('hortela_orders_v1') ?? '[]')[0].status).toBe('enviado');
-
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    click('[data-action="panel-delete"]');
-    expect($('#panel-count').textContent).toBe('0 pedidos');
-    expect($('#panel-empty').style.display).toBe('block');
-
-    click('[data-action="panel-logout"]');
-    expect(isActive('home')).toBe(true);
-    click('[data-action="open-panel"]');
-    expect(isActive('painel')).toBe(false);
+  it('se o Worker recusar, mostra o motivo e não perde nada', async () => {
+    click('#n-estudio');
+    click('[data-action="clear"]');
+    click('[data-stamp-id="s10"]');
+    click('[data-action="add-studio"]');
+    $<HTMLInputElement>('#ck-name').value = 'Bia';
+    $<HTMLInputElement>('#ck-email').value = 'bia@site.com';
+    api.fail = { status: 502, error: 'Não foi possível registrar o pedido agora. Tente de novo.' };
+    click('[data-action="submit-order"]');
+    await vi.waitFor(() => expect($('#toast-el').textContent).toBe(api.fail?.error));
+    api.fail = null;
+    expect(isActive('confirmacao')).toBe(false);
+    expect($('#checkout-modal').classList.contains('open')).toBe(true);
+    expect($<HTMLInputElement>('#ck-name').value).toBe('Bia');
+    expect($<HTMLButtonElement>('#ck-submit').disabled).toBe(false);
+    expect(document.querySelectorAll('#drop-zone .ps')).toHaveLength(1);
+    click('[data-action="close-checkout"]');
   });
 });

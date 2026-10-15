@@ -114,9 +114,3 @@ export const downloadDataUrl = (href: string, filename: string) => {
   a.download = filename;
   a.click();
 };
-
-export const downloadText = (text: string, type: string, filename: string) => {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  downloadDataUrl(url, filename);
-  URL.revokeObjectURL(url);
-};

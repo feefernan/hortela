@@ -4,7 +4,7 @@ const SUFFIX_LENGTH = 6; // 32^6 ≈ 1,07 bilhão de combinações por dia
 
 export type RandomBytes = (length: number) => Uint8Array;
 
-const cryptoBytes: RandomBytes = (length) => globalThis.crypto.getRandomValues(new Uint8Array(length));
+const cryptoBytes: RandomBytes = (length) => crypto.getRandomValues(new Uint8Array(length));
 
 /** Gera o serial do pedido no formato HRT-AAAAMMDD-XXXXXX. */
 export const generateSerial = (date: Date = new Date(), randomBytes: RandomBytes = cryptoBytes): string => {

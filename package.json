@@ -15,7 +15,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "knip": "knip",
-    "arch": "depcruise src --config .dependency-cruiser.cjs",
+    "arch": "depcruise src worker/src --config .dependency-cruiser.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

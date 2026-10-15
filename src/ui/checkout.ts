@@ -1,16 +1,15 @@
 import { type Cart, cartSubtotal, lineLabel } from '../domain/cart';
-import { formatOrderDate, type Order, type OrderRepository, type StudioConfig } from '../domain/orders';
+import { formatOrderDate, type Order, type StudioConfig } from '../domain/orders';
 import { formatBRL } from '../domain/pricing';
-import { generateSerial } from '../domain/serial';
 import { CHECKOUT_ERROR_MESSAGES, validateCheckout } from '../domain/validation';
-import { sendOrderEmail } from '../infra/email';
+import { type OrderResult, OrderSendError, sendOrder } from '../infra/order-api';
 import { reportError, track } from '../infra/telemetry';
 import { captureComposition, exportProductionSVG } from './capture';
 import { downloadCertificate } from './certificate';
 import { byId, onAction } from './dom';
 import { type ButtonProgress, nextFrame, startButtonProgress } from './progress';
 import { go } from './router';
-import { readStudioConfig, studioTotalLabel } from './studio';
+import { readStudioConfig, studioModel, studioTotalLabel } from './studio';
 import { toast } from './toast';
 
 type CheckoutSource = { kind: 'estudio' } | { kind: 'colecao'; lines: Cart };
@@ -83,24 +82,30 @@ const showConfirmation = (order: Order) => {
   go('confirmacao');
 };
 
-const buildStudioOrder = async (
-  base: Pick<Order, 'serial' | 'name' | 'email' | 'obs' | 'date'>,
-  progress: ButtonProgress,
-) => {
+/** Monta o que vai para o Worker. Preço, total e serial são decididos lá, nunca aqui. */
+const buildPayload = async (contact: { name: string; email: string; obs: string }, progress: ButtonProgress) => {
+  if (source.kind === 'colecao') return { kind: 'colecao', ...contact, items: source.lines };
   const imgB64 = await captureComposition();
-  progress.step(0.45, 'Preparando arquivo de produção…');
+  progress.step(0.4, 'Preparando arquivo de produção…');
   await nextFrame();
-  const svgData = exportProductionSVG(base.serial);
-  return { ...base, kind: 'estudio' as const, cfg: readStudioConfig(), imgB64, svgData, total: studioTotalLabel() };
+  const cfg = readStudioConfig();
+  return {
+    kind: 'estudio',
+    ...contact,
+    studio: { model: studioModel(), color: cfg.color, size: cfg.size, view: cfg.view, stamps: cfg.stamps },
+    previewPng: imgB64,
+    // O Worker troca __SERIAL__ pelo serial que ele gerar.
+    productionSvg: exportProductionSVG('__SERIAL__'),
+  };
 };
 
-const submitOrder = async (repo: OrderRepository) => {
-  const input = {
+const submitOrder = async () => {
+  const contact = {
     name: byId<HTMLInputElement>('ck-name').value.trim(),
     email: byId<HTMLInputElement>('ck-email').value.trim(),
     obs: byId<HTMLTextAreaElement>('ck-obs').value.trim(),
   };
-  const error = validateCheckout(input);
+  const error = validateCheckout(contact);
   if (error) {
     toast(CHECKOUT_ERROR_MESSAGES[error]);
     return;
@@ -111,38 +116,47 @@ const submitOrder = async (repo: OrderRepository) => {
     isCollection ? 'Conferindo as peças…' : 'Gerando sua composição…',
   );
   await nextFrame();
-  const base = { serial: generateSerial(), ...input, date: formatOrderDate(new Date()) };
-  const order: Order =
-    source.kind === 'colecao'
-      ? {
-          ...base,
-          kind: 'colecao',
-          items: [...source.lines],
-          cfg: collectionConfig(source.lines),
-          total: formatBRL(cartSubtotal(source.lines)),
-        }
-      : await buildStudioOrder(base, progress);
-  progress.step(0.8, 'Registrando o pedido…');
-  await nextFrame();
-  currentOrder = order;
-  repo.save(order);
+  const payload = await buildPayload(contact, progress);
+  progress.step(0.7, 'Registrando o pedido…');
+  let result: OrderResult;
+  try {
+    result = await sendOrder(payload);
+  } catch (e) {
+    // Nada é perdido: formulário, carrinho e composição continuam como estavam para tentar de novo.
+    progress.done();
+    toast(e instanceof OrderSendError ? e.message : 'Não foi possível registrar o pedido. Tente de novo.');
+    if (!(e instanceof OrderSendError)) reportError(e);
+    return;
+  }
+  const studio = source.kind === 'estudio' ? (payload as { previewPng: string | null; productionSvg: string }) : null;
+  const order: Order = {
+    kind: source.kind,
+    items: source.kind === 'colecao' ? [...source.lines] : undefined,
+    serial: result.serial,
+    ...contact,
+    cfg: source.kind === 'colecao' ? collectionConfig(source.lines) : readStudioConfig(),
+    total: formatBRL(result.total),
+    date: formatOrderDate(new Date()),
+    imgB64: studio?.previewPng ?? null,
+    svgData: studio?.productionSvg.replace('__SERIAL__', result.serial) ?? null,
+  };
   progress.step(1, 'Pronto');
   await nextFrame();
+  currentOrder = order;
 
   closeCheckout();
   progress.done();
   // Formulário limpo para o próximo pedido.
   for (const id of ['ck-name', 'ck-email', 'ck-obs']) byId<HTMLInputElement>(id).value = '';
   if (isCollection) onCollectionOrdered();
-  void sendOrderEmail(order).then((sent) => sent && toast('Pedido enviado por e-mail ✓'));
   showConfirmation(order);
 };
 
-export const initCheckout = (repo: OrderRepository, afterCollectionOrder: () => void = () => {}) => {
+export const initCheckout = (afterCollectionOrder: () => void = () => {}) => {
   onCollectionOrdered = afterCollectionOrder;
   onAction('close-checkout', closeCheckout);
   onAction('submit-order', () => {
-    track('pedido.finalizar', { origem: source.kind }, () => submitOrder(repo)).catch(reportError);
+    track('pedido.finalizar', { origem: source.kind }, () => submitOrder()).catch(reportError);
   });
   onAction('download-certificate', (el) => {
     if (!currentOrder) {

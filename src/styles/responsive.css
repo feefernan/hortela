@@ -234,9 +234,6 @@ a.loja-card {
     font-size: 14px;
     min-height: 44px;
   }
-  .nav-center li:has(#n-painel) {
-    display: none;
-  }
 
   .page {
     padding-bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px));
@@ -297,10 +294,6 @@ a.loja-card {
   #checkout-modal .modal > div {
     padding: 28px 20px !important;
   }
-  .panel-login-box {
-    width: calc(100vw - 32px);
-    padding: 36px 24px;
-  }
 
   #confirmacao > div {
     padding: 40px 16px 64px !important;
@@ -312,13 +305,6 @@ a.loja-card {
     flex-direction: column;
   }
 
-  .painel-header {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .panel-card {
-    grid-template-columns: 1fr;
-  }
 
   .toast {
     bottom: calc(var(--mobile-bar-h) + 16px);

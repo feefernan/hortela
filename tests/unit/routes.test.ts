@@ -11,7 +11,7 @@ describe('rotas', () => {
   });
 
   it('lê o hash de volta (ida e volta)', () => {
-    for (const page of ['home', 'loja', 'estudio', 'sobre', 'confirmacao', 'painel'] as const) {
+    for (const page of ['home', 'loja', 'estudio', 'sobre', 'confirmacao'] as const) {
       expect(parseHash(routeToHash({ page }))).toEqual({ page });
     }
     expect(parseHash('#/peca/tarde-de-outubro')).toEqual({ page: 'loja', productId: 'tarde-de-outubro' });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ALPHABET, findProduct, findStamp, PRODUCTS, STAMPS } from '../../src/domain/catalog';
 import { editionLabel } from '../../src/domain/edition';
 import { escapeHtml } from '../../src/domain/escape';
-import { formatOrderDate, toRecord } from '../../src/domain/orders';
+import { formatOrderDate } from '../../src/domain/orders';
 import { formatBRL, MODELS, PRINT_FEE, studioTotal } from '../../src/domain/pricing';
 import { generateSerial, SERIAL_PATTERN } from '../../src/domain/serial';
 import { isValidWord, validateCheckout } from '../../src/domain/validation';
@@ -137,22 +137,6 @@ describe('word layout', () => {
 });
 
 describe('orders', () => {
-  it('converte pedido em registro sem os anexos pesados', () => {
-    const record = toRecord({
-      serial: 'HRT-1',
-      name: 'Ana',
-      email: 'ana@site.com',
-      obs: '',
-      cfg: { model: 'Camiseta', color: 'Musgo', size: 'G', view: 'Frente', stamps: ['Açucena'] },
-      total: 'R$ 200',
-      date: '1 de janeiro',
-      imgB64: 'data:image/png;base64,xyz',
-      svgData: null,
-    });
-    expect(record).toMatchObject({ status: 'novo', hasImg: true, hasSVG: false });
-    expect(record).not.toHaveProperty('imgB64');
-  });
-
   it('formata a data em pt-BR', () => {
     expect(formatOrderDate(new Date(2026, 9, 14))).toMatch(/14 de outubro de 2026/);
   });
