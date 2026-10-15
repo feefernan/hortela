@@ -59,10 +59,29 @@ describe('serial', () => {
     expect(generateSerial(new Date(2026, 11, 31), bytes(31, 30, 18, 63, 255, 10))).toBe('HRT-20261231-ZYJZZA');
   });
 
-  it('usa crypto e a data atual por padrão, sem colisões em 2.000 seriais', () => {
-    const serials = new Set(Array.from({ length: 2000 }, () => generateSerial()));
-    expect(serials.size).toBe(2000);
-    for (const s of serials) expect(s).toMatch(SERIAL_PATTERN);
+  it('usa crypto e a data atual por padrão', () => {
+    const today = new Date();
+    const ds = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    for (let i = 0; i < 50; i++) expect(generateSerial()).toMatch(new RegExp(`^HRT-${ds}-`));
+    for (let i = 0; i < 50; i++) expect(generateSerial()).toMatch(SERIAL_PATTERN);
+  });
+
+  it('cada byte vira um caractere: sufixos distintos para bytes distintos (determinístico, #37)', () => {
+    // Fonte de bytes controlada em vez de sorte: 32 sequências diferentes → 32 seriais diferentes.
+    const serials = new Set(
+      Array.from({ length: 32 }, (_, i) => generateSerial(new Date(2026, 0, 1), bytes(i, 31 - i, i, i, i, i))),
+    );
+    expect(serials.size).toBe(32);
+  });
+
+  it('distribui uniformemente: os 256 valores de byte cobrem os 32 caracteres 8 vezes cada', () => {
+    const counts = new Map<string, number>();
+    for (let b = 0; b < 256; b++) {
+      const ch = generateSerial(new Date(2026, 0, 1), bytes(b, b, b, b, b, b)).slice(-1);
+      counts.set(ch, (counts.get(ch) ?? 0) + 1);
+    }
+    expect(counts.size).toBe(32);
+    expect(new Set(counts.values())).toEqual(new Set([8]));
   });
 
   it('nunca usa letras ambíguas (I, L, O, U)', () => {
