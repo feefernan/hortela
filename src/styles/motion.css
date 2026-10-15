@@ -8,9 +8,10 @@
  */
 
 :root {
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* chegada: rápida e assenta suave */
-  --ease-in: cubic-bezier(0.55, 0, 1, 0.45); /* saída: começa suave e acelera */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* mudança de estado visível */
+  /* Entradas E saídas usam ease-out: ease-in começa devagar justo no momento que a pessoa olha. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* movimento/morph na tela */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* gaveta, estilo iOS */
 
   --dur-press: 120ms;
   --dur-fast: 160ms; /* saídas, micro-feedback */
@@ -48,7 +49,7 @@
 .page.active {
   /* backwards (não both): ao terminar, nada de transform/filter residual — senão a página vira
      containing block e quebra elementos position: fixed dentro dela (barra de total no celular). */
-  animation: enter var(--dur-slow) var(--ease-out) backwards;
+  animation: enter var(--dur-base) var(--ease-out) backwards; /* ação frequente: < 300ms */
 }
 
 /* A página que sai fica sobreposta por um instante e some (ver ui/router.ts). */
@@ -57,7 +58,7 @@
   position: absolute;
   inset: 0 0 auto;
   pointer-events: none;
-  animation: exit var(--dur-fast) var(--ease-in) both;
+  animation: exit var(--dur-fast) var(--ease-out) both;
 }
 
 /* ── CARDS (entrada escalonada) ─────────────────── */
@@ -74,7 +75,7 @@
   visibility: hidden;
   opacity: 0;
   transition:
-    opacity var(--dur-fast) var(--ease-in),
+    opacity var(--dur-fast) var(--ease-out),
     visibility 0s linear var(--dur-fast);
 }
 .modal-bg.open,
@@ -92,9 +93,9 @@
   transform: translateY(6px) scale(0.98);
   filter: blur(2px);
   transition:
-    opacity var(--dur-fast) var(--ease-in),
-    transform var(--dur-fast) var(--ease-in),
-    filter var(--dur-fast) var(--ease-in);
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out);
 }
 .modal-bg.open .modal,
 .panel-login-bg.open .panel-login-box {
@@ -115,9 +116,9 @@
   transform: translateX(-50%) translateY(12px);
   filter: blur(var(--enter-blur));
   transition:
-    opacity var(--dur-fast) var(--ease-in),
-    transform var(--dur-fast) var(--ease-in),
-    filter var(--dur-fast) var(--ease-in),
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out),
     visibility 0s linear var(--dur-fast);
 }
 .toast.show {
@@ -171,7 +172,7 @@ button:active:not(:disabled),
   visibility: hidden;
   opacity: 0;
   transition:
-    opacity var(--dur-fast) var(--ease-in),
+    opacity var(--dur-fast) var(--ease-out),
     visibility 0s linear var(--dur-fast);
 }
 .drawer-bg.open {
@@ -186,16 +187,16 @@ button:active:not(:disabled),
   opacity: 0;
   filter: blur(2px);
   transition:
-    transform var(--dur-fast) var(--ease-in),
-    opacity var(--dur-fast) var(--ease-in),
-    filter var(--dur-fast) var(--ease-in);
+    transform var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out);
 }
 .drawer-bg.open .drawer {
   transform: none;
   opacity: 1;
   filter: none;
   transition:
-    transform var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-drawer),
     opacity var(--dur-base) var(--ease-out),
     filter var(--dur-base) var(--ease-out);
 }
@@ -218,7 +219,7 @@ button:active:not(:disabled),
   }
 }
 .ps.removing {
-  animation: exit var(--dur-fast) var(--ease-in) both;
+  animation: exit var(--dur-fast) var(--ease-out) both;
   pointer-events: none;
 }
 
@@ -231,7 +232,7 @@ button:active:not(:disabled),
 }
 
 /* Tooltip: aparece com atraso para não piscar ao passar o mouse; some na hora. Só com hover. */
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   [data-tip] {
     position: relative;
   }
@@ -271,6 +272,28 @@ button:active:not(:disabled),
 #shirt-collar,
 #shirt-body {
   transition: d var(--dur-slow) var(--ease-in-out);
+}
+
+/* Troca Frente/Costas: a zona que aparece entra rápido (sem mover posição). */
+.drop-zone:not([hidden]) {
+  animation: zone-in var(--dur-fast) var(--ease-out) backwards;
+}
+@keyframes zone-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+/* Confirmação do pedido: momento raro — a composição "se revela" de cima para baixo. */
+#confirmacao.active #conf-preview,
+#confirmacao.active #conf-serial {
+  animation: reveal 500ms var(--ease-out) 120ms backwards;
+}
+@keyframes reveal {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
 }
 
 /* ── SKELETON ───────────────────────────────────── */

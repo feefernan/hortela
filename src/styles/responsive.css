@@ -20,6 +20,39 @@ body {
   overflow-x: clip;
 }
 
+/* Linha base móvel (skill mobile-native). */
+html {
+  -webkit-tap-highlight-color: transparent; /* sem flash cinza no toque; o :active dá o retorno */
+  -webkit-text-size-adjust: 100%;
+}
+button,
+a,
+[data-action] {
+  touch-action: manipulation; /* tap sem os 300ms de espera do duplo toque */
+}
+button,
+.btn,
+.btn-cart,
+.sz,
+.mo,
+.sw,
+.st,
+.filter-pill,
+.sc-btn,
+.nav-center a {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+/* iOS dá zoom em campos com fonte < 16px e não volta. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* vence os estilos inline antigos dos campos */
+  }
+}
+
 /* Cards de peça são links (#/peca/:id) — compartilháveis e abríveis em nova aba. */
 a.p-card,
 a.loja-card {
@@ -167,7 +200,8 @@ a.loja-card {
   }
 
   nav {
-    padding: 0 16px;
+    /* viewport-fit=cover: no celular deitado, afasta o menu do recorte da câmera */
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
   }
   .logo {
     font-size: 15px;
