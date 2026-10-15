@@ -70,6 +70,21 @@ src/
 - **Mutação**: score mínimo 60% (`stryker.config.json`). Vitest fica fixado na v4 até o runner do Stryker
   suportar a v5 (na v5 todos os mutantes "sobrevivem" por incompatibilidade).
 
+## Revisão de código (skill ponytail)
+
+Skill vendorizada em `.claude/skills/ponytail*` (de github.com/DietrichGebert/ponytail, MIT).
+
+- **Ao escrever código:** siga a `ponytail` no nível `full` — a menor mudança que resolve a tarefa
+  inteira, reaproveitando o que já existe (domínio, helpers, tokens), sem abstração ou opção que
+  ninguém pediu. Nunca corte validação na borda, tratamento de erro que evita perda de dados,
+  segurança, acessibilidade, testes ou o que este AGENTS.md exige (motion, `prefers-reduced-motion`).
+- **Antes de pedir merge:** rode a `ponytail-review` sobre o diff do PR e cole o resultado
+  (`Verdict: …`) na descrição. Achados de "Must fix" são corrigidos no próprio PR.
+- **Atalho consciente:** quando aceitar um limite conhecido, deixe o comentário
+  `shortcut: <o limite>, <quando melhorar>` — a `ponytail-debt` lista todos.
+- **Auditoria periódica:** `ponytail-audit` no repositório inteiro; cada achado vira issue.
+- Em conflito entre a skill e este arquivo, **este arquivo vence**.
+
 ## Observabilidade
 
 - Erros, performance e traces via **Sentry** + **OpenTelemetry** (`src/infra/telemetry.ts`), ligados apenas
