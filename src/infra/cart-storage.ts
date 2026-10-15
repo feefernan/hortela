@@ -1,4 +1,4 @@
-import { type Cart, parseCart } from '../domain/cart';
+import { type Cart, parseCart, withCurrentCatalog } from '../domain/cart';
 
 export const CART_KEY = 'hortela_cart_v1';
 
@@ -11,7 +11,7 @@ export interface CartStorage {
 export const createCartStorage = (storage: Storage = window.localStorage): CartStorage => ({
   load() {
     try {
-      return parseCart(JSON.parse(storage.getItem(CART_KEY) ?? '[]'));
+      return withCurrentCatalog(parseCart(JSON.parse(storage.getItem(CART_KEY) ?? '[]')));
     } catch {
       return [];
     }

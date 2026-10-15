@@ -94,7 +94,7 @@ Regras:
 
 - Nada de senhas, chaves ou e-mails pessoais no código. Use `.env.local` (não versionado) e GitHub Secrets.
   Variáveis documentadas em `.env.example`.
-- `legacy/index.html` é o snapshot do site antigo, só para referência. Não edite nem importe.
+- O site antigo (antes da refatoração) está no commit `e4a1052` (`legacy/index.html`), se precisar consultar.
 
 ## Idioma
 

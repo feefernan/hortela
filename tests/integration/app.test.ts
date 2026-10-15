@@ -400,6 +400,25 @@ describe('palco no celular (#14)', () => {
   });
 });
 
+describe('Surpresa (#41)', () => {
+  it('trocar de lado no meio não leva estampas para o outro lado', () => {
+    vi.useFakeTimers();
+    click('#n-estudio');
+    click('[data-view="costas"]');
+    click('[data-action="clear"]');
+    click('[data-view="frente"]');
+    click('[data-action="surprise"]');
+    vi.advanceTimersByTime(0);
+    click('[data-view="costas"]');
+    vi.advanceTimersByTime(1000);
+    vi.useRealTimers();
+    expect(document.querySelectorAll('#drop-zone-back .ps')).toHaveLength(0);
+    expect(document.querySelectorAll('#drop-zone .ps').length).toBeGreaterThanOrEqual(1);
+    click('[data-view="frente"]');
+    click('[data-action="clear"]');
+  });
+});
+
 describe('arquivo de produção', () => {
   it('inclui as aquarelas como <image> e os dois lados', async () => {
     click('#n-estudio');
