@@ -1,6 +1,6 @@
 name: Deploy
 
-# Merge na main = deploy em produção (usehortela.comercial.ws) via FTP.
+# Merge na main = deploy em produção via FTP na hospedagem Locaweb, servida em usehortela.art.br (Cloudflare na frente).
 # Segredos necessários (Settings → Secrets and variables → Actions):
 #   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD   e, opcional, a variável FTP_SERVER_DIR (padrão "./").
 # Variáveis de build (VITE_*) ficam em Secrets com o mesmo nome — ver .env.example.
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: http://usehortela.comercial.ws
+      url: https://usehortela.art.br
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

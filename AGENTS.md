@@ -5,7 +5,7 @@ Instruções para **qualquer agente de IA (de qualquer modelo/ferramenta) e pess
 
 ## O projeto
 
-Loja da **Hortelã** — arte vestível em aquarela (`usehortela.comercial.ws`, Instagram `@usehortela`).
+Loja da **Hortelã** — arte vestível em aquarela (`usehortela.art.br`, Instagram `@usehortela`).
 Site estático (Vite + TypeScript, sem framework) com Coleção (drops numerados), **Estúdio** (o cliente compõe a
 própria estampa sobre a camiseta) e checkout que gera serial e certificado.
 
