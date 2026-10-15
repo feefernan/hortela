@@ -104,6 +104,14 @@ describe('POST /api/orders', () => {
     expect(n.calls).toHaveLength(0);
   });
 
+  it('o domínio próprio (com e sem www) é origem permitida', async () => {
+    const e = { ...env(), ALLOWED_ORIGIN: 'https://usehortela.art.br,https://www.usehortela.art.br' };
+    for (const origin of ['https://usehortela.art.br', 'https://www.usehortela.art.br']) {
+      const res = await handle(post(studio, origin), e, ctx, notion().f);
+      expect(res.headers.get('Access-Control-Allow-Origin')).toBe(origin);
+    }
+  });
+
   it('pedido inválido devolve a mensagem do domínio', async () => {
     const res = await handle(post({ ...studio, studio: { model: 'x', stamps: ['a'] } }), env(), ctx, notion().f);
     expect(res.status).toBe(400);

@@ -10,7 +10,9 @@ export default defineConfig({
     observability: { enabled: true, logs: { enabled: true }, traces: { enabled: true } },
     env: {
       // Origens do site que podem chamar a API (separadas por vírgula).
-      ALLOWED_ORIGIN: bindings.text('http://usehortela.comercial.ws,http://localhost:5173,http://localhost:4173'),
+      ALLOWED_ORIGIN: bindings.text(
+        'https://usehortela.art.br,https://www.usehortela.art.br,http://usehortela.comercial.ws,http://localhost:5173,http://localhost:4173',
+      ),
       NOTION_ORDERS_DB: bindings.text('3facabbfb8c68005936ac8e551f57037'),
       NOTION_TOKEN: bindings.secret(),
       // 5 pedidos por minuto por IP: suficiente para quem compra, freia spam.
