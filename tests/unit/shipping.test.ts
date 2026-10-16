@@ -6,6 +6,7 @@ import {
   normalizeCep,
   parseAddress,
   paymentStatus,
+  pickShippingOptions,
   shippingProducts,
 } from '../../src/domain/shipping';
 
@@ -73,5 +74,24 @@ describe('status do pedido diante de avisos fora de ordem', () => {
     expect(nextOrderStatus('Aguardando pagamento', 'approved')).toBe('Pago');
     expect(nextOrderStatus('Cancelado', 'approved')).toBe('Pago');
     expect(nextOrderStatus('Aguardando pagamento', 'rejected')).toBe('Cancelado');
+  });
+});
+
+describe('opções de frete exibidas', () => {
+  const o = (id: number, price: number, days: number) => ({ id, price, days });
+
+  it('até 4, mais baratas primeiro', () => {
+    const all = [o(1, 30, 5), o(2, 15, 6), o(3, 16, 4), o(4, 17, 3), o(5, 18, 2), o(6, 40, 3)];
+    expect(pickShippingOptions(all).map((x) => x.id)).toEqual([2, 3, 4, 5]);
+  });
+
+  it('a mais rápida entra no lugar da última quando não está entre as baratas', () => {
+    const all = [o(1, 15, 6), o(2, 16, 5), o(3, 17, 7), o(4, 18, 6), o(9, 36, 1)];
+    expect(pickShippingOptions(all).map((x) => x.id)).toEqual([1, 2, 3, 9]);
+  });
+
+  it('lista curta fica como está', () => {
+    expect(pickShippingOptions([o(1, 20, 3)])).toEqual([o(1, 20, 3)]);
+    expect(pickShippingOptions([])).toEqual([]);
   });
 });

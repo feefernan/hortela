@@ -128,6 +128,27 @@ describe('POST /api/shipping/quote', () => {
   });
 });
 
+describe('POST /api/shipping/quote com muitas opções', () => {
+  it('mostra no máximo 4, mas o pedido aceita qualquer opção cotada', async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      id: 100 + i,
+      name: `S${i}`,
+      custom_price: String(15 + i),
+      custom_delivery_time: 12 - i,
+      company: { name: 'X' },
+    }));
+    const a = apis();
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) =>
+      String(url).endsWith('/shipment/calculate') ? Response.json(many) : a.f(url, init),
+    ) as unknown as typeof fetch;
+    const res = await handle(post('/api/shipping/quote', { ...order, cep: '20040020' }), env, ctx, f);
+    const { options } = (await res.json()) as { options: { id: number }[] };
+    expect(options.map((x) => x.id)).toEqual([100, 101, 102, 111]);
+    const placed = await handle(post('/api/orders', { ...order, shipping: { serviceId: 107 } }), env, ctx, f);
+    expect(placed.status).toBe(201);
+  });
+});
+
 describe('POST /api/orders com frete e pagamento', () => {
   it('recota o frete, cobra peças + frete no Mercado Pago e grava "Aguardando pagamento" com entrega', async () => {
     const a = apis();

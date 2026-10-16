@@ -6,7 +6,7 @@
  * pelo TypeScript/Vitest da raiz; `entry.ts` confere que eles batem com os tipos gerados.
  */
 import { SERIAL_PATTERN } from '../../src/domain/serial';
-import { nextOrderStatus, normalizeCep, type PaymentStatus } from '../../src/domain/shipping';
+import { nextOrderStatus, normalizeCep, type PaymentStatus, pickShippingOptions } from '../../src/domain/shipping';
 import { quoteShipping } from './melhor-envio';
 import { createCheckout, getPayment, verifySignature } from './mercado-pago';
 import { createOrderPage, findOrderPage, updatePaymentStatus, uploadFile } from './notion';
@@ -91,7 +91,7 @@ const shippingQuote = async (request: Request, env: Env, f: typeof fetch, h: Rec
     if (!cep) return json({ error: 'CEP inválido' }, 400, h);
     const options = await quote(f, env, cep, goodsOf(input));
     if (!options.length) return json({ error: 'Nenhuma opção de envio para esse CEP' }, 422, h);
-    return json({ options }, 200, h);
+    return json({ options: pickShippingOptions(options) }, 200, h);
   } catch (e) {
     if (e instanceof OrderError) return json({ error: e.message }, e.status, h);
     log('error', 'cotação de frete falhou', { error: String(e) });

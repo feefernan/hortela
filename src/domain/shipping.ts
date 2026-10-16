@@ -24,6 +24,17 @@ export const shippingProducts = (count: number, value: number) => [
   },
 ];
 
+/**
+ * Opções de frete que o cliente vê: até `max`, as mais baratas, com a mais rápida sempre entre elas
+ * (o Melhor Envio devolve uma dúzia e a lista cansa). O pedido continua aceitando qualquer opção cotada.
+ */
+export const pickShippingOptions = <T extends { price: number; days: number }>(options: T[], max = 4): T[] => {
+  const picked = [...options].sort((a, b) => a.price - b.price || a.days - b.days).slice(0, max);
+  const fastest = [...options].sort((a, b) => a.days - b.days || a.price - b.price)[0];
+  if (fastest && !picked.includes(fastest)) picked[picked.length - 1] = fastest;
+  return picked;
+};
+
 export interface Address {
   cep: string;
   street: string;
