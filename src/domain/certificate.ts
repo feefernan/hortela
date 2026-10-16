@@ -18,21 +18,12 @@ export const fitContain = (w: number, h: number, box: Rect): Rect => {
 };
 
 export interface ArtworkLabel {
-  title: string;
-  subtitle: string;
-  rows: { label: string; value: string }[];
-  note: string;
+  code: string;
+  author: string;
 }
 
-/** Texto da etiqueta do certificado: dados da obra, nunca da compra ou da peça. */
+/** As duas linhas de texto do certificado (além da marca): código da obra e autoria. Nada de compra ou peça. */
 export const artworkLabel = (d: { serial: string; name: string; date: Date }): ArtworkLabel => ({
-  title: 'Certificado de autenticidade',
-  subtitle: 'Obra original · edição única 1/1',
-  rows: [
-    { label: 'Código da obra', value: d.serial },
-    { label: 'Criada por', value: d.name },
-    { label: 'Data', value: formatOrderDate(d.date) },
-    { label: 'Técnica', value: 'Composição autoral sobre aquarelas Hortelã' },
-  ],
-  note: 'Esta composição foi criada uma única vez e não será reproduzida.',
+  code: d.serial,
+  author: `${d.name} · ${formatOrderDate(d.date)}`,
 });

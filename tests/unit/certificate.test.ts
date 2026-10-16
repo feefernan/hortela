@@ -31,19 +31,9 @@ describe('fitContain', () => {
 describe('artworkLabel', () => {
   const label = artworkLabel({ serial: 'HRT-20261015-ABC123', name: 'Ana', date: new Date(2026, 9, 15) });
 
-  it('traz código da obra, autoria e data', () => {
-    expect(label.rows).toEqual(
-      expect.arrayContaining([
-        { label: 'Código da obra', value: 'HRT-20261015-ABC123' },
-        { label: 'Criada por', value: 'Ana' },
-      ]),
-    );
-    expect(label.rows.find((r) => r.label === 'Data')?.value).toMatch(/15 de outubro de 2026/);
-  });
-
-  it('não fala de compra nem da peça', () => {
-    expect(label.rows.map((r) => r.label)).toEqual(['Código da obra', 'Criada por', 'Data', 'Técnica']);
-    const all = JSON.stringify(label).toLowerCase();
-    for (const word of ['modelo', 'tamanho', 'total', 'r$', 'camiseta', 'pedido']) expect(all).not.toContain(word);
+  it('só código da obra e autoria com data', () => {
+    expect(label.code).toBe('HRT-20261015-ABC123');
+    expect(label.author).toMatch(/^Ana · 15 de outubro de 2026$/);
+    expect(Object.keys(label)).toEqual(['code', 'author']);
   });
 });

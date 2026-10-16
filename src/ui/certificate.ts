@@ -8,25 +8,22 @@ type CertificateData = Pick<Order, 'serial' | 'name' | 'artB64' | 'imgB64'>;
 const W = 1754;
 const H = 1240;
 const M = 100; // margem interna
-const LABEL_W = 420; // etiqueta no canto inferior direito, como numa galeria
+const LABEL_W = 380; // etiqueta de 3 linhas no canto inferior direito
 const LABEL_X = W - M - LABEL_W;
-const ART = { x: M, y: M, w: LABEL_X - M - 60, h: H - 2 * M };
+const ART = { x: M, y: M, w: LABEL_X - M - 40, h: H - 2 * M };
 
 const INK = '#1C1812';
 const MOSS = '#3C4E2E';
 const SAGE = '#7A9268';
-const LILAC = '#9B7FA8';
 const LINE = '#D6CCBA';
 
-/** Quebra o texto em linhas que cabem em `width`. */
-const wrap = (ctx: CanvasRenderingContext2D, text: string, width: number): string[] =>
-  text.split(' ').reduce<string[]>((lines, word) => {
-    const last = lines.at(-1);
-    if (last !== undefined && ctx.measureText(`${last} ${word}`).width <= width)
-      lines[lines.length - 1] = `${last} ${word}`;
-    else lines.push(word);
-    return lines;
-  }, []);
+/** Escreve uma linha, reduzindo a fonte até caber na etiqueta (nomes longos). */
+const fitText = (ctx: CanvasRenderingContext2D, text: string, y: number, size: number, style: string) => {
+  let px = size;
+  do ctx.font = `${style} ${px--}px Georgia, serif`;
+  while (ctx.measureText(text).width > LABEL_W && px > 10);
+  ctx.fillText(text, LABEL_X, y);
+};
 
 /** O símbolo da Hortelã (mesmo desenho do favicon), em `size` px. */
 const drawLogo = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
@@ -44,76 +41,28 @@ const drawLogo = (ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.strokeStyle = SAGE;
   ctx.lineWidth = 1.2;
   ctx.stroke(new Path2D('M 5 4 L 19 20'));
-  ctx.fillStyle = LILAC;
+  ctx.fillStyle = '#9B7FA8';
   ctx.beginPath();
   ctx.arc(17.5, 5.5, 2.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 };
 
-/** Etiqueta da obra, ancorada no canto inferior direito. */
+/** Etiqueta da obra no canto inferior direito: marca, código da obra e autoria — três linhas. */
 const drawLabel = (ctx: CanvasRenderingContext2D, d: CertificateData) => {
-  const label = artworkLabel({ serial: d.serial, name: d.name, date: new Date() });
-  const x = LABEL_X;
-  const ops: { h: number; draw: (y: number) => void }[] = [];
-  const text = (font: string, color: string, value: string, lineH: number, spacing = '0px') => {
-    ctx.font = font;
-    for (const line of wrap(ctx, value, LABEL_W))
-      ops.push({
-        h: lineH,
-        draw: (y) => {
-          ctx.font = font;
-          ctx.fillStyle = color;
-          ctx.letterSpacing = spacing;
-          ctx.fillText(line, x, y);
-          ctx.letterSpacing = '0px';
-        },
-      });
-  };
-  const gap = (h: number) => ops.push({ h, draw: () => {} });
-
-  ops.push({
-    h: 64,
-    draw: (y) => {
-      drawLogo(ctx, x, y - 40, 48);
-      ctx.font = 'bold 20px Georgia, serif';
-      ctx.fillStyle = INK;
-      ctx.letterSpacing = '10px';
-      ctx.fillText('HORTELÃ', x + 64, y - 14);
-      ctx.letterSpacing = '0px';
-      ctx.font = 'italic 15px Georgia, serif';
-      ctx.fillStyle = SAGE;
-      ctx.fillText('Arte vestível em aquarela', x + 64, y + 8);
-    },
-  });
-  gap(28);
-  text('italic 32px Georgia, serif', MOSS, label.title, 40);
-  text('italic 18px Georgia, serif', SAGE, label.subtitle, 26);
-  ops.push({
-    h: 34,
-    draw: (y) => {
-      ctx.strokeStyle = LINE;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + LABEL_W, y);
-      ctx.stroke();
-    },
-  });
-  for (const row of label.rows) {
-    text('13px Georgia, serif', SAGE, row.label.toUpperCase(), 22, '2px');
-    if (row.label === 'Código da obra') text('bold 20px "Courier New", monospace', LILAC, row.value, 34);
-    else text('italic 21px Georgia, serif', INK, row.value, 34);
-    gap(6);
-  }
-  gap(10);
-  text('italic 15px Georgia, serif', SAGE, label.note, 22);
-
-  let y = H - M - ops.reduce((sum, op) => sum + op.h, 0);
-  for (const op of ops) {
-    y += op.h;
-    op.draw(y);
-  }
+  const { code, author } = artworkLabel({ serial: d.serial, name: d.name, date: new Date() });
+  const bottom = H - M;
+  drawLogo(ctx, LABEL_X - 4, bottom - 118, 40);
+  ctx.fillStyle = INK;
+  ctx.font = 'bold 18px Georgia, serif';
+  ctx.letterSpacing = '9px';
+  ctx.fillText('HORTELÃ', LABEL_X + 50, bottom - 88);
+  ctx.letterSpacing = '0px';
+  ctx.fillStyle = MOSS;
+  ctx.font = '20px "Courier New", monospace';
+  ctx.fillText(code, LABEL_X, bottom - 40);
+  ctx.fillStyle = SAGE;
+  fitText(ctx, author, bottom, 19, 'italic');
 };
 
 /** Gera e baixa o certificado da obra (PNG A4 paisagem, 150 dpi): a arte em destaque e a etiqueta da obra. */
