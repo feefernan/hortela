@@ -1,15 +1,16 @@
 import { type Cart, cartSubtotal, lineLabel } from '../domain/cart';
 import { formatOrderDate, type Order, type StudioConfig } from '../domain/orders';
-import { formatBRL } from '../domain/pricing';
+import { formatBRL, studioTotal } from '../domain/pricing';
 import { CHECKOUT_ERROR_MESSAGES, validateCheckout } from '../domain/validation';
-import { type OrderResult, OrderSendError, sendOrder } from '../infra/order-api';
+import { fetchOrderStatus, type OrderResult, OrderSendError, sendOrder } from '../infra/order-api';
 import { reportError, track } from '../infra/telemetry';
 import { captureArt, captureComposition, exportProductionSVG } from './capture';
 import { downloadCertificate } from './certificate';
+import { initDelivery, readDelivery, resetDelivery } from './delivery';
 import { byId, onAction } from './dom';
 import { type ButtonProgress, nextFrame, startButtonProgress } from './progress';
-import { go } from './router';
-import { readStudioConfig, studioModel, studioTotalLabel } from './studio';
+import { navigate, setReturnHook } from './router';
+import { readStudioConfig, studioModel } from './studio';
 import { toast } from './toast';
 
 type CheckoutSource = { kind: 'estudio' } | { kind: 'colecao'; lines: Cart };
@@ -20,6 +21,28 @@ let artB64: string | null = null;
 let source: CheckoutSource = { kind: 'estudio' };
 let onCollectionOrdered: () => void = () => {};
 
+/** Pedido guardado na aba enquanto o cliente paga no Mercado Pago, para a confirmação na volta. */
+const PENDING_KEY = 'hortela_pedido_pendente';
+
+const savePending = (order: Order) => {
+  // Com as imagens primeiro; se a aba não tiver espaço, sem elas (a confirmação sai sem o preview).
+  for (const o of [order, { ...order, imgB64: null, artB64: null, svgData: null }]) {
+    try {
+      sessionStorage.setItem(PENDING_KEY, JSON.stringify(o));
+      return;
+    } catch {}
+  }
+};
+
+const loadPending = (serial: string): Order | null => {
+  try {
+    const order = JSON.parse(sessionStorage.getItem(PENDING_KEY) ?? 'null') as Order | null;
+    return order?.serial === serial ? order : null;
+  } catch {
+    return null;
+  }
+};
+
 const collectionConfig = (lines: Cart): StudioConfig => ({
   model: 'Peças da coleção',
   color: '—',
@@ -28,33 +51,40 @@ const collectionConfig = (lines: Cart): StudioConfig => ({
   stamps: lines.map(lineLabel),
 });
 
-const fillSummary = (cfg: StudioConfig, total: string, isCollection: boolean) => {
+const fillSummary = (cfg: StudioConfig, goodsTotal: number, isCollection: boolean) => {
   byId('ck-model').textContent = cfg.model;
   byId('ck-color').textContent = cfg.color;
   byId('ck-size').textContent = cfg.size;
   byId('ck-view').textContent = cfg.view;
   byId('ck-stamps-label').textContent = isCollection ? 'Itens' : 'Estampas';
   byId('ck-stamps').textContent = cfg.stamps.join(', ');
-  byId('ck-total').textContent = total;
+  resetDelivery(goodsTotal);
   byId('checkout-modal').classList.add('open');
 };
 
 /** Checkout de uma composição do Estúdio (peça única, com certificado). */
 export const openCheckout = () => {
   source = { kind: 'estudio' };
-  fillSummary(readStudioConfig(), studioTotalLabel(), false);
+  fillSummary(readStudioConfig(), studioTotal(studioModel()), false);
 };
 
 /** Checkout das peças da coleção que estão no carrinho. */
 export const openCartCheckout = (lines: Cart) => {
   source = { kind: 'colecao', lines };
-  fillSummary(collectionConfig(lines), formatBRL(cartSubtotal(lines)), true);
+  fillSummary(collectionConfig(lines), cartSubtotal(lines), true);
 };
 
 const closeCheckout = () => byId('checkout-modal').classList.remove('open');
 
-const showConfirmation = (order: Order) => {
+/** O que o frete precisa saber: as peças do carrinho ou o modelo da composição. */
+const goodsPayload = () =>
+  source.kind === 'colecao'
+    ? { kind: 'colecao', items: source.lines }
+    : { kind: 'estudio', studio: { model: studioModel() } };
+
+const showConfirmation = (order: Order, status = 'Pedido confirmado') => {
   const isCollection = order.kind === 'colecao';
+  byId('conf-status').textContent = status;
   byId('conf-serial').textContent = order.serial;
   byId('conf-serial-2').textContent = order.serial;
   byId('conf-name').textContent = order.name;
@@ -81,12 +111,55 @@ const showConfirmation = (order: Order) => {
     placeholder.style.display = '';
     placeholder.textContent = isCollection ? order.cfg.stamps.join(' · ') : 'Sua composição';
   }
-  go('confirmacao');
+  navigate({ page: 'confirmacao', serial: order.serial });
 };
 
-/** Monta o que vai para o Worker. Preço, total e serial são decididos lá, nunca aqui. */
-const buildPayload = async (contact: { name: string; email: string; obs: string }, progress: ButtonProgress) => {
-  if (source.kind === 'colecao') return { kind: 'colecao', ...contact, items: source.lines };
+const RETURN_STATUS: Record<string, string> = {
+  Pago: 'Pagamento aprovado',
+  'Aguardando pagamento': 'Pagamento em análise',
+  Cancelado: 'Pagamento não aprovado',
+};
+
+/** Volta do Mercado Pago (#/pedido/<serial>): mostra o pedido guardado e o status real do pagamento. */
+const showReturn = (serial: string) => {
+  const pending = loadPending(serial);
+  currentOrder = pending;
+  showConfirmation(
+    pending ?? {
+      kind: 'colecao',
+      serial,
+      name: '—',
+      email: '',
+      obs: '',
+      cfg: { model: '—', color: '—', size: '—', view: '—', stamps: [] },
+      total: '',
+      date: '',
+    },
+    'Consultando o pagamento…',
+  );
+  // O Mercado Pago devolve o cliente antes de avisar o Worker: se ele já disse "approved" na volta, mostramos
+  // aprovado (só a tela; o status real do pedido vem do aviso assinado).
+  const approvedOnReturn = /[?&](collection_status|status)=approved\b/.test(window.location.hash);
+  fetchOrderStatus(serial)
+    .then((status) => {
+      const shown = status === 'Aguardando pagamento' && approvedOnReturn ? 'Pago' : status;
+      byId('conf-status').textContent = RETURN_STATUS[shown] ?? 'Pedido recebido';
+      // Pedido pago ou em análise: o carrinho já virou pedido. Recusado: o carrinho fica para tentar de novo.
+      if (status !== 'Cancelado' && pending?.kind === 'colecao') onCollectionOrdered();
+    })
+    .catch(() => {
+      byId('conf-status').textContent = 'Pedido recebido';
+    });
+};
+
+/** Monta o que vai para o Worker. Preço, frete, total e serial são decididos lá, nunca aqui. */
+const buildPayload = async (
+  contact: { name: string; email: string; obs: string },
+  delivery: Exclude<ReturnType<typeof readDelivery>, string>,
+  progress: ButtonProgress,
+) => {
+  const shipping = { address: delivery.address, shipping: { serviceId: delivery.serviceId } };
+  if (source.kind === 'colecao') return { kind: 'colecao', ...contact, ...shipping, items: source.lines };
   const imgB64 = await captureComposition();
   artB64 = await captureArt();
   progress.step(0.4, 'Preparando arquivo de produção…');
@@ -95,6 +168,7 @@ const buildPayload = async (contact: { name: string; email: string; obs: string 
   return {
     kind: 'estudio',
     ...contact,
+    ...shipping,
     studio: { model: studioModel(), color: cfg.color, size: cfg.size, view: cfg.view, stamps: cfg.stamps },
     previewPng: imgB64,
     // O Worker troca __SERIAL__ pelo serial que ele gerar.
@@ -113,13 +187,18 @@ const submitOrder = async () => {
     toast(CHECKOUT_ERROR_MESSAGES[error]);
     return;
   }
+  const delivery = readDelivery();
+  if (typeof delivery === 'string') {
+    toast(delivery);
+    return;
+  }
   const isCollection = source.kind === 'colecao';
   const progress = startButtonProgress(
     byId<HTMLButtonElement>('ck-submit'),
     isCollection ? 'Conferindo as peças…' : 'Gerando sua composição…',
   );
   await nextFrame();
-  const payload = await buildPayload(contact, progress);
+  const payload = await buildPayload(contact, delivery, progress);
   progress.step(0.7, 'Registrando o pedido…');
   let result: OrderResult;
   try {
@@ -144,10 +223,18 @@ const submitOrder = async () => {
     svgData: studio?.productionSvg.replace('__SERIAL__', result.serial) ?? null,
     artB64: studio ? artB64 : null,
   };
+
+  if (result.checkoutUrl) {
+    // Paga no Mercado Pago e volta para #/pedido/<serial>. O carrinho só é limpo na volta, se o pagamento não for recusado.
+    progress.step(1, 'Indo para o pagamento…');
+    savePending(order);
+    window.location.assign(result.checkoutUrl);
+    return;
+  }
+
   progress.step(1, 'Pronto');
   await nextFrame();
   currentOrder = order;
-
   closeCheckout();
   progress.done();
   // Formulário limpo para o próximo pedido.
@@ -158,6 +245,8 @@ const submitOrder = async () => {
 
 export const initCheckout = (afterCollectionOrder: () => void = () => {}) => {
   onCollectionOrdered = afterCollectionOrder;
+  initDelivery(goodsPayload);
+  setReturnHook(showReturn);
   onAction('close-checkout', closeCheckout);
   onAction('submit-order', () => {
     track('pedido.finalizar', { origem: source.kind }, () => submitOrder()).catch(reportError);

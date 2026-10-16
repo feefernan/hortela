@@ -17,6 +17,7 @@ describe('sendOrder', () => {
     await expect(sendOrder({ kind: 'colecao' }, f as unknown as typeof fetch)).resolves.toEqual({
       serial: 'HRT-1',
       total: 210,
+      checkoutUrl: null,
     });
     expect(f).toHaveBeenCalledWith('https://api.test/api/orders', expect.objectContaining({ method: 'POST' }));
   });
@@ -38,5 +39,38 @@ describe('sendOrder', () => {
     const f = vi.fn();
     await expect(sendOrder({}, f as unknown as typeof fetch)).rejects.toThrow(/indisponíveis/);
     expect(f).not.toHaveBeenCalled();
+  });
+});
+
+describe('frete, status e CEP', () => {
+  it('cota o frete e consulta o status no Worker', async () => {
+    const { quoteShipping, fetchOrderStatus } = await load();
+    const opts = [{ id: 1, name: 'PAC', company: 'Correios', price: 22.5, days: 7 }];
+    const f = vi.fn(async (url: string) =>
+      url.endsWith('/quote') ? Response.json({ options: opts }) : Response.json({ status: 'Pago' }),
+    );
+    await expect(quoteShipping({ cep: '1' }, f as unknown as typeof fetch)).resolves.toEqual(opts);
+    await expect(fetchOrderStatus('HRT-1', f as unknown as typeof fetch)).resolves.toBe('Pago');
+    expect(f).toHaveBeenLastCalledWith('https://api.test/api/orders/HRT-1/status', undefined);
+  });
+
+  it('CEP pelo ViaCEP; CEP inexistente ou serviço fora do ar viram null', async () => {
+    const { lookupCep } = await load();
+    const ok = vi.fn(async () =>
+      Response.json({ logradouro: 'Rua A', bairro: 'Centro', localidade: 'Rio de Janeiro', uf: 'RJ' }),
+    );
+    await expect(lookupCep('20040020', ok as unknown as typeof fetch)).resolves.toEqual({
+      street: 'Rua A',
+      district: 'Centro',
+      city: 'Rio de Janeiro',
+      uf: 'RJ',
+    });
+    expect(ok).toHaveBeenCalledWith('https://viacep.com.br/ws/20040020/json/');
+    const missing = vi.fn(async () => Response.json({ erro: true }));
+    await expect(lookupCep('00000000', missing as unknown as typeof fetch)).resolves.toBeNull();
+    const down = vi.fn(async () => {
+      throw new TypeError('offline');
+    });
+    await expect(lookupCep('20040020', down as unknown as typeof fetch)).resolves.toBeNull();
   });
 });

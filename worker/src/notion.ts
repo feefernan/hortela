@@ -1,4 +1,5 @@
-/** Cliente mínimo da API do Notion: upload de arquivo e criação da página do pedido. */
+/** Cliente mínimo da API do Notion: upload de arquivo, criação e atualização da página do pedido. */
+import { formatAddress, type PaymentStatus } from '../../src/domain/shipping';
 import type { ValidOrder } from './order';
 
 const API = 'https://api.notion.com/v1';
@@ -47,6 +48,7 @@ export const createOrderPage = async (
   databaseId: string,
   order: ValidOrder,
   files: { preview: string | null; production: string | null },
+  status: PaymentStatus | 'Novo',
 ) =>
   ok(
     await f(`${API}/pages`, {
@@ -56,8 +58,7 @@ export const createOrderPage = async (
         parent: { database_id: databaseId },
         properties: {
           Serial: { title: [{ text: { content: order.serial } }] },
-          // shortcut: sem pagamento ainda, todo pedido entra como "Novo"; com o Mercado Pago (#23) vira "Aguardando pagamento".
-          Status: { select: { name: 'Novo' } },
+          Status: { select: { name: status } },
           Tipo: { select: { name: order.kind === 'colecao' ? 'Coleção' : 'Estúdio' } },
           Cliente: rich(order.name),
           'E-mail': { email: order.email },
@@ -71,8 +72,46 @@ export const createOrderPage = async (
           Preview: { files: fileRef(files.preview, `${order.serial}.png`) },
           Produção: { files: fileRef(files.production, `${order.serial}.svg`) },
           Data: { date: { start: new Date().toISOString() } },
+          // Colunas de entrega só quando há frete: o banco antigo, sem elas, continua aceitando pedidos.
+          ...(order.shipping && order.address
+            ? {
+                Frete: { number: order.shipping.price },
+                Envio: rich(order.shipping.service),
+                Endereço: rich(formatAddress(order.address)),
+              }
+            : {}),
         },
       }),
     }),
     'criar pedido',
+  );
+
+/** Id da página do pedido com esse serial, ou null. */
+export const findOrderPage = async (f: Fetch, token: string, databaseId: string, serial: string) => {
+  const data = await ok(
+    await f(`${API}/databases/${databaseId}/query`, {
+      method: 'POST',
+      headers: { ...headers(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filter: { property: 'Serial', title: { equals: serial } }, page_size: 1 }),
+    }),
+    'buscar pedido',
+  );
+  const page = (data.results as { id: string; properties: Record<string, { select?: { name: string } | null }> }[])[0];
+  return page ? { id: page.id, status: page.properties.Status?.select?.name ?? '' } : null;
+};
+
+export const updatePaymentStatus = async (
+  f: Fetch,
+  token: string,
+  pageId: string,
+  status: PaymentStatus,
+  payment: string,
+) =>
+  ok(
+    await f(`${API}/pages/${pageId}`, {
+      method: 'PATCH',
+      headers: { ...headers(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: { Status: { select: { name: status } }, 'Pagamento MP': rich(payment) } }),
+    }),
+    'atualizar pagamento',
   );

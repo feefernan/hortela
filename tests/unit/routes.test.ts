@@ -7,6 +7,7 @@ describe('rotas', () => {
     expect(routeToHash({ page: 'loja' })).toBe('#/colecao');
     expect(routeToHash({ page: 'estudio' })).toBe('#/estudio');
     expect(routeToHash({ page: 'confirmacao' })).toBe('#/pedido');
+    expect(routeToHash({ page: 'confirmacao', serial: 'HRT-1' })).toBe('#/pedido/HRT-1');
     expect(routeToHash({ page: 'loja', productId: 'floresta-3' })).toBe('#/peca/floresta-3');
   });
 
@@ -29,5 +30,15 @@ describe('rotas', () => {
     expect(pageTitle({ page: 'loja' })).toBe('Coleção — Hortelã');
     expect(pageTitle({ page: 'loja', productId: 'x' }, 'Raízes')).toBe('Raízes — Hortelã');
     expect(pageTitle({ page: 'loja', productId: 'x' })).toBe('Coleção — Hortelã');
+  });
+});
+
+describe('volta do pagamento', () => {
+  it('lê o serial mesmo com os parâmetros que o Mercado Pago acrescenta', () => {
+    expect(parseHash('#/pedido/HRT-20261015-ABC123')).toEqual({ page: 'confirmacao', serial: 'HRT-20261015-ABC123' });
+    expect(parseHash('#/pedido/HRT-20261015-ABC123?collection_id=1&status=approved')).toEqual({
+      page: 'confirmacao',
+      serial: 'HRT-20261015-ABC123',
+    });
   });
 });

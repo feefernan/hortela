@@ -7,6 +7,10 @@ const env = (allow = true): Env => ({
   NOTION_ORDERS_DB: 'db-pedidos',
   NOTION_TOKEN: 'segredo',
   ORDERS_LIMITER: { limit: vi.fn(async () => ({ success: allow })) },
+  QUOTES_LIMITER: { limit: vi.fn(async () => ({ success: allow })) },
+  SITE_URL: 'https://usehortela.art.br',
+  MELHOR_ENVIO_API: 'https://me.test',
+  ORIGIN_CEP: '01001000',
 });
 const ctx = { waitUntil: () => {} };
 
@@ -65,6 +69,17 @@ describe('POST /api/orders', () => {
     expect(page.properties.Total.number).toBe(200);
     expect(page.properties.Preview.files?.[0].file_upload.id).toBe(`up-${data.serial}.png`);
     expect(page.properties.Produção.files?.[0].file_upload.id).toBe(`up-${data.serial}.svg`);
+  });
+
+  it('sem tokens de frete e pagamento, o pedido entra como "Novo" e sem link de pagamento', async () => {
+    const n = notion();
+    const res = await handle(post(studio), env(), ctx, n.f);
+    expect(((await res.json()) as { checkoutUrl: unknown }).checkoutUrl).toBeNull();
+    const page = n.calls.find((c) => c.url.endsWith('/pages'))?.body as {
+      properties: Record<string, { select?: { name: string } }>;
+    };
+    expect(page.properties.Status.select?.name).toBe('Novo');
+    expect(page.properties).not.toHaveProperty('Frete');
   });
 
   it('upload falhando não perde o pedido: grava sem anexo', async () => {

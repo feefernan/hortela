@@ -292,8 +292,6 @@ const surprise = () => {
 
 export const studioModel = (): ModelId => model;
 
-export const studioTotalLabel = () => byId('o-total').textContent ?? formatBRL(studioTotal(model));
-
 const hasStamps = () => sidesWithStamps().length > 0;
 
 /** Lados com estampa e a zona de cada um — usado na captura e no SVG de produção. */

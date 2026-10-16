@@ -7,6 +7,8 @@ export type PageId = 'home' | 'loja' | 'estudio' | 'sobre' | 'confirmacao';
 export interface Route {
   page: PageId;
   productId?: string;
+  /** Volta do pagamento: #/pedido/HRT-… (o Mercado Pago pode acrescentar ?payment_id=… depois). */
+  serial?: string;
 }
 
 const SLUG: Record<PageId, string> = {
@@ -19,12 +21,16 @@ const SLUG: Record<PageId, string> = {
 
 const PAGE_BY_SLUG = new Map(Object.entries(SLUG).map(([page, slug]) => [slug, page as PageId]));
 
-export const routeToHash = (route: Route): string =>
-  route.productId ? `#/peca/${encodeURIComponent(route.productId)}` : `#/${SLUG[route.page]}`;
+export const routeToHash = (route: Route): string => {
+  if (route.productId) return `#/peca/${encodeURIComponent(route.productId)}`;
+  if (route.serial) return `#/pedido/${encodeURIComponent(route.serial)}`;
+  return `#/${SLUG[route.page]}`;
+};
 
 export const parseHash = (hash: string): Route => {
-  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const parts = hash.replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean);
   if (parts[0] === 'peca' && parts[1]) return { page: 'loja', productId: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'pedido' && parts[1]) return { page: 'confirmacao', serial: decodeURIComponent(parts[1]) };
   return { page: PAGE_BY_SLUG.get(parts[0] ?? '') ?? 'home' };
 };
 

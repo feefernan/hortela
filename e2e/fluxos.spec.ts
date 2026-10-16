@@ -1,16 +1,37 @@
 import { expect, test } from '@playwright/test';
 
-// Worker de pedidos simulado: devolve serial e total como a API real.
+// Worker de pedidos e ViaCEP simulados: respondem como as APIs reais.
 test.beforeEach(async ({ page }) => {
+  const cors = { 'Access-Control-Allow-Origin': '*' };
   await page.route('https://api.test/api/orders', async (route) => {
     const body = route.request().postDataJSON() as { kind: string };
     await route.fulfill({
       status: 201,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      json: { serial: 'HRT-20261015-E2E000', total: body.kind === 'colecao' ? 210 : 200 },
+      headers: cors,
+      json: { serial: 'HRT-20261015-E2E000', total: (body.kind === 'colecao' ? 210 : 200) + 22.5, checkoutUrl: null },
     });
   });
+  await page.route('https://api.test/api/shipping/quote', (route) =>
+    route.fulfill({
+      headers: cors,
+      json: { options: [{ id: 1, name: 'PAC', company: 'Correios', price: 22.5, days: 7 }] },
+    }),
+  );
+  await page.route('https://viacep.com.br/**', (route) =>
+    route.fulfill({
+      headers: cors,
+      json: { logradouro: 'Rua do Ouvidor', bairro: 'Centro', localidade: 'Rio de Janeiro', uf: 'RJ' },
+    }),
+  );
 });
+
+/** CEP → frete → número da casa (o resto do endereço vem do CEP). */
+const fillDelivery = async (page: import('@playwright/test').Page) => {
+  await page.locator('#ck-cep').fill('20040020');
+  await page.locator('#ck-cep').press('Enter');
+  await expect(page.locator('.ck-ship')).toHaveCount(1);
+  await page.locator('#ck-number').fill('10');
+};
 
 test.describe('fluxos principais', () => {
   test('home carrega sem erros de console', async ({ page }) => {
@@ -35,6 +56,7 @@ test.describe('fluxos principais', () => {
     await page.locator('[data-action="checkout-cart"]').click();
     await page.locator('#ck-name').fill('Ana');
     await page.locator('#ck-email').fill('ana@site.com');
+    await fillDelivery(page);
     await page.locator('[data-action="submit-order"]').click();
     await expect(page.locator('#confirmacao')).toHaveClass(/active/);
     await expect(page.locator('#conf-cert-btn')).toBeHidden();
@@ -50,6 +72,7 @@ test.describe('fluxos principais', () => {
     await page.locator('[data-action="add-studio"]').click();
     await page.locator('#ck-name').fill('Ana');
     await page.locator('#ck-email').fill('ana@site.com');
+    await fillDelivery(page);
     await page.locator('[data-action="submit-order"]').click();
     await expect(page.locator('#confirmacao')).toHaveClass(/active/);
     await expect(page.locator('#conf-serial')).toHaveText('HRT-20261015-E2E000');

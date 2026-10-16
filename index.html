@@ -423,6 +423,9 @@
       </div>
     </div>
 
+    <div style="display:flex;justify-content:space-between;font-family:var(--body);font-size:14px;color:var(--sage);">
+      <span>Frete</span><span id="ck-shipping" style="color:var(--ink)">calcule ao lado</span>
+    </div>
     <div style="border-top:1px solid var(--dust);padding-top:14px;display:flex;justify-content:space-between;font-family:var(--display);font-style:italic;font-size:22px;color:var(--ink);">
       <span>Total</span><span id="ck-total"></span>
     </div>
@@ -449,6 +452,23 @@
         style="border:1px solid var(--dust);background:var(--parchment);padding:11px 14px;font-family:var(--body);font-size:14px;color:var(--ink);outline:none;transition:border-color .18s;">
     </div>
 
+    <fieldset class="ck-delivery">
+      <legend class="ck-label">Entrega</legend>
+      <div class="ck-cep-row">
+        <input id="ck-cep" class="ck-input" data-enter-action="quote-shipping" enterkeyhint="search" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="CEP" aria-label="CEP">
+        <button type="button" class="ck-quote" data-action="quote-shipping">Calcular frete</button>
+      </div>
+      <div id="ck-address" class="ck-address" hidden>
+        <input id="ck-street" class="ck-input ck-wide" type="text" autocomplete="address-line1" placeholder="Rua" aria-label="Rua">
+        <input id="ck-number" class="ck-input" type="text" autocomplete="address-line2" placeholder="Número" aria-label="Número">
+        <input id="ck-complement" class="ck-input" type="text" placeholder="Complemento (opcional)" aria-label="Complemento">
+        <input id="ck-district" class="ck-input" type="text" placeholder="Bairro" aria-label="Bairro">
+        <input id="ck-city" class="ck-input" type="text" autocomplete="address-level2" placeholder="Cidade" aria-label="Cidade">
+        <input id="ck-uf" class="ck-input" type="text" autocomplete="address-level1" maxlength="2" placeholder="UF" aria-label="UF">
+      </div>
+      <div id="ck-ship-options" class="ck-ship-options" role="radiogroup" aria-label="Opções de envio"></div>
+    </fieldset>
+
     <div style="display:flex;flex-direction:column;gap:6px;">
       <label for="ck-obs" style="font-family:var(--body);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);">Observações <span style="opacity:.5;">(opcional)</span></label>
       <textarea id="ck-obs" rows="3" placeholder="Alguma instrução especial para a produção..."
@@ -456,12 +476,12 @@
     </div>
 
     <div style="font-family:var(--body);font-style:italic;font-size:11px;color:var(--sage);line-height:1.6;padding:10px 14px;border-left:2px solid var(--dust);">
-      Ao finalizar, você receberá um certificado para baixar e eu recebo os dados do pedido para iniciar a confecção.
+      Você paga com Pix ou cartão no Mercado Pago. Com o pagamento aprovado, a peça entra em produção.
     </div>
 
     <button type="button" id="ck-submit" data-action="submit-order"
       style="background:var(--moss);color:var(--white);border:none;padding:17px;font-family:var(--body);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s;margin-top:4px;" data-hover="solid">
-      Finalizar pedido
+      Ir para o pagamento
     </button>
   </div>
 </div>
@@ -474,7 +494,7 @@
 
   <!-- header -->
   <div style="text-align:center;margin-bottom:56px;">
-    <div style="font-family:var(--body);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss);margin-bottom:12px;">Pedido confirmado</div>
+    <div id="conf-status" style="font-family:var(--body);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss);margin-bottom:12px;">Pedido confirmado</div>
     <h1 style="font-family:var(--display);font-weight:300;font-style:italic;font-size:52px;color:var(--ink);margin-bottom:16px;">Obrigado.</h1>
     <div style="font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--lilas);padding:10px 20px;display:inline-block;border:1px solid var(--lilas);letter-spacing:.2em;" id="conf-serial">—</div>
   </div>

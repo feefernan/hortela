@@ -9,18 +9,36 @@ const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySe
 const click = (sel: string) => $(sel).click();
 const isActive = (id: string) => $(`#${id}`).classList.contains('active');
 
-/** API de pedidos falsa: guarda o que o site enviou e responde como o Worker. */
+/** API de pedidos (Worker) e ViaCEP falsos: guardam o que o site enviou e respondem como os reais. */
 const api = {
   sent: [] as Record<string, unknown>[],
   fail: null as null | { status: number; error: string },
+  checkoutUrl: null as string | null,
+  status: 'Pago',
 };
-const apiFetch = vi.fn(async (_url: string, init: RequestInit) => {
-  const body = JSON.parse(String(init.body));
+const SHIPPING = [
+  { id: 1, name: 'PAC', company: 'Correios', price: 22.5, days: 7 },
+  { id: 2, name: 'SEDEX', company: 'Correios', price: 38.9, days: 3 },
+];
+const apiFetch = vi.fn(async (url: string, init?: RequestInit) => {
+  if (url.startsWith('https://viacep.com.br/'))
+    return Response.json({ logradouro: 'Rua do Ouvidor', bairro: 'Centro', localidade: 'Rio de Janeiro', uf: 'RJ' });
+  if (url.endsWith('/status')) return Response.json({ status: api.status });
+  if (url.endsWith('/api/shipping/quote')) return Response.json({ options: SHIPPING });
+  const body = JSON.parse(String(init?.body));
   api.sent.push(body);
   if (api.fail) return Response.json({ error: api.fail.error }, { status: api.fail.status });
-  const total = body.kind === 'colecao' ? 185 : 200;
-  return Response.json({ serial: 'HRT-20261015-ABC123', total }, { status: 201 });
+  const total = (body.kind === 'colecao' ? 185 : 200) + 22.5;
+  return Response.json({ serial: 'HRT-20261015-ABC123', total, checkoutUrl: api.checkoutUrl }, { status: 201 });
 });
+
+/** CEP → frete (PAC, a primeira opção) → número; o resto do endereço vem do CEP. */
+const fillDelivery = async () => {
+  $<HTMLInputElement>('#ck-cep').value = '20040020';
+  click('[data-action="quote-shipping"]');
+  await vi.waitFor(() => expect(document.querySelectorAll('.ck-ship')).toHaveLength(2));
+  $<HTMLInputElement>('#ck-number').value = '10';
+};
 
 beforeAll(async () => {
   vi.stubEnv('VITE_ORDERS_API', 'https://api.test');
@@ -208,6 +226,17 @@ describe('checkout do carrinho', () => {
     $<HTMLInputElement>('#ck-name').value = 'Bia';
     $<HTMLInputElement>('#ck-email').value = 'bia@site.com';
     click('[data-action="submit-order"]');
+    expect($('#toast-el').textContent).toBe('Calcule o frete com o seu CEP');
+    await fillDelivery();
+    expect($<HTMLInputElement>('#ck-street').value).toBe('Rua do Ouvidor');
+    expect($<HTMLInputElement>('#ck-cep').value).toBe('20040-020');
+    expect($('#ck-shipping').textContent).toBe('R$ 22,50');
+    expect($('#ck-total').textContent).toBe('R$ 207,50');
+    // Escolher o SEDEX atualiza o total ao vivo.
+    $<HTMLInputElement>('.ck-ship:nth-child(2) input').click();
+    expect($('#ck-total').textContent).toBe('R$ 223,90');
+    $<HTMLInputElement>('.ck-ship:nth-child(1) input').click();
+    click('[data-action="submit-order"]');
     await vi.waitFor(() => expect(isActive('confirmacao')).toBe(true));
     expect($('#conf-stamps-label').textContent).toBe('Itens');
     expect($('#conf-cert-btn').hidden).toBe(true);
@@ -216,6 +245,10 @@ describe('checkout do carrinho', () => {
     expect(sent.kind).toBe('colecao');
     expect(sent.items).toMatchObject([{ productId: 'broto', size: 'G', qty: 1 }]);
     expect(sent).not.toHaveProperty('total');
+    expect(sent).toMatchObject({
+      address: { cep: '20040020', street: 'Rua do Ouvidor', number: '10', city: 'Rio de Janeiro', uf: 'RJ' },
+      shipping: { serviceId: 1 },
+    });
   });
 });
 
@@ -465,8 +498,10 @@ describe('checkout', () => {
 
     $<HTMLInputElement>('#ck-name').value = 'Ana';
     $<HTMLInputElement>('#ck-email').value = 'ana@site.com';
+    await fillDelivery();
     click('[data-action="submit-order"]');
     await vi.waitFor(() => expect(isActive('confirmacao')).toBe(true));
+    expect(window.location.hash).toBe('#/pedido/HRT-20261015-ABC123');
     expect($('#conf-serial').textContent).toBe('HRT-20261015-ABC123');
     expect($('#conf-stamps').textContent).toBe('Camanducaia');
     expect($('#conf-cert-btn').hidden).toBe(false);
@@ -494,6 +529,7 @@ describe('checkout', () => {
     click('[data-action="add-studio"]');
     $<HTMLInputElement>('#ck-name').value = 'Bia';
     $<HTMLInputElement>('#ck-email').value = 'bia@site.com';
+    await fillDelivery();
     api.fail = { status: 502, error: 'Não foi possível registrar o pedido agora. Tente de novo.' };
     click('[data-action="submit-order"]');
     await vi.waitFor(() => expect($('#toast-el').textContent).toBe(api.fail?.error));
@@ -504,5 +540,38 @@ describe('checkout', () => {
     expect($<HTMLButtonElement>('#ck-submit').disabled).toBe(false);
     expect(document.querySelectorAll('#drop-zone .ps')).toHaveLength(1);
     click('[data-action="close-checkout"]');
+  });
+});
+
+describe('pagamento no Mercado Pago', () => {
+  it('vai para o pagamento e, na volta, mostra o pedido com o status real', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {}); // jsdom não navega para fora
+    click('#n-estudio');
+    click('[data-action="clear"]');
+    click('[data-stamp-id="s10"]');
+    click('[data-action="add-studio"]');
+    $<HTMLInputElement>('#ck-name').value = 'Caio';
+    $<HTMLInputElement>('#ck-email').value = 'caio@site.com';
+    await fillDelivery();
+    api.checkoutUrl = 'https://mp.test/pagar';
+    click('[data-action="submit-order"]');
+    await vi.waitFor(() => expect(sessionStorage.getItem('hortela_pedido_pendente')).toContain('HRT-20261015-ABC123'));
+    api.checkoutUrl = null;
+    expect(isActive('confirmacao')).toBe(false);
+
+    // O Mercado Pago devolve para #/pedido/<serial> com os parâmetros dele.
+    window.location.hash = '#/pedido/HRT-20261015-ABC123?collection_status=approved';
+    await vi.waitFor(() => expect($('#conf-status').textContent).toBe('Pagamento aprovado'));
+    expect(isActive('confirmacao')).toBe(true);
+    expect($('#conf-name').textContent).toBe('Caio');
+    expect($('#conf-cert-btn').hidden).toBe(false);
+  });
+
+  it('pagamento recusado diz isso na volta', async () => {
+    api.status = 'Cancelado';
+    window.location.hash = '#/pedido/HRT-20261015-XYZ789';
+    await vi.waitFor(() => expect($('#conf-status').textContent).toBe('Pagamento não aprovado'));
+    expect($('#conf-serial').textContent).toBe('HRT-20261015-XYZ789');
+    api.status = 'Pago';
   });
 });
