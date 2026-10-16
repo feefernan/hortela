@@ -142,14 +142,15 @@ describe('POST /api/orders com frete e pagamento', () => {
       items: { unit_price: number }[];
       shipments: { mode: string; cost: number };
       external_reference: string;
-      notification_url: string;
+      notification_url?: string;
       back_urls: { success: string };
     };
     expect(pref?.headers['X-Idempotency-Key']).toBe(data.serial);
     expect(body.items[0].unit_price).toBe(210);
     expect(body.shipments).toEqual({ mode: 'not_specified', cost: 22.5 });
     expect(body.external_reference).toBe(data.serial);
-    expect(body.notification_url).toBe('https://usehortela.art.br/api/mp/webhook');
+    // O aviso vem do webhook cadastrado no painel (assinado); notification_url aqui teria prioridade sem assinatura.
+    expect(body).not.toHaveProperty('notification_url');
     expect(body.back_urls.success).toBe(`https://usehortela.art.br/#/pedido/${data.serial}`);
 
     const page = a.calls.find((c) => c.url.endsWith('/pages'))?.body as {

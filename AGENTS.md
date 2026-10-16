@@ -68,7 +68,7 @@ worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.co
    como "Aguardando pagamento" → devolve `{ serial, total, checkoutUrl }`.
 3. O site guarda o pedido na aba (sessionStorage) e vai para o `checkoutUrl`. O Mercado Pago devolve para
    `#/pedido/<serial>`, que mostra o pedido e o status de `GET /api/orders/:serial/status`.
-4. O Mercado Pago avisa `POST /api/mp/webhook` (assinatura `x-signature` conferida); o Worker consulta o pagamento
+4. O Mercado Pago avisa `POST /api/mp/webhook` — URL cadastrada no **painel** do app (Webhooks → Configurar notificações, evento Pagamentos), nunca como `notification_url` na cobrança, senão o aviso chega sem a assinatura `x-signature` que o Worker confere; o Worker consulta o pagamento
    e muda o Status no Notion para **Pago** ou **Cancelado**.
 
 Sem os tokens do Mercado Pago e do Melhor Envio, o Worker grava o pedido como "Novo", sem cobrança (`checkoutUrl: null`).

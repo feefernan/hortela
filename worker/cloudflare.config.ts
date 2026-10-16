@@ -24,8 +24,8 @@ export default defineConfig({
       QUOTES_LIMITER: bindings.rateLimit({ namespace: '1002', simple: { limit: 20, period: 60 } }),
       // Volta do pagamento e aviso do Mercado Pago (webhook) usam este endereço.
       SITE_URL: bindings.text('https://usehortela.art.br'),
-      // Ambiente de testes do Melhor Envio; em produção, https://melhorenvio.com.br.
-      MELHOR_ENVIO_API: bindings.text('https://sandbox.melhorenvio.com.br'),
+      // Conta real do Melhor Envio: cotar é gratuito; só a compra de etiqueta é cobrada.
+      MELHOR_ENVIO_API: bindings.text('https://melhorenvio.com.br'),
       // shortcut: CEP de saída provisório (centro de SP) até a Hortelã informar o real (#52).
       ORIGIN_CEP: bindings.text('01001000'),
       MELHOR_ENVIO_TOKEN: bindings.secret(),

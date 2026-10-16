@@ -177,7 +177,18 @@ const paymentWebhook = async (request: Request, env: Env, f: typeof fetch) => {
     request.headers.get('x-request-id'),
     dataId,
   );
-  if (!signed) return new Response(null, { status: 401 });
+  if (!signed) {
+    // Só a forma do aviso, nunca valores: ajuda a achar chave errada ou aviso no formato antigo (IPN).
+    const sig = request.headers.get('x-signature') ?? '';
+    log('warn', 'aviso de pagamento sem assinatura válida', {
+      temAssinatura: sig.includes('v1='),
+      temTs: sig.includes('ts='),
+      temRequestId: Boolean(request.headers.get('x-request-id')),
+      temDataId: Boolean(dataId),
+      formato: url.searchParams.has('topic') ? 'ipn' : 'webhook',
+    });
+    return new Response(null, { status: 401 });
+  }
   if ((url.searchParams.get('type') ?? body.type) !== 'payment') return new Response(null, { status: 200 });
 
   // Erro aqui devolve 500 e o Mercado Pago reenvia o aviso. Repetir é seguro: só regrava o mesmo status.

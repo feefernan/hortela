@@ -27,7 +27,8 @@ export const createCheckout = async (f: typeof fetch, token: string, c: Charge):
       external_reference: c.serial,
       back_urls: { success: back, pending: back, failure: back },
       auto_return: 'approved',
-      notification_url: `${c.siteUrl}/api/mp/webhook`,
+      // Sem notification_url aqui: ela teria prioridade sobre o webhook cadastrado no painel do Mercado Pago,
+      // e só os avisos do painel vêm assinados com a chave secreta (x-signature) que o Worker confere.
       statement_descriptor: 'HORTELA',
     }),
   });
