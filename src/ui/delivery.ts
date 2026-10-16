@@ -1,6 +1,6 @@
 /** Entrega no checkout: CEP → endereço (ViaCEP) e opções de frete (Worker → Melhor Envio), com o total ao vivo. */
 import { formatBRL } from '../domain/pricing';
-import { type Address, formatCep, normalizeCep, parseAddress } from '../domain/shipping';
+import { type Address, formatCep, normalizeCep, parseAddress, shippingLabel } from '../domain/shipping';
 import { lookupCep, OrderSendError, quoteShipping, type ShippingOption } from '../infra/order-api';
 import { reportError } from '../infra/telemetry';
 import { byId, onAction, onEnter } from './dom';
@@ -42,7 +42,7 @@ const renderOptions = () => {
       const radio = document.createElement('input');
       Object.assign(radio, { type: 'radio', name: 'ck-ship', value: String(o.id), checked: i === 0 });
       const text = document.createElement('span');
-      text.textContent = `${o.company} ${o.name}`.trim();
+      text.textContent = shippingLabel(o);
       const days = document.createElement('small');
       days.textContent = `${o.days} ${o.days === 1 ? 'dia útil' : 'dias úteis'}`;
       text.append(days);

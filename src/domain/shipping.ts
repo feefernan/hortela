@@ -9,10 +9,14 @@ export const normalizeCep = (value: unknown): string | null => {
 export const formatCep = (cep: string) => `${cep.slice(0, 5)}-${cep.slice(5)}`;
 
 /**
- * Pacote de uma peça dobrada (cm, kg).
- * shortcut: medidas provisórias até a Hortelã enviar as reais (#52); o frete cotado sai aproximado até lá.
+ * Caixa de uma peça: 24 × 16 × 8 cm (#54).
+ * shortcut: peso provisório (0,3 kg) até a Hortelã pesar a caixa montada; o frete pode variar um pouco.
  */
-const PIECE_PACKAGE = { width: 30, height: 4, length: 25, weight: 0.3 };
+const PIECE_PACKAGE = { length: 24, width: 16, height: 8, weight: 0.3 };
+
+/** "Correios PAC"; sem repetir a transportadora quando o serviço já traz o nome dela ("Loggi Ponto"). */
+export const shippingLabel = (o: { company: string; name: string }) =>
+  o.name.toLowerCase().startsWith(o.company.toLowerCase()) ? o.name : `${o.company} ${o.name}`.trim();
 
 /** Itens para a cotação do Melhor Envio: `count` peças que somam `value` reais (valor declarado). */
 export const shippingProducts = (count: number, value: number) => [

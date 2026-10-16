@@ -7,6 +7,7 @@ import {
   parseAddress,
   paymentStatus,
   pickShippingOptions,
+  shippingLabel,
   shippingProducts,
 } from '../../src/domain/shipping';
 
@@ -48,6 +49,10 @@ describe('endereço', () => {
 describe('pacote', () => {
   it('declara o valor por peça e a quantidade', () => {
     expect(shippingProducts(2, 420)[0]).toMatchObject({ quantity: 2, insurance_value: 210 });
+  });
+
+  it('usa a caixa real de 24 × 16 × 8 cm', () => {
+    expect(shippingProducts(1, 210)[0]).toMatchObject({ length: 24, width: 16, height: 8 });
   });
 });
 
@@ -93,5 +98,13 @@ describe('opções de frete exibidas', () => {
   it('lista curta fica como está', () => {
     expect(pickShippingOptions([o(1, 20, 3)])).toEqual([o(1, 20, 3)]);
     expect(pickShippingOptions([])).toEqual([]);
+  });
+});
+
+describe('nome do serviço', () => {
+  it('não repete a transportadora', () => {
+    expect(shippingLabel({ company: 'Loggi', name: 'Loggi Ponto' })).toBe('Loggi Ponto');
+    expect(shippingLabel({ company: 'Correios', name: 'PAC' })).toBe('Correios PAC');
+    expect(shippingLabel({ company: 'Jadlog', name: '.Package' })).toBe('Jadlog .Package');
   });
 });
