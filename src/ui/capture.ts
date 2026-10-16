@@ -1,7 +1,8 @@
+import { artBounds } from '../domain/certificate';
 import { byId, qsa } from './dom';
 import { compositionSides, rectOf } from './studio';
 
-const loadImage = (src: string): Promise<HTMLImageElement | null> =>
+export const loadImage = (src: string): Promise<HTMLImageElement | null> =>
   new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -12,10 +13,63 @@ const loadImage = (src: string): Promise<HTMLImageElement | null> =>
 const svgUrl = (svg: Element) =>
   URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' }));
 
+const dataUrls = new Map<string, Promise<string>>();
+const toDataUrl = (href: string): Promise<string> => {
+  const cached = dataUrls.get(href);
+  if (cached) return cached;
+  const p = fetch(href)
+    .then((r) => r.blob())
+    .then(
+      (blob) =>
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.readAsDataURL(blob);
+        }),
+    )
+    .catch(() => href);
+  dataUrls.set(href, p);
+  return p;
+};
+
+/**
+ * SVG como imagem não carrega arquivos externos: as letras das palavras (<image href>) sumiriam.
+ * Embute cada imagem como data URL antes de desenhar.
+ */
+const selfContainedSvgUrl = async (svg: Element): Promise<string> => {
+  const clone = svg.cloneNode(true) as Element;
+  await Promise.all(
+    [...clone.querySelectorAll('image')].map(async (img) => {
+      const href = img.getAttribute('href');
+      if (href && !href.startsWith('data:'))
+        img.setAttribute('href', await toDataUrl(new URL(href, window.location.href).href));
+    }),
+  );
+  return svgUrl(clone);
+};
+
 const shirtWithCollar = (collar: string): SVGSVGElement => {
   const clone = byId('shirt-el').cloneNode(true) as SVGSVGElement;
   clone.querySelector('#shirt-collar')?.setAttribute('d', collar);
   return clone;
+};
+
+const placed = (zone: Element) => qsa<HTMLElement>('.ps:not(.removing)', zone);
+
+/** Desenha as estampas na posição do Estúdio, deslocadas por (dx, dy). */
+const drawStamps = async (ctx: CanvasRenderingContext2D, els: HTMLElement[], dx: number, dy: number) => {
+  for (const el of els) {
+    const art = el.querySelector('svg') ?? el.querySelector('img');
+    if (!art) continue;
+    const src = art instanceof HTMLImageElement ? art.src : await selfContainedSvgUrl(art);
+    const img = await loadImage(src);
+    if (!(art instanceof HTMLImageElement)) URL.revokeObjectURL(src);
+    if (!img) continue;
+    const r = rectOf(el);
+    ctx.globalAlpha = Number.parseFloat(el.dataset.op ?? '1') || 1;
+    ctx.drawImage(img, r.x + dx, r.y + dy, r.w, r.h);
+    ctx.globalAlpha = 1;
+  }
 };
 
 const stageSize = () => {
@@ -46,17 +100,35 @@ export const captureComposition = async (): Promise<string | null> => {
   if (!shirt) return null;
   ctx.drawImage(shirt, 0, 0, W, H);
 
-  for (const el of qsa<HTMLElement>('.ps:not(.removing)', first.zone)) {
-    const art = el.querySelector('svg') ?? el.querySelector('img');
-    if (!art) continue;
-    const src = art instanceof HTMLImageElement ? art.src : svgUrl(art);
-    const img = await loadImage(src);
-    if (!(art instanceof HTMLImageElement)) URL.revokeObjectURL(src);
-    if (!img) continue;
-    const r = rectOf(el);
-    ctx.globalAlpha = Number.parseFloat(el.dataset.op ?? '1') || 1;
-    ctx.drawImage(img, r.x, r.y, r.w, r.h);
-    ctx.globalAlpha = 1;
+  await drawStamps(ctx, placed(first.zone), 0, 0);
+  return canvas.toDataURL('image/png');
+};
+
+/**
+ * Só a arte, sem a camiseta (para o certificado): cada lado com estampa recortado no contorno das
+ * estampas, lado a lado, fundo transparente, em escala 3x.
+ */
+export const captureArt = async (): Promise<string | null> => {
+  const SCALE = 3;
+  const GAP = 40;
+  const sides = compositionSides().flatMap(({ zone }) => {
+    const els = placed(zone);
+    const box = artBounds(els.map(rectOf), 6);
+    return box ? [{ els, box }] : [];
+  });
+  if (!sides.length) return null;
+  const W = sides.reduce((sum, s) => sum + s.box.w, 0) + GAP * (sides.length - 1);
+  const H = Math.max(...sides.map((s) => s.box.h));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(W * SCALE);
+  canvas.height = Math.ceil(H * SCALE);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.scale(SCALE, SCALE);
+  let x = 0;
+  for (const { els, box } of sides) {
+    await drawStamps(ctx, els, x - box.x, (H - box.h) / 2 - box.y);
+    x += box.w + GAP;
   }
   return canvas.toDataURL('image/png');
 };
@@ -86,7 +158,7 @@ export const exportProductionSVG = (serial: string): string => {
   const sides = compositionSides();
   const groups = sides.map(({ side, label, zone, collar }, i) => {
     const shirt = new XMLSerializer().serializeToString(shirtWithCollar(collar));
-    const parts = qsa<HTMLElement>('.ps:not(.removing)', zone).map(stampSVG).filter(Boolean).join('\n      ');
+    const parts = placed(zone).map(stampSVG).filter(Boolean).join('\n      ');
     return `  <g id="${side}" transform="translate(${i * (W + GAP)},0)">
     <title>${label}</title>
     <g class="shirt-base">${shirt}</g>
