@@ -6,6 +6,7 @@ import {
   type GarmentSize,
   isGarmentSize,
   removeLine,
+  withCurrentCatalog,
 } from '../domain/cart';
 import { findProduct } from '../domain/catalog';
 import { escapeHtml as e } from '../domain/escape';
@@ -105,6 +106,13 @@ export const addProductToCart = (productId: string, size: GarmentSize): boolean 
 
 export const clearCart = () => {
   cart = [];
+  persist();
+  render();
+};
+
+/** Atualiza o carrinho guardado com o catálogo vivo: preço novo, sem esgotadas, dentro do estoque. */
+export const refreshCart = () => {
+  cart = withCurrentCatalog(cart);
   persist();
   render();
 };

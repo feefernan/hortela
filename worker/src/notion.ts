@@ -1,4 +1,5 @@
 /** Cliente mínimo da API do Notion: upload de arquivo, criação e atualização da página do pedido. */
+import type { StockRow } from '../../src/domain/catalog';
 import { formatAddress, type PaymentStatus } from '../../src/domain/shipping';
 import type { ValidOrder } from './order';
 
@@ -115,3 +116,57 @@ export const updatePaymentStatus = async (
     }),
     'atualizar pagamento',
   );
+
+type Prop = {
+  number?: number | null;
+  checkbox?: boolean;
+  rich_text?: { plain_text: string }[];
+  title?: { plain_text: string }[];
+};
+const plain = (p?: Prop) =>
+  (p?.rich_text ?? p?.title ?? [])
+    .map((t) => t.plain_text)
+    .join('')
+    .trim();
+
+const queryPieces = async (f: Fetch, token: string, piecesDb: string, filter?: unknown) => {
+  const data = await ok(
+    await f(`${API}/databases/${piecesDb}/query`, {
+      method: 'POST',
+      headers: { ...headers(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page_size: 100, ...(filter ? { filter } : {}) }),
+    }),
+    'ler peças',
+  );
+  return data.results as { id: string; properties: Record<string, Prop> }[];
+};
+
+/** Preço, edição e estoque de cada peça (banco Peças), casando pela coluna ID. */
+export const fetchStock = async (f: Fetch, token: string, piecesDb: string): Promise<StockRow[]> =>
+  (await queryPieces(f, token, piecesDb))
+    .map(({ properties: p }) => ({
+      id: plain(p.ID),
+      price: p.Preço?.number ?? null,
+      total: p['Edição total']?.number ?? null,
+      available: p.Disponíveis?.number ?? null,
+      active: p['Ativa no site']?.checkbox ?? true,
+    }))
+    .filter((row) => row.id);
+
+/**
+ * Desconta `qty` de Disponíveis da peça, sem passar de zero.
+ * shortcut: lê e grava em dois passos; dois pagamentos da mesma peça no mesmo segundo podem descontar um só.
+ */
+export const decrementStock = async (f: Fetch, token: string, piecesDb: string, id: string, qty: number) => {
+  const [page] = await queryPieces(f, token, piecesDb, { property: 'ID', rich_text: { equals: id } });
+  const available = page?.properties.Disponíveis?.number;
+  if (!page || available == null) return;
+  await ok(
+    await f(`${API}/pages/${page.id}`, {
+      method: 'PATCH',
+      headers: { ...headers(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: { Disponíveis: { number: Math.max(0, available - qty) } } }),
+    }),
+    'baixar estoque',
+  );
+};

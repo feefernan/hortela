@@ -1,11 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
-import { type Env, handle } from '../../worker/src/app';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearStockCache, type Env, handle } from '../../worker/src/app';
+
+beforeEach(clearStockCache);
 
 const ORIGIN = 'https://usehortela.art.br';
 const SERIAL = 'HRT-20261015-ABC123';
 const env: Env = {
   ALLOWED_ORIGIN: ORIGIN,
   NOTION_ORDERS_DB: 'db-pedidos',
+  NOTION_PIECES_DB: 'db-pecas',
   NOTION_TOKEN: 'segredo',
   ORDERS_LIMITER: { limit: async () => ({ success: true }) },
   QUOTES_LIMITER: { limit: async () => ({ success: true }) },
@@ -31,6 +34,18 @@ const QUOTES = [
   { id: 3, name: '.Com', error: 'Serviço indisponível para o trecho.' },
 ];
 
+/** Linha do banco Peças como a API do Notion devolve. */
+const piece = (id: string, price: number | null, available: number | null, active = true) => ({
+  id: `pc-${id}`,
+  properties: {
+    ID: { rich_text: [{ plain_text: id }] },
+    Preço: { number: price },
+    'Edição total': { number: 20 },
+    Disponíveis: { number: available },
+    'Ativa no site': { checkbox: active },
+  },
+});
+
 /** Melhor Envio, Mercado Pago e Notion falsos: registram as chamadas e respondem como as APIs reais. */
 const apis = (
   opts: {
@@ -38,6 +53,8 @@ const apis = (
     payment?: { status: string; external_reference?: string };
     noPage?: boolean;
     pageStatus?: string;
+    pieces?: ReturnType<typeof piece>[];
+    metadata?: unknown;
   } = {},
 ) => {
   const calls: { url: string; method: string; body?: unknown; headers: Record<string, string> }[] = [];
@@ -56,14 +73,25 @@ const apis = (
         ? new Response('erro', { status: 500 })
         : Response.json({ init_point: 'https://mp.test/real', sandbox_init_point: 'https://mp.test/sandbox' });
     if (u.includes('/v1/payments/'))
-      return Response.json({ id: 999, ...(opts.payment ?? { status: 'approved', external_reference: SERIAL }) });
+      return Response.json({
+        id: 999,
+        metadata: opts.metadata,
+        ...(opts.payment ?? { status: 'approved', external_reference: SERIAL }),
+      });
+    if (u.endsWith('/databases/db-pecas/query')) {
+      const filter = (body as { filter?: { rich_text: { equals: string } } }).filter;
+      const all = opts.pieces ?? [];
+      return Response.json({
+        results: filter ? all.filter((p) => p.properties.ID.rich_text[0].plain_text === filter.rich_text.equals) : all,
+      });
+    }
     if (u.endsWith('/query'))
       return Response.json({
         results: opts.noPage
           ? []
           : [{ id: 'page-1', properties: { Status: { select: { name: opts.pageStatus ?? 'Aguardando pagamento' } } } }],
       });
-    if (u.endsWith('/pages') || u.endsWith('/pages/page-1')) return Response.json({ id: 'page-1' });
+    if (u.endsWith('/pages') || /\/pages\/(page-1|pc-[\w-]+)$/.test(u)) return Response.json({ id: 'page-1' });
     return new Response('?', { status: 404 });
   });
   return { f: f as unknown as typeof fetch, calls };
@@ -105,7 +133,7 @@ describe('POST /api/shipping/quote', () => {
       { id: 1, name: 'PAC', company: 'Correios', price: 22.5, days: 7 },
       { id: 2, name: 'SEDEX', company: 'Correios', price: 38.9, days: 3 },
     ]);
-    const call = a.calls[0];
+    const call = a.calls.find((c) => c.url.endsWith('/shipment/calculate')) as (typeof a.calls)[number];
     expect(call.headers.Authorization).toBe('Bearer me-token');
     expect(call.headers['User-Agent']).toMatch(/@/);
     const body = call.body as {
@@ -303,5 +331,61 @@ describe('GET /api/orders/:serial/status', () => {
     const a = apis({ noPage: true });
     expect((await handle(get('qualquer-coisa'), env, ctx, a.f)).status).toBe(404);
     expect((await handle(get(SERIAL), env, ctx, a.f)).status).toBe(404);
+  });
+});
+
+describe('preço e estoque do Notion (banco Peças)', () => {
+  it('GET /api/catalog devolve preço, edição e estoque de cada peça', async () => {
+    const a = apis({ pieces: [piece('floresta-3', 250, 12), piece('raizes', null, 0, false)] });
+    const res = await handle(
+      new Request('https://usehortela.art.br/api/catalog', { headers: { Origin: ORIGIN } }),
+      env,
+      ctx,
+      a.f,
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      pieces: [
+        { id: 'floresta-3', price: 250, total: 20, available: 12, active: true },
+        { id: 'raizes', price: null, total: 20, available: 0, active: false },
+      ],
+    });
+  });
+
+  it('o pedido cobra o preço do Notion e manda as peças junto da cobrança', async () => {
+    const a = apis({ pieces: [piece('floresta-3', 250, 12)] });
+    const res = await handle(post('/api/orders', order), env, ctx, a.f);
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as { total: number }).total).toBe(272.5);
+    const pref = a.calls.find((c) => c.url.endsWith('/checkout/preferences'))?.body as {
+      items: { unit_price: number }[];
+      metadata: unknown;
+    };
+    expect(pref.items[0].unit_price).toBe(250);
+    expect(pref.metadata).toEqual({ items: [{ id: 'floresta-3', qty: 1 }] });
+  });
+
+  it('peça esgotada ou acima do estoque é recusada sem cobrar', async () => {
+    const sold = apis({ pieces: [piece('floresta-3', 210, 0)] });
+    const r1 = await handle(post('/api/orders', order), env, ctx, sold.f);
+    expect(r1.status).toBe(409);
+    expect(((await r1.json()) as { error: string }).error).toMatch(/esgotou/);
+    clearStockCache();
+    const one = apis({ pieces: [piece('floresta-3', 210, 1)] });
+    const two = { ...order, items: [{ ...order.items[0], qty: 2 }] };
+    expect((await handle(post('/api/orders', two), env, ctx, one.f)).status).toBe(409);
+    expect([...sold.calls, ...one.calls].some((c) => c.url.endsWith('/checkout/preferences'))).toBe(false);
+  });
+
+  it('pagamento aprovado baixa o estoque uma vez; aviso repetido não baixa de novo', async () => {
+    const metadata = { items: [{ id: 'floresta-3', qty: 2 }] };
+    const a = apis({ pieces: [piece('floresta-3', 210, 5)], metadata });
+    expect((await handle(await webhook(), env, ctx, a.f)).status).toBe(200);
+    const stock = a.calls.find((c) => c.method === 'PATCH' && c.url.endsWith('/pages/pc-floresta-3'));
+    expect(stock?.body).toEqual({ properties: { Disponíveis: { number: 3 } } });
+
+    const again = apis({ pieces: [piece('floresta-3', 210, 3)], metadata, pageStatus: 'Pago' });
+    await handle(await webhook(), env, ctx, again.f);
+    expect(again.calls.some((c) => c.url.includes('/pages/pc-'))).toBe(false);
   });
 });

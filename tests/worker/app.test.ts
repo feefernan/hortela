@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
-import { type Env, handle } from '../../worker/src/app';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearStockCache, type Env, handle } from '../../worker/src/app';
 
 const ORIGIN = 'http://usehortela.comercial.ws';
 const env = (allow = true): Env => ({
   ALLOWED_ORIGIN: `${ORIGIN},http://localhost:5173`,
   NOTION_ORDERS_DB: 'db-pedidos',
+  NOTION_PIECES_DB: 'db-pecas',
   NOTION_TOKEN: 'segredo',
   ORDERS_LIMITER: { limit: vi.fn(async () => ({ success: allow })) },
   QUOTES_LIMITER: { limit: vi.fn(async () => ({ success: allow })) },
@@ -13,6 +14,7 @@ const env = (allow = true): Env => ({
   ORIGIN_CEP: '01001000',
 });
 const ctx = { waitUntil: () => {} };
+beforeEach(clearStockCache);
 
 /** Notion falso: registra as chamadas e responde como a API real. */
 const notion = (opts: { failUpload?: boolean; failPage?: boolean } = {}) => {
@@ -27,6 +29,7 @@ const notion = (opts: { failUpload?: boolean; failPage?: boolean } = {}) => {
       return Response.json({ id: `up-${body.filename}`, upload_url: `https://api.notion.com/v1/file_uploads/up/send` });
     }
     if (u.endsWith('/send')) return Response.json({ status: 'uploaded' });
+    if (u.endsWith('/databases/db-pecas/query')) return Response.json({ results: [] });
     if (u.endsWith('/pages'))
       return opts.failPage ? new Response('erro', { status: 503 }) : Response.json({ id: 'page-1' });
     return new Response('?', { status: 404 });

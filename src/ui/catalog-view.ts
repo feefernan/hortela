@@ -1,5 +1,5 @@
 import { isGarmentSize } from '../domain/cart';
-import { PRODUCTS, type Product } from '../domain/catalog';
+import { type Product, products } from '../domain/catalog';
 import { type CollectionFilter, FILTER_EMPTY_MESSAGE, filterProducts } from '../domain/collection-filter';
 import { editionLabel } from '../domain/edition';
 import { formatBRL } from '../domain/pricing';
@@ -48,9 +48,11 @@ const collectionCardHTML = (p: Product, i: number) => {
 let openProductId: string | null = null;
 /** true quando o modal foi aberto por clique aqui (há uma entrada de histórico para desfazer). */
 let openedInApp = false;
+let currentFilter: CollectionFilter = 'todas';
 
 const renderCollection = (filter: CollectionFilter) => {
-  const items = filterProducts(PRODUCTS, filter);
+  currentFilter = filter;
+  const items = filterProducts(products(), filter);
   byId('loja-grid').innerHTML = items.map(collectionCardHTML).join('');
   const empty = byId('loja-empty');
   empty.hidden = items.length > 0;
@@ -58,7 +60,7 @@ const renderCollection = (filter: CollectionFilter) => {
 };
 
 const showProduct = (id: string) => {
-  const p = PRODUCTS.find((x) => x.id === id);
+  const p = products().find((x) => x.id === id);
   if (!p) return;
   openProductId = id;
   // Cada peça abre no tamanho padrão (G), sem herdar a escolha da peça anterior.
@@ -94,9 +96,19 @@ const closeProduct = () => {
   }
 };
 
+const renderAll = () => {
+  byId('home-grid').innerHTML = products().slice(0, 3).map(homeCardHTML).join('');
+  renderCollection(currentFilter);
+};
+
+/** Redesenha com o catálogo vivo (preço e estoque do Notion), inclusive a peça aberta. */
+export const refreshCatalog = () => {
+  renderAll();
+  if (openProductId) showProduct(openProductId);
+};
+
 export const initCatalog = () => {
-  byId('home-grid').innerHTML = PRODUCTS.slice(0, 3).map(homeCardHTML).join('');
-  renderCollection('todas');
+  renderAll();
   for (const id of ['home-grid', 'loja-grid']) byId(id).removeAttribute('aria-busy');
   setProductHook((id) => (id ? showProduct(id) : hideProduct()));
   document.addEventListener('keydown', (event) => {

@@ -15,8 +15,9 @@ export type Cart = readonly CartLine[];
 
 export type AddResult = { ok: true; cart: Cart } | { ok: false; reason: 'esgotada' | 'limite' };
 
-/** Peça marcada como "última" só pode ir uma vez para o carrinho; outras, até 3 por tamanho. */
-export const maxQty = (product: Pick<Product, 'status'>): number => (product.status === 'last' ? 1 : 3);
+/** Até 3 unidades por peça, nunca mais que o estoque; "última" (sem estoque conhecido) só uma. */
+export const maxQty = (product: Pick<Product, 'status' | 'available'>): number =>
+  product.available !== undefined ? Math.min(3, product.available) : product.status === 'last' ? 1 : 3;
 
 const sameLine = (a: Pick<CartLine, 'productId' | 'size'>, b: Pick<CartLine, 'productId' | 'size'>) =>
   a.productId === b.productId && a.size === b.size;

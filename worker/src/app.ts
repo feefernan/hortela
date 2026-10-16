@@ -5,6 +5,7 @@
  * Tipos mínimos e locais (em vez dos gerados pelo cf) para o mesmo código ser checado e testado
  * pelo TypeScript/Vitest da raiz; `entry.ts` confere que eles batem com os tipos gerados.
  */
+import { type StockRow, useStock } from '../../src/domain/catalog';
 import { SERIAL_PATTERN } from '../../src/domain/serial';
 import {
   nextOrderStatus,
@@ -15,7 +16,7 @@ import {
 } from '../../src/domain/shipping';
 import { quoteShipping } from './melhor-envio';
 import { createCheckout, getPayment, verifySignature } from './mercado-pago';
-import { createOrderPage, findOrderPage, updatePaymentStatus, uploadFile } from './notion';
+import { createOrderPage, decrementStock, fetchStock, findOrderPage, updatePaymentStatus, uploadFile } from './notion';
 import { goodsOf, OrderError, type OrderInput, type ValidOrder, validateOrder } from './order';
 
 interface Limiter {
@@ -25,6 +26,7 @@ interface Limiter {
 export interface Env {
   ALLOWED_ORIGIN: string;
   NOTION_ORDERS_DB: string;
+  NOTION_PIECES_DB: string;
   NOTION_TOKEN: string;
   ORDERS_LIMITER: Limiter;
   QUOTES_LIMITER: Limiter;
@@ -86,6 +88,30 @@ const readJson = async (request: Request) => {
 const quote = (f: typeof fetch, env: Env, cep: string, goods: ValidOrder['goods']) =>
   quoteShipping(f, { ...env, MELHOR_ENVIO_TOKEN: env.MELHOR_ENVIO_TOKEN ?? '' }, cep, goods);
 
+// Catálogo do Notion em memória por 1 minuto: protege o limite de ~3 req/s do Notion e responde rápido.
+let stockCache: { at: number; rows: StockRow[] } | null = null;
+export const clearStockCache = () => {
+  stockCache = null;
+};
+
+/** Lê preço e estoque do banco Peças (com cache) e aplica ao catálogo usado pelas regras do domínio. */
+const loadStock = async (env: Env, f: typeof fetch) => {
+  if (!stockCache || Date.now() - stockCache.at > 60_000)
+    stockCache = { at: Date.now(), rows: await fetchStock(f, env.NOTION_TOKEN, env.NOTION_PIECES_DB) };
+  useStock(stockCache.rows);
+  return stockCache.rows;
+};
+
+/** GET /api/catalog — preço, edição e estoque das peças, para o site. */
+const catalog = async (env: Env, f: typeof fetch, h: Record<string, string>) => {
+  try {
+    return json({ pieces: await loadStock(env, f) }, 200, { ...h, 'Cache-Control': 'public, max-age=60' });
+  } catch (e) {
+    log('error', 'catálogo do Notion indisponível', { error: String(e) });
+    return json({ error: 'Catálogo indisponível' }, 502, h);
+  }
+};
+
 /** POST /api/shipping/quote — opções de frete para o carrinho ou a composição, até o CEP informado. */
 const shippingQuote = async (request: Request, env: Env, f: typeof fetch, h: Record<string, string>) => {
   const blocked = await guard(request, env.QUOTES_LIMITER, h);
@@ -95,6 +121,7 @@ const shippingQuote = async (request: Request, env: Env, f: typeof fetch, h: Rec
     const input = await readJson(request);
     const cep = normalizeCep(input.cep);
     if (!cep) return json({ error: 'CEP inválido' }, 400, h);
+    await loadStock(env, f);
     const options = await quote(f, env, cep, goodsOf(input));
     if (!options.length) return json({ error: 'Nenhuma opção de envio para esse CEP' }, 422, h);
     return json({ options: pickShippingOptions(options) }, 200, h);
@@ -124,6 +151,8 @@ const createOrder = async (request: Request, env: Env, f: typeof fetch, h: Recor
   let checkoutUrl: string | null = null;
   try {
     const input = await readJson(request);
+    // Preço e estoque do Notion valem para recalcular o pedido e recusar peça esgotada.
+    await loadStock(env, f);
     order = validateOrder(input);
     if (env.MELHOR_ENVIO_TOKEN) order = await withShipping(order, input, env, f);
     // A cobrança vem antes do Notion: se ela falhar, nenhum pedido "aguardando" fica órfão.
@@ -138,6 +167,7 @@ const createOrder = async (request: Request, env: Env, f: typeof fetch, h: Recor
         shipping: order.shipping?.price ?? 0,
         payer: { name: order.name, email: order.email },
         siteUrl: env.SITE_URL,
+        items: order.items,
       });
   } catch (e) {
     if (e instanceof OrderError) return json({ error: e.message }, e.status, h);
@@ -210,6 +240,15 @@ const paymentWebhook = async (request: Request, env: Env, f: typeof fetch) => {
     }
     const status = nextOrderStatus(page.status, payment.status);
     if (status) await updatePaymentStatus(f, env.NOTION_TOKEN, page.id, status, `${payment.id} · ${payment.status}`);
+    // Só na passagem para Pago (aviso repetido não chega aqui): baixa o estoque das peças da coleção.
+    if (status === 'Pago') {
+      for (const item of payment.metadata?.items ?? []) {
+        const qty = Number(item.qty);
+        if (typeof item.id === 'string' && Number.isInteger(qty) && qty > 0)
+          await decrementStock(f, env.NOTION_TOKEN, env.NOTION_PIECES_DB, item.id, qty);
+      }
+      clearStockCache();
+    }
     log('info', 'aviso de pagamento', { serial, payment: payment.id, mp: payment.status, status: status ?? 'mantido' });
     return new Response(null, { status: 200 });
   } catch (e) {
@@ -238,6 +277,7 @@ export const handle = async (request: Request, env: Env, _ctx: Ctx, f: typeof fe
   const { method } = request;
   if (method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
   if (url.pathname === '/api/health') return json({ ok: true }, 200, h);
+  if (url.pathname === '/api/catalog' && method === 'GET') return catalog(env, f, h);
   if (url.pathname === '/api/orders' && method === 'POST') return createOrder(request, env, f, h);
   if (url.pathname === '/api/shipping/quote' && method === 'POST') return shippingQuote(request, env, f, h);
   if (url.pathname === '/api/mp/webhook' && method === 'POST') return paymentWebhook(request, env, f);

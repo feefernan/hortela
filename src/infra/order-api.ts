@@ -1,4 +1,5 @@
-/** Conversa com o Worker de pedidos (worker/): cota o frete, envia o pedido e consulta o status do pagamento. */
+/** Conversa com o Worker de pedidos (worker/): catálogo vivo, frete, pedido e status do pagamento. */
+import type { StockRow } from '../domain/catalog';
 
 export const ORDERS_API = import.meta.env.VITE_ORDERS_API ?? '';
 
@@ -58,6 +59,10 @@ export const quoteShipping = async (payload: unknown, f: typeof fetch = fetch): 
       f,
     )
   ).options;
+
+/** Preço e estoque das peças (banco Peças do Notion, via Worker). */
+export const fetchCatalog = async (f: typeof fetch = fetch): Promise<StockRow[]> =>
+  (await call<{ pieces: StockRow[] }>('/api/catalog', undefined, 'Catálogo indisponível.', f)).pieces;
 
 export const fetchOrderStatus = async (serial: string, f: typeof fetch = fetch): Promise<string> =>
   (
