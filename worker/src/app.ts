@@ -6,7 +6,13 @@
  * pelo TypeScript/Vitest da raiz; `entry.ts` confere que eles batem com os tipos gerados.
  */
 import { SERIAL_PATTERN } from '../../src/domain/serial';
-import { nextOrderStatus, normalizeCep, type PaymentStatus, pickShippingOptions } from '../../src/domain/shipping';
+import {
+  nextOrderStatus,
+  normalizeCep,
+  type PaymentStatus,
+  pickShippingOptions,
+  shippingLabel,
+} from '../../src/domain/shipping';
 import { quoteShipping } from './melhor-envio';
 import { createCheckout, getPayment, verifySignature } from './mercado-pago';
 import { createOrderPage, findOrderPage, updatePaymentStatus, uploadFile } from './notion';
@@ -106,7 +112,7 @@ const withShipping = async (order: ValidOrder, input: OrderInput, env: Env, f: t
   const chosen = options.find((o) => o.id === Number(input.shipping?.serviceId));
   if (!chosen) throw new OrderError(409, 'Essa opção de frete mudou. Calcule o frete de novo.');
   const price = Math.round(chosen.price * 100) / 100;
-  const service = `${chosen.company} ${chosen.name} · ${chosen.days} dias úteis`.trim();
+  const service = `${shippingLabel(chosen)} · ${chosen.days} dias úteis`;
   return { ...order, shipping: { service, price }, total: Math.round((order.total + price) * 100) / 100 };
 };
 

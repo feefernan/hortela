@@ -26,8 +26,8 @@ export default defineConfig({
       SITE_URL: bindings.text('https://usehortela.art.br'),
       // Conta real do Melhor Envio: cotar é gratuito; só a compra de etiqueta é cobrada.
       MELHOR_ENVIO_API: bindings.text('https://melhorenvio.com.br'),
-      // shortcut: CEP de saída provisório (centro de SP) até a Hortelã informar o real (#52).
-      ORIGIN_CEP: bindings.text('01001000'),
+      // CEP de onde as peças saem (#54).
+      ORIGIN_CEP: bindings.text('01403020'),
       MELHOR_ENVIO_TOKEN: bindings.secret(),
       MP_ACCESS_TOKEN: bindings.secret(),
       MP_WEBHOOK_SECRET: bindings.secret(),
