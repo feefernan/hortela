@@ -7,22 +7,22 @@ type CertificateData = Pick<Order, 'serial' | 'name' | 'artB64' | 'imgB64'>;
 // A4 paisagem a 150 dpi.
 const W = 1754;
 const H = 1240;
-const M = 100; // margem interna
-const LABEL_W = 380; // etiqueta de 3 linhas no canto inferior direito
-const LABEL_X = W - M - LABEL_W;
-const ART = { x: M, y: M, w: LABEL_X - M - 40, h: H - 2 * M };
+const M = 96; // margem interna
+const LABEL_H = 130; // 3 linhas centralizadas na base
+const CX = W / 2;
+const ART = { x: M, y: M, w: W - 2 * M, h: H - 2 * M - LABEL_H - 30 };
 
 const INK = '#1C1812';
 const MOSS = '#3C4E2E';
 const SAGE = '#7A9268';
 const LINE = '#D6CCBA';
 
-/** Escreve uma linha, reduzindo a fonte até caber na etiqueta (nomes longos). */
+/** Escreve uma linha centralizada, reduzindo a fonte até caber na página (nomes longos). */
 const fitText = (ctx: CanvasRenderingContext2D, text: string, y: number, size: number, style: string) => {
   let px = size;
   do ctx.font = `${style} ${px--}px Georgia, serif`;
-  while (ctx.measureText(text).width > LABEL_W && px > 10);
-  ctx.fillText(text, LABEL_X, y);
+  while (ctx.measureText(text).width > W - 2 * M && px > 10);
+  ctx.fillText(text, CX, y);
 };
 
 /** O símbolo da Hortelã (mesmo desenho do favicon), em `size` px. */
@@ -48,21 +48,24 @@ const drawLogo = (ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.restore();
 };
 
-/** Etiqueta da obra no canto inferior direito: marca, código da obra e autoria — três linhas. */
+/** Etiqueta da obra centralizada na base: marca, código da obra e autoria — três linhas. */
 const drawLabel = (ctx: CanvasRenderingContext2D, d: CertificateData) => {
   const { code, author } = artworkLabel({ serial: d.serial, name: d.name, date: new Date() });
   const bottom = H - M;
-  drawLogo(ctx, LABEL_X - 4, bottom - 118, 40);
-  ctx.fillStyle = INK;
   ctx.font = 'bold 18px Georgia, serif';
   ctx.letterSpacing = '9px';
-  ctx.fillText('HORTELÃ', LABEL_X + 50, bottom - 88);
+  const brandW = 50 + ctx.measureText('HORTELÃ').width;
+  drawLogo(ctx, CX - brandW / 2, bottom - 118, 40);
+  ctx.fillStyle = INK;
+  ctx.fillText('HORTELÃ', CX - brandW / 2 + 50, bottom - 88);
   ctx.letterSpacing = '0px';
+  ctx.textAlign = 'center';
   ctx.fillStyle = MOSS;
   ctx.font = '20px "Courier New", monospace';
-  ctx.fillText(code, LABEL_X, bottom - 40);
+  ctx.fillText(code, CX, bottom - 40);
   ctx.fillStyle = SAGE;
   fitText(ctx, author, bottom, 19, 'italic');
+  ctx.textAlign = 'start';
 };
 
 /** Gera e baixa o certificado da obra (PNG A4 paisagem, 150 dpi): a arte em destaque e a etiqueta da obra. */
