@@ -23,6 +23,8 @@ export interface Order {
   date: string;
   imgB64?: string | null;
   svgData?: string | null;
+  /** Só a arte, sem a camiseta: fica no navegador para o certificado, não vai ao Worker. */
+  artB64?: string | null;
 }
 
 export const formatOrderDate = (date: Date): string =>

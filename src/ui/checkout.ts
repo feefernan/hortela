@@ -4,7 +4,7 @@ import { formatBRL } from '../domain/pricing';
 import { CHECKOUT_ERROR_MESSAGES, validateCheckout } from '../domain/validation';
 import { type OrderResult, OrderSendError, sendOrder } from '../infra/order-api';
 import { reportError, track } from '../infra/telemetry';
-import { captureComposition, exportProductionSVG } from './capture';
+import { captureArt, captureComposition, exportProductionSVG } from './capture';
 import { downloadCertificate } from './certificate';
 import { byId, onAction } from './dom';
 import { type ButtonProgress, nextFrame, startButtonProgress } from './progress';
@@ -15,6 +15,8 @@ import { toast } from './toast';
 type CheckoutSource = { kind: 'estudio' } | { kind: 'colecao'; lines: Cart };
 
 let currentOrder: Order | null = null;
+/** Arte sem camiseta da composição em envio, para o certificado. */
+let artB64: string | null = null;
 let source: CheckoutSource = { kind: 'estudio' };
 let onCollectionOrdered: () => void = () => {};
 
@@ -86,6 +88,7 @@ const showConfirmation = (order: Order) => {
 const buildPayload = async (contact: { name: string; email: string; obs: string }, progress: ButtonProgress) => {
   if (source.kind === 'colecao') return { kind: 'colecao', ...contact, items: source.lines };
   const imgB64 = await captureComposition();
+  artB64 = await captureArt();
   progress.step(0.4, 'Preparando arquivo de produção…');
   await nextFrame();
   const cfg = readStudioConfig();
@@ -139,6 +142,7 @@ const submitOrder = async () => {
     date: formatOrderDate(new Date()),
     imgB64: studio?.previewPng ?? null,
     svgData: studio?.productionSvg.replace('__SERIAL__', result.serial) ?? null,
+    artB64: studio ? artB64 : null,
   };
   progress.step(1, 'Pronto');
   await nextFrame();
