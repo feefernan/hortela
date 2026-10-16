@@ -7,11 +7,17 @@ export type { PageId };
 
 type ProductHook = (productId: string | null) => void;
 let productHook: ProductHook = () => {};
+let returnHook: (serial: string) => void = () => {};
 let current: Route = { page: 'home' };
 
 /** O catálogo registra como abrir/fechar o modal de peça quando a rota muda (#/peca/:id). */
 export const setProductHook = (hook: ProductHook) => {
   productHook = hook;
+};
+
+/** O checkout registra como mostrar um pedido ao voltar do pagamento (#/pedido/:serial). */
+export const setReturnHook = (hook: (serial: string) => void) => {
+  returnHook = hook;
 };
 
 const showPage = (id: PageId) => {
@@ -59,8 +65,9 @@ export const initRouter = () => {
   });
   const fromLocation = () => {
     const route = parseHash(window.location.hash);
-    // A confirmação não faz sentido aberta direto por link.
-    apply(route.page === 'confirmacao' ? { page: 'home' } : route);
+    // Confirmação só com o serial (volta do pagamento); sem ele, não faz sentido aberta por link.
+    if (route.page === 'confirmacao' && route.serial) returnHook(route.serial);
+    else apply(route.page === 'confirmacao' ? { page: 'home' } : route);
   };
   window.addEventListener('popstate', fromLocation);
   window.addEventListener('hashchange', fromLocation);

@@ -141,3 +141,114 @@
   font-style: italic;
   color: var(--sage);
 }
+
+/* ── CHECKOUT: entrega (CEP, endereço, frete) ────── */
+.ck-delivery {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.ck-label {
+  font-family: var(--body);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sage);
+  padding: 0;
+  margin-bottom: 6px;
+}
+.ck-input {
+  border: 1px solid var(--dust);
+  background: var(--parchment);
+  padding: 11px 14px;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  min-width: 0;
+  transition: border-color 0.18s;
+}
+.ck-input:focus {
+  border-color: var(--sage);
+}
+.ck-cep-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.ck-quote {
+  border: 1px solid var(--moss);
+  background: transparent;
+  color: var(--moss);
+  padding: 0 16px;
+  font-family: var(--body);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ck-quote:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.ck-address {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px;
+}
+.ck-address .ck-wide {
+  grid-column: 1 / -1;
+}
+.ck-address:not([hidden]),
+.ck-ship {
+  animation: ck-reveal var(--dur-base) var(--ease-out) backwards;
+}
+.ck-ship-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ck-ship-options.is-loading {
+  min-height: 92px;
+}
+.ck-ship {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--dust);
+  padding: 10px 12px;
+  font-family: var(--body);
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.18s, background-color 0.18s;
+}
+.ck-ship input {
+  accent-color: var(--moss);
+}
+.ck-ship:has(input:checked) {
+  border-color: var(--moss);
+  background: var(--parchment);
+}
+.ck-ship small {
+  display: block;
+  color: var(--sage);
+  font-style: italic;
+}
+.ck-ship strong {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 16px;
+}
+@keyframes ck-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

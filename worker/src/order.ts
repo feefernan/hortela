@@ -6,6 +6,7 @@ import { addToCart, type Cart, lineLabel, parseCart } from '../../src/domain/car
 import { findProduct } from '../../src/domain/catalog';
 import { MODELS, type ModelId, studioTotal } from '../../src/domain/pricing';
 import { generateSerial } from '../../src/domain/serial';
+import { type Address, parseAddress } from '../../src/domain/shipping';
 import { validateCheckout } from '../../src/domain/validation';
 
 export interface OrderInput {
@@ -17,6 +18,8 @@ export interface OrderInput {
   studio?: { model?: unknown; color?: unknown; size?: unknown; view?: unknown; stamps?: unknown };
   previewPng?: unknown;
   productionSvg?: unknown;
+  address?: unknown;
+  shipping?: { serviceId?: unknown };
 }
 
 export interface ValidOrder {
@@ -33,6 +36,11 @@ export interface ValidOrder {
   lines: string[];
   previewPng: Uint8Array<ArrayBuffer> | null;
   productionSvg: string | null;
+  /** Peças e valor das peças (sem frete), para cotar o envio. */
+  goods: { count: number; total: number };
+  address: Address | null;
+  /** Preenchido pelo Worker depois de recotar o frete; `total` passa a incluí-lo. */
+  shipping: { service: string; price: number } | null;
 }
 
 export class OrderError extends Error {
@@ -75,17 +83,31 @@ const rebuildCart = (raw: unknown): Cart => {
   return cart;
 };
 
+/** Quantas peças e quanto valem, recalculado no servidor (usado também para cotar o frete). */
+export const goodsOf = (input: Pick<OrderInput, 'kind' | 'items' | 'studio'>): { count: number; total: number } => {
+  if (input.kind === 'colecao') {
+    const cart = rebuildCart(input.items);
+    return { count: cart.reduce((n, l) => n + l.qty, 0), total: cart.reduce((sum, l) => sum + l.unitPrice * l.qty, 0) };
+  }
+  const model = input.studio?.model;
+  if (input.kind === 'estudio' && typeof model === 'string' && model in MODELS)
+    return { count: 1, total: studioTotal(model as ModelId) };
+  throw new OrderError(400, 'Pedido inválido');
+};
+
 export const validateOrder = (input: OrderInput, now = new Date()): ValidOrder => {
   const contact = { name: text(input.name, 120), email: text(input.email, 160), obs: text(input.obs, 1000) };
   if (validateCheckout(contact)) throw new OrderError(400, 'Nome ou e-mail inválido');
-  const base = { serial: generateSerial(now), ...contact };
+  const base = { serial: generateSerial(now), ...contact, address: parseAddress(input.address), shipping: null };
 
   if (input.kind === 'colecao') {
     const cart = rebuildCart(input.items);
+    const total = cart.reduce((sum, l) => sum + l.unitPrice * l.qty, 0);
     return {
       ...base,
       kind: 'colecao',
-      total: cart.reduce((sum, l) => sum + l.unitPrice * l.qty, 0),
+      total,
+      goods: { count: cart.reduce((n, l) => n + l.qty, 0), total },
       model: 'Peças da coleção',
       color: '—',
       size: [...new Set(cart.map((l) => l.size))].join(', '),
@@ -112,6 +134,7 @@ export const validateOrder = (input: OrderInput, now = new Date()): ValidOrder =
       ...base,
       kind: 'estudio',
       total: studioTotal(model),
+      goods: { count: 1, total: studioTotal(model) },
       model: MODELS[model].label,
       color: text(s.color, 40),
       size: text(s.size, 4),

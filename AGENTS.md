@@ -51,16 +51,29 @@ src/
   styles/   CSS
   main.ts   composição/bootstrap — ninguém importa main.ts
 worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.config.ts)
-  src/app.ts     rotas, CORS, rate limit, gravação no Notion
-  src/order.ts   valida e recalcula o pedido reaproveitando src/domain
-  src/notion.ts  cliente mínimo da API do Notion
+  src/app.ts            rotas, CORS, rate limit; pedido, cotação de frete, webhook e status do pagamento
+  src/order.ts          valida e recalcula o pedido reaproveitando src/domain
+  src/notion.ts         cliente mínimo da API do Notion
+  src/melhor-envio.ts   cotação de frete (Melhor Envio)
+  src/mercado-pago.ts   Checkout Pro: preferência, consulta de pagamento, assinatura do webhook
   src/entry.ts   ponto de entrada; confere o Env local contra os tipos gerados
 ```
 
-**Fluxo do pedido:** o site envia o pedido (sem preço, total nem serial) para `POST /api/orders` no Worker →
-o Worker valida, recalcula tudo com `src/domain`, gera o serial, sobe preview PNG e SVG de produção e cria a
-página no banco **Pedidos** do Notion → devolve `{ serial, total }`. Se o Worker falhar, o site mostra o erro e
-mantém formulário, carrinho e composição para tentar de novo. Dinheiro e serial **nunca** são decididos no navegador.
+**Fluxo do pedido:**
+1. No checkout, o cliente digita o CEP: o endereço vem do ViaCEP e as opções de frete de `POST /api/shipping/quote`
+   (Worker → Melhor Envio).
+2. O site envia o pedido (sem preço, frete, total nem serial) para `POST /api/orders`. O Worker valida, recalcula
+   tudo com `src/domain`, **recota o frete**, gera o serial, cria a cobrança no Mercado Pago (peças + frete,
+   `external_reference` = serial), sobe preview PNG e SVG de produção e cria a página no banco **Pedidos** do Notion
+   como "Aguardando pagamento" → devolve `{ serial, total, checkoutUrl }`.
+3. O site guarda o pedido na aba (sessionStorage) e vai para o `checkoutUrl`. O Mercado Pago devolve para
+   `#/pedido/<serial>`, que mostra o pedido e o status de `GET /api/orders/:serial/status`.
+4. O Mercado Pago avisa `POST /api/mp/webhook` (assinatura `x-signature` conferida); o Worker consulta o pagamento
+   e muda o Status no Notion para **Pago** ou **Cancelado**.
+
+Sem os tokens do Mercado Pago e do Melhor Envio, o Worker grava o pedido como "Novo", sem cobrança (`checkoutUrl: null`).
+Se o Worker falhar, o site mostra o erro e mantém formulário, carrinho e composição para tentar de novo. Dinheiro,
+frete e serial **nunca** são decididos no navegador.
 
 - `domain/` **não importa** `infra/` nem `ui/` e não toca no DOM. Toda regra de negócio nova nasce aqui, com teste.
 - `infra/` **não importa** `ui/`.
@@ -121,8 +134,10 @@ Regras:
 
 - Nada de senhas, chaves ou e-mails pessoais no código. Use `.env.local` (não versionado) e GitHub Secrets.
   Variáveis documentadas em `.env.example`.
-- Worker: o token do Notion é secret (`NOTION_TOKEN`, declarado com `bindings.secret()`), enviado no deploy via
-  `cf deploy --secrets-file` a partir do GitHub Secret de mesmo nome. Deploy pelo CI usa `CLOUDFLARE_API_TOKEN`.
+- Worker: `NOTION_TOKEN`, `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` e `MELHOR_ENVIO_TOKEN` são secrets (declarados com
+  `bindings.secret()`), enviados no deploy via `cf deploy --secrets-file` a partir dos GitHub Secrets de mesmo nome.
+  Deploy pelo CI usa `CLOUDFLARE_API_TOKEN`. Para cadastrar ou trocar as chaves, a pessoa roda
+  `bash scripts/ligar-pagamento.sh` no próprio terminal — chaves nunca passam pelo chat nem por arquivos versionados.
   Valores públicos (ID do banco, origens permitidas) ficam em `worker/cloudflare.config.ts`.
 - O site antigo (antes da refatoração) está no commit `e4a1052` (`legacy/index.html`), se precisar consultar.
 

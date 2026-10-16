@@ -16,4 +16,6 @@ export const PRINT_FEE = 80;
 
 export const studioTotal = (model: ModelId): number => MODELS[model].price + PRINT_FEE;
 
-export const formatBRL = (value: number): string => `R$ ${value}`;
+/** R$ 200 para valores inteiros; R$ 22,50 quando há centavos (frete). */
+export const formatBRL = (value: number): string =>
+  `R$ ${Number.isInteger(value) ? value : value.toFixed(2).replace('.', ',')}`;

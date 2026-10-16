@@ -20,6 +20,17 @@ export default defineConfig({
       NOTION_TOKEN: bindings.secret(),
       // 5 pedidos por minuto por IP: suficiente para quem compra, freia spam.
       ORDERS_LIMITER: bindings.rateLimit({ namespace: '1001', simple: { limit: 5, period: 60 } }),
+      // Cotações de frete: o cliente pode testar alguns CEPs.
+      QUOTES_LIMITER: bindings.rateLimit({ namespace: '1002', simple: { limit: 20, period: 60 } }),
+      // Volta do pagamento e aviso do Mercado Pago (webhook) usam este endereço.
+      SITE_URL: bindings.text('https://usehortela.art.br'),
+      // Ambiente de testes do Melhor Envio; em produção, https://melhorenvio.com.br.
+      MELHOR_ENVIO_API: bindings.text('https://sandbox.melhorenvio.com.br'),
+      // shortcut: CEP de saída provisório (centro de SP) até a Hortelã informar o real (#52).
+      ORIGIN_CEP: bindings.text('01001000'),
+      MELHOR_ENVIO_TOKEN: bindings.secret(),
+      MP_ACCESS_TOKEN: bindings.secret(),
+      MP_WEBHOOK_SECRET: bindings.secret(),
     },
   },
 });

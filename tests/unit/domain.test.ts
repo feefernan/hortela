@@ -45,6 +45,7 @@ describe('pricing', () => {
   });
   it('formata em reais', () => {
     expect(formatBRL(200)).toBe('R$ 200');
+    expect(formatBRL(232.5)).toBe('R$ 232,50');
   });
 });
 
