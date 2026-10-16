@@ -17,6 +17,8 @@ export default defineConfig({
         'https://usehortela.art.br,https://www.usehortela.art.br,http://usehortela.comercial.ws,http://localhost:5173,http://localhost:4173',
       ),
       NOTION_ORDERS_DB: bindings.text('3facabbfb8c68005936ac8e551f57037'),
+      // Banco Peças: preço, edição e estoque de cada peça da coleção (#56).
+      NOTION_PIECES_DB: bindings.text('3facabbfb8c68079aea8c6534c5de876'),
       NOTION_TOKEN: bindings.secret(),
       // 5 pedidos por minuto por IP: suficiente para quem compra, freia spam.
       ORDERS_LIMITER: bindings.rateLimit({ namespace: '1001', simple: { limit: 5, period: 60 } }),

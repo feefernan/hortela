@@ -38,6 +38,8 @@ export interface ValidOrder {
   productionSvg: string | null;
   /** Peças e valor das peças (sem frete), para cotar o envio. */
   goods: { count: number; total: number };
+  /** Peças da coleção e quantidades, para baixar o estoque quando o pagamento for aprovado. */
+  items: { id: string; qty: number }[];
   address: Address | null;
   /** Preenchido pelo Worker depois de recotar o frete; `total` passa a incluí-lo. */
   shipping: { service: string; price: number } | null;
@@ -108,6 +110,12 @@ export const validateOrder = (input: OrderInput, now = new Date()): ValidOrder =
       kind: 'colecao',
       total,
       goods: { count: cart.reduce((n, l) => n + l.qty, 0), total },
+      items: Object.entries(
+        cart.reduce<Record<string, number>>(
+          (acc, l) => ({ ...acc, [l.productId]: (acc[l.productId] ?? 0) + l.qty }),
+          {},
+        ),
+      ).map(([id, qty]) => ({ id, qty })),
       model: 'Peças da coleção',
       color: '—',
       size: [...new Set(cart.map((l) => l.size))].join(', '),
@@ -135,6 +143,7 @@ export const validateOrder = (input: OrderInput, now = new Date()): ValidOrder =
       kind: 'estudio',
       total: studioTotal(model),
       goods: { count: 1, total: studioTotal(model) },
+      items: [],
       model: MODELS[model].label,
       color: text(s.color, 40),
       size: text(s.size, 4),

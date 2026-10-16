@@ -4,7 +4,9 @@ export interface Product {
   id: string;
   name: string;
   collection: string;
-  edition: { number: number; total: number };
+  edition: { total: number };
+  /** Unidades à venda, do banco Peças no Notion; ausente quando o Notion não respondeu. */
+  available?: number;
   story: string;
   price: number;
   status: ProductStatus;
@@ -18,7 +20,7 @@ export const PRODUCTS: readonly Product[] = [
     id: 'floresta-3',
     name: 'Floresta nº 3',
     collection: 'Coleção Véspera',
-    edition: { number: 8, total: 20 },
+    edition: { total: 20 },
     story:
       'Pintada numa tarde de março, depois de uma caminhada não planejada. A floresta era vista de cima, como se o olhar fosse de pássaro antes da chuva.',
     price: 210,
@@ -29,7 +31,7 @@ export const PRODUCTS: readonly Product[] = [
     id: 'tarde-de-outubro',
     name: 'Tarde de outubro',
     collection: 'Série Memória',
-    edition: { number: 3, total: 15 },
+    edition: { total: 15 },
     story:
       'O terracota apareceu sozinho. Não havia plano de usar essa cor, mas a tarde pedia aquele calor específico — o tipo que vai embora antes de você perceber.',
     price: 195,
@@ -40,7 +42,7 @@ export const PRODUCTS: readonly Product[] = [
     id: 'raizes',
     name: 'Raízes',
     collection: 'Série Botânica',
-    edition: { number: 1, total: 10 },
+    edition: { total: 10 },
     story: 'Uma série sobre o que sustenta. Galhos, raízes, fios invisíveis. O que cresce antes de aparecer.',
     price: 225,
     status: 'last',
@@ -50,7 +52,7 @@ export const PRODUCTS: readonly Product[] = [
     id: 'nevoa',
     name: 'Névoa',
     collection: 'Coleção Véspera',
-    edition: { number: 12, total: 20 },
+    edition: { total: 20 },
     story:
       'Tem uma névoa específica da manhã que existe por um instante antes de desaparecer. Esta obra é esse instante.',
     price: 190,
@@ -61,7 +63,7 @@ export const PRODUCTS: readonly Product[] = [
     id: 'chuva-fina',
     name: 'Chuva fina',
     collection: 'Série Memória',
-    edition: { number: 7, total: 15 },
+    edition: { total: 15 },
     story: 'Uma chuva que cai devagar, quase sem barulho. A pintura foi feita ouvindo ela.',
     price: 200,
     status: 'sold',
@@ -71,7 +73,7 @@ export const PRODUCTS: readonly Product[] = [
     id: 'broto',
     name: 'Broto',
     collection: 'Série Botânica',
-    edition: { number: 5, total: 10 },
+    edition: { total: 10 },
     story: 'O início de algo. Menor que tudo ao redor, mas já cheio de intenção.',
     price: 185,
     status: 'ok',
@@ -116,4 +118,46 @@ export const STAMPS: readonly Stamp[] = [
 
 export const findStamp = (id: string): Stamp | undefined => STAMPS.find((s) => s.id === id);
 
-export const findProduct = (id: string): Product | undefined => PRODUCTS.find((p) => p.id === id);
+/** Uma linha do banco Peças do Notion (null = coluna vazia). */
+export interface StockRow {
+  id: string;
+  price: number | null;
+  total: number | null;
+  available: number | null;
+  active: boolean;
+}
+
+const statusFor = (available: number | undefined, fallback: ProductStatus): ProductStatus => {
+  if (available === undefined) return fallback;
+  if (available <= 0) return 'sold';
+  return available === 1 ? 'last' : 'ok';
+};
+
+/**
+ * Catálogo vivo: nome, história e arte vêm do código; preço, edição e estoque, do Notion.
+ * Peça desativada no Notion sai do site; peça que não está no Notion fica como no código.
+ */
+export const applyStock = (rows: readonly StockRow[]): Product[] =>
+  PRODUCTS.flatMap((p) => {
+    const row = rows.find((r) => r.id === p.id);
+    if (!row) return [p];
+    if (!row.active) return [];
+    const available = row.available ?? undefined;
+    return [
+      {
+        ...p,
+        price: row.price ?? p.price,
+        edition: { total: row.total ?? p.edition.total },
+        available,
+        status: statusFor(available, p.status),
+      },
+    ];
+  });
+
+// Estado do módulo: o site troca uma vez ao receber o catálogo; o Worker, a cada pedido.
+let live: readonly Product[] = PRODUCTS;
+export const useStock = (rows: readonly StockRow[]) => {
+  live = applyStock(rows);
+};
+export const products = (): readonly Product[] => live;
+export const findProduct = (id: string): Product | undefined => live.find((p) => p.id === id);

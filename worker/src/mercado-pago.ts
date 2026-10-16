@@ -9,6 +9,8 @@ export interface Charge {
   shipping: number;
   payer: { name: string; email: string };
   siteUrl: string;
+  /** Peças e quantidades; voltam no pagamento (metadata) para baixar o estoque. */
+  items: { id: string; qty: number }[];
 }
 
 const auth = (token: string) => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
@@ -25,6 +27,7 @@ export const createCheckout = async (f: typeof fetch, token: string, c: Charge):
       shipments: { mode: 'not_specified', cost: c.shipping },
       payer: { name: c.payer.name, email: c.payer.email },
       external_reference: c.serial,
+      metadata: { items: c.items },
       back_urls: { success: back, pending: back, failure: back },
       auto_return: 'approved',
       // Sem notification_url aqui: ela teria prioridade sobre o webhook cadastrado no painel do Mercado Pago,
@@ -43,7 +46,12 @@ export const createCheckout = async (f: typeof fetch, token: string, c: Charge):
 export const getPayment = async (f: typeof fetch, token: string, id: string) => {
   const res = await f(`${API}/v1/payments/${encodeURIComponent(id)}`, { headers: auth(token) });
   if (!res.ok) throw new Error(`Mercado Pago pagamento ${id}: ${res.status}`);
-  return (await res.json()) as { id: number; status: string; external_reference?: string };
+  return (await res.json()) as {
+    id: number;
+    status: string;
+    external_reference?: string;
+    metadata?: { items?: { id?: unknown; qty?: unknown }[] };
+  };
 };
 
 const hexToBytes = (hex: string) => Uint8Array.from(hex.match(/../g) ?? [], (h) => Number.parseInt(h, 16));

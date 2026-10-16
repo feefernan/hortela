@@ -24,6 +24,9 @@ const apiFetch = vi.fn(async (url: string, init?: RequestInit) => {
   if (url.startsWith('https://viacep.com.br/'))
     return Response.json({ logradouro: 'Rua do Ouvidor', bairro: 'Centro', localidade: 'Rio de Janeiro', uf: 'RJ' });
   if (url.endsWith('/status')) return Response.json({ status: api.status });
+  // Banco Peças: só a Floresta nº 3 tem estoque cadastrado; as outras ficam como no código.
+  if (url.endsWith('/api/catalog'))
+    return Response.json({ pieces: [{ id: 'floresta-3', price: 210, total: 20, available: 12, active: true }] });
   if (url.endsWith('/api/shipping/quote')) return Response.json({ options: SHIPPING });
   const body = JSON.parse(String(init?.body));
   api.sent.push(body);
@@ -149,7 +152,7 @@ describe('coleção', () => {
     click('.loja-card[data-product="floresta-3"]');
     expect($('#modal-bg').classList.contains('open')).toBe(true);
     expect($('#m-name').textContent).toBe('Floresta nº 3');
-    expect($('#m-col').textContent).toBe('Coleção Véspera · Ed. 8 de 20');
+    expect($('#m-col').textContent).toBe('Coleção Véspera · Edição de 20 · 12 disponíveis');
     const sizes = document.querySelectorAll<HTMLElement>('#modal-bg .sz');
     sizes[0].click();
     expect(sizes[0].classList.contains('on')).toBe(true);

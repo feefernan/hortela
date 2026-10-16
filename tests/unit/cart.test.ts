@@ -43,6 +43,9 @@ describe('carrinho', () => {
   it('respeita o limite por peça (última = 1, demais = 3, somando tamanhos)', () => {
     expect(maxQty(product('raizes'))).toBe(1);
     expect(maxQty(product('broto'))).toBe(3);
+    // Com estoque conhecido, nunca mais que o disponível.
+    expect(maxQty({ ...product('broto'), available: 2 })).toBe(2);
+    expect(maxQty({ ...product('broto'), available: 9 })).toBe(3);
     const one = add([], 'raizes', 'M');
     expect(addToCart(one, product('raizes'), 'G')).toEqual({ ok: false, reason: 'limite' });
     let cart = add([], 'broto', 'P');

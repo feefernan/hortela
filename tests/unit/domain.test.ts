@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { ALPHABET, findProduct, findStamp, PRODUCTS, STAMPS } from '../../src/domain/catalog';
+import {
+  ALPHABET,
+  applyStock,
+  findProduct,
+  findStamp,
+  PRODUCTS,
+  STAMPS,
+  type StockRow,
+  useStock,
+} from '../../src/domain/catalog';
 import { editionLabel } from '../../src/domain/edition';
 import { escapeHtml } from '../../src/domain/escape';
 import { formatOrderDate } from '../../src/domain/orders';
@@ -29,11 +38,51 @@ describe('catalog', () => {
 });
 
 describe('edition', () => {
-  it('formata a edição', () => {
-    expect(editionLabel({ edition: { number: 8, total: 20 }, status: 'ok' })).toBe('Ed. 8 de 20');
+  it('mostra o tamanho da edição e quantas restam', () => {
+    expect(editionLabel({ edition: { total: 20 }, status: 'ok', available: 12 })).toBe('Edição de 20 · 12 disponíveis');
+    expect(editionLabel({ edition: { total: 10 }, status: 'last', available: 1 })).toBe('Edição de 10 · 1 disponível');
+    expect(editionLabel({ edition: { total: 10 }, status: 'sold', available: 0 })).toBe('Edição de 10 · Esgotada');
   });
-  it('marca a última peça', () => {
-    expect(editionLabel({ edition: { number: 1, total: 10 }, status: 'last' })).toBe('Ed. 1 de 10 · Última');
+  it('sem estoque conhecido (Notion fora do ar), só a edição', () => {
+    expect(editionLabel({ edition: { total: 20 }, status: 'ok' })).toBe('Edição de 20');
+    expect(editionLabel({ edition: { total: 10 }, status: 'last' })).toBe('Edição de 10 · Última');
+  });
+});
+
+describe('catálogo vivo (banco Peças)', () => {
+  const row = (id: string, o: Partial<StockRow> = {}): StockRow => ({
+    id,
+    price: null,
+    total: null,
+    available: null,
+    active: true,
+    ...o,
+  });
+
+  it('preço, edição e estoque do Notion por cima do código', () => {
+    const live = applyStock([row('floresta-3', { price: 250, total: 30, available: 1 })]);
+    expect(live.find((p) => p.id === 'floresta-3')).toMatchObject({
+      name: 'Floresta nº 3',
+      price: 250,
+      edition: { total: 30 },
+      available: 1,
+      status: 'last',
+    });
+    expect(live.find((p) => p.id === 'nevoa')).toEqual(PRODUCTS.find((p) => p.id === 'nevoa'));
+  });
+
+  it('sem estoque vira esgotada; desativada some; coluna vazia mantém o código', () => {
+    const live = applyStock([row('floresta-3', { available: 0 }), row('nevoa', { active: false }), row('raizes')]);
+    expect(live.find((p) => p.id === 'floresta-3')?.status).toBe('sold');
+    expect(live.some((p) => p.id === 'nevoa')).toBe(false);
+    expect(live.find((p) => p.id === 'raizes')).toMatchObject({ price: 225, status: 'last' });
+  });
+
+  it('useStock muda o que findProduct enxerga', () => {
+    useStock([row('floresta-3', { price: 999 })]);
+    expect(findProduct('floresta-3')?.price).toBe(999);
+    useStock([]);
+    expect(findProduct('floresta-3')?.price).toBe(210);
   });
 });
 
