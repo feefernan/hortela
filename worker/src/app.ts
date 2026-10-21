@@ -135,6 +135,9 @@ const pieceImage = async (request: Request, id: string, env: Env, ctx: Ctx, f: t
   const cache = edgeCache();
   const hit = await cache?.match(request);
   if (hit) return hit;
+  // Só a falta de cache consulta o Notion; `?v=` inventado forçaria faltas, então elas têm limite por IP.
+  const ip = request.headers.get('CF-Connecting-IP') ?? 'local';
+  if (!(await env.QUOTES_LIMITER.limit({ key: `img:${ip}` })).success) return new Response(null, { status: 429 });
   try {
     const url = await pieceImageUrl(f, env.NOTION_TOKEN, env.NOTION_PIECES_DB, id);
     if (!url) return new Response('Peça sem imagem', { status: 404 });
