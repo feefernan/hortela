@@ -14,7 +14,7 @@ import { formatBRL } from '../domain/pricing';
 import type { CartStorage } from '../infra/cart-storage';
 import { track } from '../infra/telemetry';
 import { watercolorSVG } from './art';
-import { byId, onAction } from './dom';
+import { byId, onAction, setLayerOpen } from './dom';
 import { bump } from './motion';
 import { go } from './router';
 import { toast } from './toast';
@@ -76,13 +76,13 @@ const render = () => {
 const openCart = () => {
   lastFocus = document.activeElement as HTMLElement | null;
   renderDrawer();
-  byId('cart-drawer-bg').classList.add('open');
+  setLayerOpen('cart-drawer-bg', true);
   byId('cart-open-btn').setAttribute('aria-expanded', 'true');
   byId('cart-drawer').querySelector<HTMLElement>('button')?.focus();
 };
 
 const closeCart = () => {
-  byId('cart-drawer-bg').classList.remove('open');
+  setLayerOpen('cart-drawer-bg', false);
   byId('cart-open-btn').setAttribute('aria-expanded', 'false');
   lastFocus?.focus?.();
 };

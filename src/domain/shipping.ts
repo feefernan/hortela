@@ -68,6 +68,22 @@ export const parseAddress = (raw: unknown): Address | null => {
   return required.every(Boolean) && /^[A-Z]{2}$/.test(address.uf) ? address : null;
 };
 
+type AddressField = 'cep' | 'street' | 'number' | 'district' | 'city' | 'uf';
+
+/** O que falta no endereço, campo a campo, na ordem em que aparecem no formulário. */
+export const addressErrors = (raw: Record<string, unknown>): { field: AddressField; message: string }[] => {
+  const v = (k: string) => clean(raw[k], 120);
+  const errors: { field: AddressField; message: string }[] = [];
+  if (!normalizeCep(raw.cep)) errors.push({ field: 'cep', message: 'Informe um CEP com 8 números.' });
+  if (!v('street')) errors.push({ field: 'street', message: 'Informe a rua.' });
+  if (!v('number')) errors.push({ field: 'number', message: 'Informe o número (ou "s/n").' });
+  if (!v('district')) errors.push({ field: 'district', message: 'Informe o bairro.' });
+  if (!v('city')) errors.push({ field: 'city', message: 'Informe a cidade.' });
+  if (!/^[A-Z]{2}$/.test(v('uf').toUpperCase()))
+    errors.push({ field: 'uf', message: 'Use a sigla do estado (ex.: RJ).' });
+  return errors;
+};
+
 export const formatAddress = (a: Address) =>
   [
     `${a.street}, ${a.number}${a.complement ? ` — ${a.complement}` : ''}`,

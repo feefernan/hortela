@@ -1,15 +1,16 @@
 import { type Cart, cartSubtotal, lineLabel } from '../domain/cart';
 import { formatOrderDate, type Order, type StudioConfig } from '../domain/orders';
 import { formatBRL, studioTotal } from '../domain/pricing';
-import { CHECKOUT_ERROR_MESSAGES, validateCheckout } from '../domain/validation';
+import { contactErrors } from '../domain/validation';
 import { fetchOrderStatus, type OrderResult, OrderSendError, sendOrder } from '../infra/order-api';
 import { reportError, track } from '../infra/telemetry';
 import { captureArt, captureComposition, exportProductionSVG } from './capture';
 import { downloadCertificate } from './certificate';
 import { initDelivery, readDelivery, resetDelivery } from './delivery';
-import { byId, onAction } from './dom';
+import { byId, onAction, setLayerOpen } from './dom';
+import { clearErrorsOnInput, setFieldError, showFieldErrors } from './field-errors';
 import { type ButtonProgress, nextFrame, startButtonProgress } from './progress';
-import { navigate, setReturnHook } from './router';
+import { navigate, onPageChange, setReturnHook } from './router';
 import { readStudioConfig, studioModel } from './studio';
 import { toast } from './toast';
 
@@ -51,7 +52,18 @@ const collectionConfig = (lines: Cart): StudioConfig => ({
   stamps: lines.map(lineLabel),
 });
 
+/** Linhas que só fazem sentido para uma composição do Estúdio (modelo, cor, posição). */
+const showStudioRows = (prefix: 'ck' | 'conf', isCollection: boolean) => {
+  for (const key of ['model', 'color', 'view']) {
+    const row = byId(`${prefix}-${key}`).parentElement;
+    if (row) row.hidden = isCollection;
+  }
+};
+
 const fillSummary = (cfg: StudioConfig, goodsTotal: number, isCollection: boolean) => {
+  byId('ck-title').textContent = isCollection ? 'Seu pedido' : 'Sua composição';
+  byId('ck-cert-note').hidden = isCollection;
+  showStudioRows('ck', isCollection);
   byId('ck-model').textContent = cfg.model;
   byId('ck-color').textContent = cfg.color;
   byId('ck-size').textContent = cfg.size;
@@ -59,7 +71,7 @@ const fillSummary = (cfg: StudioConfig, goodsTotal: number, isCollection: boolea
   byId('ck-stamps-label').textContent = isCollection ? 'Itens' : 'Estampas';
   byId('ck-stamps').textContent = cfg.stamps.join(', ');
   resetDelivery(goodsTotal);
-  byId('checkout-modal').classList.add('open');
+  setLayerOpen('checkout-modal', true);
 };
 
 /** Checkout de uma composição do Estúdio (peça única, com certificado). */
@@ -74,7 +86,7 @@ export const openCartCheckout = (lines: Cart) => {
   fillSummary(collectionConfig(lines), cartSubtotal(lines), true);
 };
 
-const closeCheckout = () => byId('checkout-modal').classList.remove('open');
+const closeCheckout = () => setLayerOpen('checkout-modal', false);
 
 /** O que o frete precisa saber: as peças do carrinho ou o modelo da composição. */
 const goodsPayload = () =>
@@ -88,6 +100,8 @@ const showConfirmation = (order: Order, status = 'Pedido confirmado') => {
   byId('conf-serial').textContent = order.serial;
   byId('conf-serial-2').textContent = order.serial;
   byId('conf-name').textContent = order.name;
+  byId('conf-email').textContent = order.email || 'o seu e-mail';
+  showStudioRows('conf', isCollection);
   byId('conf-model').textContent = order.cfg.model;
   byId('conf-color').textContent = order.cfg.color;
   byId('conf-size').textContent = order.cfg.size;
@@ -155,7 +169,7 @@ const showReturn = (serial: string) => {
 /** Monta o que vai para o Worker. Preço, frete, total e serial são decididos lá, nunca aqui. */
 const buildPayload = async (
   contact: { name: string; email: string; obs: string },
-  delivery: Exclude<ReturnType<typeof readDelivery>, string>,
+  delivery: Exclude<ReturnType<typeof readDelivery>, unknown[]>,
   progress: ButtonProgress,
 ) => {
   const shipping = { address: delivery.address, shipping: { serviceId: delivery.serviceId } };
@@ -182,16 +196,16 @@ const submitOrder = async () => {
     email: byId<HTMLInputElement>('ck-email').value.trim(),
     obs: byId<HTMLTextAreaElement>('ck-obs').value.trim(),
   };
-  const error = validateCheckout(contact);
-  if (error) {
-    toast(CHECKOUT_ERROR_MESSAGES[error]);
-    return;
-  }
+  // Todos os problemas de uma vez, cada um ao lado do seu campo; o foco vai para o primeiro.
   const delivery = readDelivery();
-  if (typeof delivery === 'string') {
-    toast(delivery);
-    return;
-  }
+  const problems = [
+    ...contactErrors(contact).map((e) => ({
+      fieldId: e.field === 'name' ? 'ck-name' : 'ck-email',
+      message: e.message,
+    })),
+    ...(Array.isArray(delivery) ? delivery : []),
+  ];
+  if (showFieldErrors(problems) || Array.isArray(delivery)) return;
   const isCollection = source.kind === 'colecao';
   const progress = startButtonProgress(
     byId<HTMLButtonElement>('ck-submit'),
@@ -248,6 +262,17 @@ export const initCheckout = (afterCollectionOrder: () => void = () => {}) => {
   initDelivery(goodsPayload);
   setReturnHook(showReturn);
   onAction('close-checkout', closeCheckout);
+  clearErrorsOnInput(byId('checkout-modal'));
+  // E-mail errado avisa ao sair do campo, sem esperar o envio.
+  byId('ck-email').addEventListener('blur', () => {
+    const email = byId<HTMLInputElement>('ck-email').value;
+    if (email.trim()) setFieldError('ck-email', contactErrors({ name: 'x', email })[0]?.message ?? null);
+  });
+  // O checkout é uma camada sobre a página: trocar de página o fecha.
+  onPageChange(closeCheckout);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && byId('checkout-modal').classList.contains('open')) closeCheckout();
+  });
   onAction('submit-order', () => {
     track('pedido.finalizar', { origem: source.kind }, () => submitOrder()).catch(reportError);
   });

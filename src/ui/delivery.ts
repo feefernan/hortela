@@ -1,9 +1,10 @@
 /** Entrega no checkout: CEP → endereço (ViaCEP) e opções de frete (Worker → Melhor Envio), com o total ao vivo. */
 import { formatBRL } from '../domain/pricing';
-import { type Address, formatCep, normalizeCep, parseAddress, shippingLabel } from '../domain/shipping';
+import { type Address, addressErrors, formatCep, normalizeCep, parseAddress, shippingLabel } from '../domain/shipping';
 import { lookupCep, OrderSendError, quoteShipping, type ShippingOption } from '../infra/order-api';
 import { reportError } from '../infra/telemetry';
 import { byId, onAction, onEnter } from './dom';
+import { setFieldError } from './field-errors';
 import { toast } from './toast';
 
 const ADDRESS_IDS = {
@@ -29,8 +30,9 @@ const chosen = () => {
 
 const updateTotals = () => {
   const ship = chosen();
-  byId('ck-shipping').textContent = ship ? formatBRL(ship.price) : 'calcule ao lado';
+  byId('ck-shipping').textContent = ship ? formatBRL(ship.price) : 'informe o CEP';
   byId('ck-total').textContent = formatBRL(goods + (ship?.price ?? 0));
+  byId('ck-submit-total').textContent = formatBRL(goods + (ship?.price ?? 0));
 };
 
 const renderOptions = () => {
@@ -75,9 +77,12 @@ const fillAddress = (found: Awaited<ReturnType<typeof lookupCep>>) => {
 const quote = async (button: HTMLButtonElement | null) => {
   const cep = normalizeCep(input('ck-cep').value);
   if (!cep) {
-    toast('Digite um CEP com 8 números');
+    setFieldError('ck-cep', 'Informe um CEP com 8 números.');
+    input('ck-cep').focus();
     return;
   }
+  setFieldError('ck-cep', null);
+  setFieldError('ck-ship', null);
   input('ck-cep').value = formatCep(cep);
   if (button) button.disabled = true;
   list().classList.add('is-loading');
@@ -90,24 +95,38 @@ const quote = async (button: HTMLButtonElement | null) => {
     options = [];
     list().replaceChildren();
     updateTotals();
-    toast(e instanceof OrderSendError ? e.message : 'Não foi possível calcular o frete. Tente de novo.');
-    if (!(e instanceof OrderSendError)) reportError(e);
+    // Recusa do servidor (CEP inválido, sem opção para o CEP) é sobre o campo; falha de rede vai no toast.
+    if (e instanceof OrderSendError) setFieldError('ck-cep', e.message);
+    else {
+      toast('Não foi possível calcular o frete. Tente de novo.');
+      reportError(e);
+    }
   } finally {
     list().classList.remove('is-loading');
     if (button) button.disabled = false;
   }
 };
 
-/** Endereço e frete escolhidos para o pedido, ou a mensagem do que falta. */
-export const readDelivery = (): { address: Address; serviceId: number } | string => {
-  const ship = chosen();
-  if (!ship) return 'Calcule o frete com o seu CEP';
-  const address = parseAddress({
+type FieldProblem = { fieldId: string; message: string };
+
+/** Endereço e frete escolhidos para o pedido, ou os campos que faltam (com a mensagem de cada um). */
+export const readDelivery = (): { address: Address; serviceId: number } | FieldProblem[] => {
+  const raw = {
     cep: input('ck-cep').value,
     ...Object.fromEntries(Object.entries(ADDRESS_IDS).map(([key, id]) => [key, input(id).value])),
-  });
-  if (!address) return 'Complete o endereço de entrega (rua, número, bairro, cidade e UF)';
-  return { address, serviceId: ship.id };
+  };
+  const problems: FieldProblem[] = addressErrors(raw).map((e) => ({
+    fieldId: e.field === 'cep' ? 'ck-cep' : ADDRESS_IDS[e.field],
+    message: e.message,
+  }));
+  const ship = chosen();
+  if (!ship) problems.push({ fieldId: 'ck-ship', message: 'Calcule o frete e escolha uma opção de envio.' });
+  // Sem frete calculado, o endereço ainda está escondido: o erro útil é só o do CEP/frete.
+  const visible = byId('ck-address').hidden
+    ? problems.filter((p) => p.fieldId === 'ck-cep' || p.fieldId === 'ck-ship')
+    : problems;
+  const address = parseAddress(raw);
+  return visible.length || !address || !ship ? visible : { address, serviceId: ship.id };
 };
 
 /** `payload` diz o que cotar: as peças do carrinho ou o modelo da composição. */
@@ -118,5 +137,8 @@ export const initDelivery = (payload: () => object) => {
     event.preventDefault();
     void quote(null);
   });
-  list().addEventListener('change', updateTotals);
+  list().addEventListener('change', () => {
+    updateTotals();
+    setFieldError('ck-ship', null);
+  });
 };

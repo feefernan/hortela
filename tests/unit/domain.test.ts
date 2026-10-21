@@ -14,7 +14,7 @@ import { escapeHtml } from '../../src/domain/escape';
 import { formatOrderDate } from '../../src/domain/orders';
 import { formatBRL, MODELS, PRINT_FEE, studioTotal } from '../../src/domain/pricing';
 import { generateSerial, SERIAL_PATTERN } from '../../src/domain/serial';
-import { isValidWord, validateCheckout } from '../../src/domain/validation';
+import { contactErrors, isValidWord, validateCheckout } from '../../src/domain/validation';
 import { GLYPHS, layoutWord } from '../../src/domain/word-layout';
 
 describe('catalog', () => {
@@ -137,6 +137,19 @@ describe('serial', () => {
   it('nunca usa letras ambíguas (I, L, O, U)', () => {
     const all = Array.from({ length: 32 }, (_, i) => generateSerial(new Date(2026, 0, 1), bytes(i, i, i, i, i, i)));
     expect(all.join('')).not.toMatch(/[ILOU]/);
+  });
+});
+
+describe('erros de contato', () => {
+  it('cada problema com o campo onde aparece', () => {
+    expect(contactErrors({ name: ' ', email: '' })).toEqual([
+      { field: 'name', message: 'Informe seu nome.' },
+      { field: 'email', message: 'Informe seu e-mail.' },
+    ]);
+    expect(contactErrors({ name: 'Ana', email: 'ana@' })).toEqual([
+      { field: 'email', message: 'Confira o e-mail: algo como nome@site.com.' },
+    ]);
+    expect(contactErrors({ name: 'Ana', email: 'ana@site.com' })).toEqual([]);
   });
 });
 

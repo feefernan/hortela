@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addressErrors,
   formatAddress,
   formatCep,
   nextOrderStatus,
@@ -106,5 +107,22 @@ describe('nome do serviço', () => {
     expect(shippingLabel({ company: 'Loggi', name: 'Loggi Ponto' })).toBe('Loggi Ponto');
     expect(shippingLabel({ company: 'Correios', name: 'PAC' })).toBe('Correios PAC');
     expect(shippingLabel({ company: 'Jadlog', name: '.Package' })).toBe('Jadlog .Package');
+  });
+});
+
+describe('erros do endereço, campo a campo', () => {
+  it('aponta cada campo que falta, na ordem do formulário', () => {
+    expect(addressErrors({ cep: '123', street: '', number: '', district: 'Centro', city: 'Rio', uf: 'r' })).toEqual([
+      { field: 'cep', message: 'Informe um CEP com 8 números.' },
+      { field: 'street', message: 'Informe a rua.' },
+      { field: 'number', message: 'Informe o número (ou "s/n").' },
+      { field: 'uf', message: 'Use a sigla do estado (ex.: RJ).' },
+    ]);
+  });
+
+  it('endereço completo não tem erro', () => {
+    expect(
+      addressErrors({ cep: '20040-020', street: 'Rua A', number: '10', district: 'Centro', city: 'Rio', uf: 'rj' }),
+    ).toEqual([]);
   });
 });

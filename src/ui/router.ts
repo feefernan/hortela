@@ -9,6 +9,12 @@ type ProductHook = (productId: string | null) => void;
 let productHook: ProductHook = () => {};
 let returnHook: (serial: string) => void = () => {};
 let current: Route = { page: 'home' };
+const pageListeners: ((page: PageId) => void)[] = [];
+
+/** Avisa quando a página muda (ex.: o checkout fecha ao sair para outra página). */
+export const onPageChange = (listener: (page: PageId) => void) => {
+  pageListeners.push(listener);
+};
 
 /** O catálogo registra como abrir/fechar o modal de peça quando a rota muda (#/peca/:id). */
 export const setProductHook = (hook: ProductHook) => {
@@ -42,6 +48,7 @@ const apply = (route: Route) => {
   const pageChanged = route.page !== current.page;
   current = route;
   if (pageChanged || !document.querySelector('.page.active')) showPage(route.page);
+  if (pageChanged) for (const listener of pageListeners) listener(route.page);
   productHook(route.productId ?? null);
   document.title = pageTitle(route, route.productId ? findProduct(route.productId)?.name : undefined);
 };

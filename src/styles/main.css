@@ -2,8 +2,12 @@
 :root {
   --ink:       #1C1812;
   --moss:      #3C4E2E;
-  --sage:      #7A9268;
+  --sage:      #7A9268; /* decoração: bordas, traços, fundos */
+  --sage-text: #55684A; /* texto secundário: ≥4,5:1 sobre branco e pergaminho */
   --lilas:     #9B7FA8;
+  --lilas-strong: #6E5680; /* texto lilás e fundo de selo com texto branco (≥4,5:1) */
+  --line-strong: #8A7F6C;  /* borda de campo: ≥3:1 sobre pergaminho */
+  --error:     #9A3B2E;
   --dust:      #D6CCBA;
   --parchment: #F3EDE0;
   --white:     #FAFAF8;
@@ -13,6 +17,15 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* `hidden` vale mesmo quando o elemento tem display próprio (estilo inline ou classe). */
+[hidden] { display: none !important; }
+
+/* Foco de teclado sempre visível, na cor da marca. */
+:where(a, button, input, select, textarea, summary, [tabindex], [data-action]):focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
 
 body {
   font-family: var(--body);
@@ -55,7 +68,7 @@ nav {
   font-size: 13.5px;
   letter-spacing: 0.03em;
   color: var(--ink);
-  opacity: .45;
+  opacity: .7;
   text-decoration: none;
   cursor: pointer;
   transition: opacity .18s;
@@ -67,7 +80,7 @@ nav {
   font-family: var(--body);
   font-size: 13.5px;
   color: var(--ink);
-  opacity: .45;
+  opacity: .7;
   cursor: pointer;
   transition: opacity .18s;
 }
@@ -75,7 +88,7 @@ nav {
 
 .cart-n {
   width: 18px; height: 18px; border-radius: 50%;
-  background: var(--lilas);
+  background: var(--lilas-strong);
   color: white;
   font-size: 10px;
   display: none; align-items: center; justify-content: center;
@@ -100,14 +113,6 @@ nav {
   text-align: center;
 }
 
-.hero-eyebrow {
-  font-family: var(--body);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--sage);
-  margin-bottom: 36px;
-}
 
 .hero-art-frame {
   width: 340px; height: 340px;
@@ -141,7 +146,7 @@ nav {
   font-style: italic;
   font-size: 17px;
   line-height: 1.7;
-  color: var(--sage);
+  color: var(--sage-text);
   max-width: 440px;
   margin: 0 auto 40px;
 }
@@ -180,7 +185,7 @@ nav {
 .strip-link {
   font-family: var(--body);
   font-size: 12px; letter-spacing: .09em;
-  text-transform: uppercase; color: var(--sage);
+  text-transform: uppercase; color: var(--sage-text);
   cursor: pointer; transition: color .18s;
   text-decoration: none;
 }
@@ -215,9 +220,9 @@ nav {
 .p-badge {
   position: absolute; top: 14px; left: 14px;
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  font-size: 14px; letter-spacing: .01em;
   padding: 5px 10px;
-  background: var(--lilas); color: white;
+  background: var(--lilas-strong); color: white;
 }
 
 .p-info {
@@ -228,8 +233,8 @@ nav {
 
 .p-collection {
   font-family: var(--body);
-  font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--sage); margin-bottom: 3px;
+  font-size: 14px; letter-spacing: .01em;
+  color: var(--sage-text); margin-bottom: 3px;
 }
 
 .p-name {
@@ -249,7 +254,7 @@ nav {
 
 .p-edition {
   font-family: var(--body);
-  font-size: 11px; color: var(--sage); letter-spacing: .04em;
+  font-size: 14px; color: var(--sage-text); letter-spacing: .04em;
 }
 
 /* ── studio teaser band ── */
@@ -275,7 +280,7 @@ nav {
   font-family: var(--body);
   font-style: italic;
   font-size: 17px; line-height: 1.75;
-  color: var(--sage); margin-bottom: 36px;
+  color: var(--sage-text); margin-bottom: 36px;
   max-width: 440px;
 }
 
@@ -298,14 +303,14 @@ nav {
 
 .composer-top-label {
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--sage);
+  font-size: 14px; letter-spacing: .01em;
+  color: var(--sage-text);
 }
 
 .composer-top-hint {
   font-family: var(--body);
   font-style: italic;
-  font-size: 11px; color: var(--dust);
+  font-size: 14px; color: var(--dust);
 }
 
 .composer-stage {
@@ -329,8 +334,8 @@ nav {
 
 .c-label {
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--sage); margin-left: 4px;
+  font-size: 14px; letter-spacing: .01em;
+  color: var(--sage-text); margin-left: 4px;
 }
 
 /* ══════════════════════════════════════════════════
@@ -356,10 +361,10 @@ nav {
 
 .filter-pill {
   font-family: var(--body);
-  font-size: 11.5px; letter-spacing: .06em;
+  font-size: 14px; letter-spacing: .01em;
   padding: 7px 18px;
   border: 1px solid var(--dust);
-  background: transparent; color: var(--sage);
+  background: transparent; color: var(--sage-text);
   cursor: pointer; transition: color .18s, background-color .18s, border-color .18s;
 }
 .filter-pill:hover, .filter-pill.on {
@@ -438,8 +443,8 @@ nav {
 
 .sl-head-label {
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
-  color: var(--sage); margin-bottom: 12px;
+  font-size: 13px; letter-spacing: .01em;
+  color: var(--sage-text); margin-bottom: 12px;
 }
 
 .sl-tabs {
@@ -448,9 +453,9 @@ nav {
 
 .sl-tab {
   flex: 1; padding: 8px 6px;
-  font-family: var(--body); font-size: 11px; letter-spacing: .06em;
+  font-family: var(--body); font-size: 13px; letter-spacing: .01em;
   border: none; background: transparent;
-  cursor: pointer; color: var(--sage); transition: color .15s, background-color .15s, border-color .15s;
+  cursor: pointer; color: var(--sage-text); transition: color .15s, background-color .15s, border-color .15s;
   border-right: 1px solid var(--dust);
 }
 .sl-tab:last-child { border-right: none; }
@@ -462,8 +467,8 @@ nav {
 
 .ser-label {
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--sage); padding: 10px 4px 6px;
+  font-size: 13px; letter-spacing: .01em;
+  color: var(--sage-text); padding: 10px 4px 6px;
   border-top: 1px solid var(--dust); margin-top: 4px;
 }
 .ser-label:first-child { border-top: none; margin-top: 0; }
@@ -487,7 +492,7 @@ nav {
   position: absolute; bottom: 0; left: 0; right: 0;
   background: linear-gradient(transparent, rgba(28,24,18,.6));
   color: white;
-  font-family: var(--body); font-size: 9px; letter-spacing: .05em;
+  font-family: var(--body); font-size: 12px; letter-spacing: .05em;
   padding: 12px 5px 4px;
   opacity: 0; transition: opacity .18s;
 }
@@ -509,8 +514,8 @@ nav {
 
 .sc-bar-lbl {
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--sage);
+  font-size: 13px; letter-spacing: .01em;
+  color: var(--sage-text);
 }
 
 .sc-btn-group { display: flex; gap: 2px; }
@@ -519,7 +524,7 @@ nav {
   width: 30px; height: 30px;
   border: 1px solid var(--dust); background: transparent;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--sage); font-size: 12px;
+  cursor: pointer; color: var(--sage-text); font-size: 12px;
   transition: color .14s, background-color .14s, border-color .14s;
 }
 .sc-btn:hover { background: var(--parchment); color: var(--ink); }
@@ -531,10 +536,10 @@ nav {
   margin-left: auto;
   font-family: var(--body); font-size: 12px; letter-spacing: .08em;
   background: transparent; border: 1px solid var(--lilas);
-  color: var(--lilas); padding: 5px 16px; cursor: pointer;
+  color: var(--lilas-strong); padding: 5px 16px; cursor: pointer;
   transition: color .18s, background-color .18s, border-color .18s;
 }
-.sc-surp:hover { background: var(--lilas); color: white; }
+.sc-surp:hover { background: var(--lilas-strong); color: white; }
 
 .sc-stage {
   flex: 1;
@@ -571,7 +576,7 @@ nav {
 .ps-del {
   position: absolute; top: -10px; right: -10px;
   width: 20px; height: 20px; border-radius: 50%;
-  background: var(--lilas); color: white; font-size: 10px;
+  background: var(--lilas-strong); color: white; font-size: 10px;
   border: none; cursor: pointer;
   display: none; align-items: center; justify-content: center;
 }
@@ -581,7 +586,7 @@ nav {
   position: absolute; bottom: 24px; left: 50%;
   transform: translateX(-50%);
   font-family: var(--body); font-style: italic;
-  font-size: 13px; color: var(--sage);
+  font-size: 13px; color: var(--sage-text);
   background: rgba(250,250,248,.85);
   padding: 8px 22px; border: 1px solid var(--dust);
   white-space: nowrap; pointer-events: none;
@@ -602,8 +607,8 @@ nav {
 
 .sr-lbl {
   font-family: var(--body);
-  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--sage); margin-bottom: 13px;
+  font-size: 13px; letter-spacing: .01em;
+  color: var(--sage-text); margin-bottom: 13px;
 }
 
 /* model */
@@ -626,14 +631,14 @@ nav {
 
 .mo-meta {
   font-family: var(--body);
-  font-size: 10px; color: var(--sage); letter-spacing: .04em;
+  font-size: 13px; color: var(--sage-text); letter-spacing: .04em;
 }
 
 /* colors */
 .sw-row { display: flex; gap: 7px; flex-wrap: wrap; }
 
 .sw {
-  width: 26px; height: 26px; border-radius: 50%;
+  width: 26px; height: 26px; border-radius: 50%; padding: 0; appearance: none;
   border: 1px solid rgba(28,24,18,.1);
   cursor: pointer; transition: box-shadow .15s;
 }
@@ -646,7 +651,7 @@ nav {
   width: 36px; height: 36px;
   border: 1px solid var(--dust); background: transparent;
   font-family: var(--body); font-size: 13px;
-  cursor: pointer; color: var(--sage); transition: color .15s, background-color .15s, border-color .15s;
+  cursor: pointer; color: var(--sage-text); transition: color .15s, background-color .15s, border-color .15s;
 }
 .sz.on, .sz:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
 
@@ -661,7 +666,7 @@ nav {
   transition: border-color .14s;
 }
 .layer-item:hover { border-color: var(--dust); }
-.layer-item.hi { border-color: var(--sage); }
+.layer-item.hi { border-color: var(--sage-text); }
 
 .layer-thumb {
   width: 28px; height: 28px;
@@ -678,11 +683,11 @@ nav {
 
 .layer-del {
   border: none; background: transparent;
-  color: var(--sage); font-size: 11px; cursor: pointer;
+  color: var(--sage-text); font-size: 13px; cursor: pointer;
   transition: color .14s; width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center;
 }
-.layer-del:hover { color: var(--lilas); }
+.layer-del:hover { color: var(--lilas-strong); }
 
 /* opacity */
 .op-row { display: flex; align-items: center; gap: 10px; }
@@ -690,7 +695,7 @@ nav {
 input[type=range] {
   flex: 1; height: 2px;
   -webkit-appearance: none;
-  background: var(--dust); outline: none;
+  background: var(--dust);
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -700,7 +705,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .op-val {
   font-family: var(--body); font-size: 12px;
-  color: var(--sage); width: 34px; text-align: right;
+  color: var(--sage-text); width: 34px; text-align: right;
 }
 
 /* order */
@@ -712,7 +717,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .order-line {
   display: flex; justify-content: space-between;
-  font-family: var(--body); font-size: 14px; color: var(--sage);
+  font-family: var(--body); font-size: 14px; color: var(--sage-text);
   margin-bottom: 9px;
 }
 
@@ -725,7 +730,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .order-note {
   font-family: var(--body); font-style: italic;
-  font-size: 11.5px; color: var(--sage);
+  font-size: 14px; color: var(--sage-text);
   line-height: 1.65; margin-bottom: 16px;
 }
 
@@ -776,8 +781,8 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .sv-lbl {
-  font-family: var(--body); font-size: 10px;
-  letter-spacing: .16em; text-transform: uppercase;
+  font-family: var(--body); font-size: 14px;
+  letter-spacing: .01em;
   color: var(--moss); margin-bottom: 5px;
 }
 
@@ -790,7 +795,6 @@ input[type=range]::-webkit-slider-thumb {
 .modal-bg {
   display: none; position: fixed; inset: 0; z-index: 300;
   background: rgba(28,24,18,.55);
-  backdrop-filter: blur(4px);
   align-items: center; justify-content: center;
 }
 .modal-bg.open { display: flex; }
@@ -799,8 +803,13 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--white);
   width: 820px; max-width: 95vw; max-height: 90vh;
   display: grid; grid-template-columns: 1fr 1fr;
+  /* Uma linha que cabe na altura do modal: cada coluna rola por dentro em vez de ser cortada. */
+  grid-template-rows: minmax(0, 1fr);
   position: relative; overflow: hidden;
 }
+.modal > * { min-height: 0; }
+/* Com modal ou gaveta aberta, a página de trás não rola. */
+html.layer-open { overflow: hidden; }
 
 .modal-art {
   background: var(--parchment);
@@ -815,8 +824,8 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .mi-col {
-  font-family: var(--body); font-size: 10px;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--moss);
+  font-family: var(--body); font-size: 14px;
+  letter-spacing: .01em; color: var(--moss);
 }
 
 .mi-name {
@@ -827,7 +836,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .mi-story {
   font-family: var(--body); font-style: italic;
-  font-size: 15px; line-height: 1.8; color: var(--sage);
+  font-size: 15px; line-height: 1.8; color: var(--sage-text);
   border-left: 2px solid var(--dust); padding-left: 16px;
 }
 
@@ -836,16 +845,16 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .mi-sz-lbl {
-  font-family: var(--body); font-size: 10px;
-  letter-spacing: .16em; text-transform: uppercase;
-  color: var(--sage); margin-bottom: 9px;
+  font-family: var(--body); font-size: 14px;
+  letter-spacing: .01em;
+  color: var(--sage-text); margin-bottom: 9px;
 }
 
 .modal-close {
   position: absolute; top: 14px; right: 14px;
   width: 32px; height: 32px;
   border: 1px solid var(--dust); background: var(--white);
-  cursor: pointer; font-size: 13px; color: var(--sage);
+  cursor: pointer; font-size: 13px; color: var(--sage-text);
   display: flex; align-items: center; justify-content: center;
   transition: color .18s, background-color .18s, border-color .18s;
 }
@@ -858,7 +867,7 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--ink); color: var(--white);
   font-family: var(--body); font-style: italic; font-size: 14px;
   padding: 12px 28px; z-index: 500;
-  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  transition: transform .3s var(--ease-out);
   pointer-events: none; white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
