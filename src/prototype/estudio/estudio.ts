@@ -112,7 +112,7 @@ export const C: StudioVariant = {
   mount: (shell) => {
     const { panel, undo } = wrapPanels(shell);
     const open = el('<button type="button" class="pvs-open" aria-expanded="false">Estampas e peça →</button>');
-    const close = el('<button type="button" class="pvs-close">Fechar ✕</button>');
+    const close = el('<button type="button" class="pvs-close">Fechar</button>');
     panel.prepend(close);
     shell.append(open);
     const set = (on: boolean) => {
