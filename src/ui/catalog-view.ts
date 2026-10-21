@@ -7,7 +7,7 @@ import { routeToHash } from '../domain/routes';
 import { track } from '../infra/telemetry';
 import { watercolorSVG } from './art';
 import { addProductToCart } from './cart';
-import { byId, onAction, qsa, selectInGroup } from './dom';
+import { byId, onAction, qsa, selectInGroup, setLayerOpen } from './dom';
 import { navigate, setProductHook } from './router';
 
 const badgeHTML = (p: Product) =>
@@ -70,12 +70,12 @@ const showProduct = (id: string) => {
   byId('m-story').textContent = p.story;
   byId('m-price').textContent = formatBRL(p.price);
   byId('m-art').innerHTML = watercolorSVG(p.palette, 220);
-  byId('modal-bg').classList.add('open');
+  setLayerOpen('modal-bg', true);
 };
 
 const hideProduct = () => {
   openProductId = null;
-  byId('modal-bg').classList.remove('open');
+  setLayerOpen('modal-bg', false);
 };
 
 /** Abre a peça e muda a URL para #/peca/:id (link compartilhável). */

@@ -44,6 +44,23 @@ button,
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
+/* Alvos de toque de pelo menos 44 × 44 px no celular (ui-ux-pro-max, prioridade 2). */
+@media (pointer: coarse) {
+  .modal-close,
+  .sz,
+  .sc-btn,
+  .sw {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .sw-row { gap: 10px; }
+  .filter-pill,
+  .cart-line-remove,
+  .ck-quote {
+    min-height: 44px;
+  }
+  .cart-line-remove { padding: 0 8px; }
+}
 /* iOS dá zoom em campos com fonte < 16px e não volta. */
 @media (pointer: coarse) {
   input,

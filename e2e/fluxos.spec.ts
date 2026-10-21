@@ -79,6 +79,28 @@ test.describe('fluxos principais', () => {
   });
 });
 
+test.describe('checkout no desktop', () => {
+  test('o botão de pagamento é alcançável numa tela de notebook e Esc fecha o checkout', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'só no desktop');
+    await page.setViewportSize({ width: 1280, height: 768 });
+    await page.goto('/');
+    await page.locator('#n-loja').click();
+    await page.locator('.loja-card[data-product="floresta-3"]').click();
+    await page.locator('[data-action="buy-product"]').click();
+    await page.locator('#cart-open-btn').click();
+    await page.locator('[data-action="checkout-cart"]').click();
+    await fillDelivery(page);
+    const submit = page.locator('[data-action="submit-order"]');
+    await submit.scrollIntoViewIfNeeded();
+    await expect(submit).toBeInViewport();
+    await expect(submit).toContainText('R$');
+    // A página de trás não rola com o checkout aberto.
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe('hidden');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#checkout-modal')).not.toHaveClass(/open/);
+  });
+});
+
 test.describe('layout responsivo', () => {
   test('sem rolagem horizontal em nenhuma página', async ({ page }) => {
     await page.goto('/');

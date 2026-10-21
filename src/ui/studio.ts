@@ -84,7 +84,7 @@ const renderStampPicker = () => {
     <div id="word-err" style="opacity:0;color:#a33;font-size:11.5px;font-style:italic;margin-top:6px;">
       Só letras de A a Z (sem acento, sem números).
     </div>
-    <div style="font-size:11px;color:var(--sage);margin-top:6px;">Aperte Enter pra adicionar.</div>`;
+    <div style="font-size:11px;color:var(--sage-text);margin-top:6px;">Aperte Enter pra adicionar.</div>`;
   scroll.appendChild(wordBox);
 };
 
@@ -212,7 +212,7 @@ const renderLayers = () => {
   const wrap = byId('layers-wrap');
   const els = placedEls();
   if (!els.length) {
-    wrap.innerHTML = `<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage);">Nenhuma estampa ${side === 'frente' ? 'na frente' : 'nas costas'}</div>`;
+    wrap.innerHTML = `<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage-text);">Nenhuma estampa ${side === 'frente' ? 'na frente' : 'nas costas'}</div>`;
     return;
   }
   wrap.innerHTML = els

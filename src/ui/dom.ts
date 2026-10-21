@@ -7,6 +7,18 @@ export const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
 export const qsa = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document): T[] =>
   Array.from(root.querySelectorAll<T>(selector));
 
+/**
+ * Abre ou fecha uma camada (modal, gaveta). Com qualquer camada aberta a página de trás não rola:
+ * a roda do mouse e o toque ficam na camada.
+ */
+export const setLayerOpen = (id: string, open: boolean) => {
+  byId(id).classList.toggle('open', open);
+  document.documentElement.classList.toggle(
+    'layer-open',
+    document.querySelector('.modal-bg.open, #cart-drawer-bg.open') !== null,
+  );
+};
+
 export type ActionHandler = (el: HTMLElement, event: Event) => void;
 
 const clickActions = new Map<string, ActionHandler>();

@@ -72,7 +72,7 @@
 .cart-line-meta {
   font-family: var(--body);
   font-size: 12px;
-  color: var(--sage);
+  color: var(--sage-text);
   margin-top: 2px;
 }
 .cart-line-side {
@@ -88,10 +88,9 @@
   border: none;
   background: none;
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--sage);
+  color: var(--sage-text);
   cursor: pointer;
 }
 .cart-line-remove:hover {
@@ -103,7 +102,7 @@
   text-align: center;
   font-family: var(--body);
   font-style: italic;
-  color: var(--sage);
+  color: var(--sage-text);
 }
 .cart-empty .btn {
   margin-top: 18px;
@@ -130,7 +129,7 @@
   font-family: var(--body);
   font-style: italic;
   font-size: 12px;
-  color: var(--sage);
+  color: var(--sage-text);
 }
 
 /* ── COLEÇÃO: estado vazio do filtro ─────────────── */
@@ -139,7 +138,7 @@
   text-align: center;
   font-family: var(--body);
   font-style: italic;
-  color: var(--sage);
+  color: var(--sage-text);
 }
 
 /* ── CHECKOUT: entrega (CEP, endereço, frete) ────── */
@@ -152,28 +151,26 @@
   gap: 10px;
   min-width: 0;
 }
-.ck-label {
-  font-family: var(--body);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sage);
-  padding: 0;
-  margin-bottom: 6px;
-}
 .ck-input {
-  border: 1px solid var(--dust);
+  border: 1px solid var(--line-strong);
   background: var(--parchment);
   padding: 11px 14px;
   font-family: var(--body);
   font-size: 14px;
   color: var(--ink);
-  outline: none;
   min-width: 0;
+  width: 100%;
   transition: border-color 0.18s;
 }
+.ck-textarea {
+  font-style: italic;
+  resize: vertical;
+}
+.ck-input[aria-invalid='true'] {
+  border-color: var(--error);
+}
 .ck-input:focus {
-  border-color: var(--sage);
+  border-color: var(--sage-text);
 }
 .ck-cep-row {
   display: grid;
@@ -186,9 +183,8 @@
   color: var(--moss);
   padding: 0 16px;
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
 }
 .ck-quote:disabled {
@@ -197,12 +193,12 @@
 }
 .ck-address {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px 8px;
 }
-.ck-address .ck-wide {
-  grid-column: 1 / -1;
-}
+.ck-span-2 { grid-column: span 2; }
+.ck-span-4 { grid-column: span 4; }
+.ck-span-6 { grid-column: span 6; }
 .ck-address:not([hidden]),
 .ck-ship {
   animation: ck-reveal var(--dur-base) var(--ease-out) backwards;
@@ -237,7 +233,7 @@
 }
 .ck-ship small {
   display: block;
-  color: var(--sage);
+  color: var(--sage-text);
   font-style: italic;
 }
 .ck-ship strong {
@@ -251,4 +247,69 @@
     opacity: 0;
     transform: translateY(4px);
   }
+}
+
+/* ── CHECKOUT: campos, rótulos e erros ───────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.field-label {
+  font-family: var(--body);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--sage-text);
+  padding: 0;
+}
+.field-optional {
+  font-style: italic;
+}
+/* Erro ao lado do campo: diz o que falta e como corrigir. */
+.field-error {
+  font-family: var(--body);
+  font-size: 13px;
+  color: var(--error);
+}
+.note {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sage-text);
+}
+.pay-note {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sage-text);
+  padding: 10px 14px;
+  border-left: 2px solid var(--sage);
+}
+
+/* Botão de pagamento com o total: no celular fica preso embaixo enquanto o formulário rola. */
+.ck-submit {
+  background: var(--moss);
+  color: var(--white);
+  border: none;
+  padding: 17px;
+  font-family: var(--body);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.18s;
+  margin-top: 4px;
+}
+@media (max-width: 760px) {
+  .ck-submit {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    box-shadow: 0 -12px 16px var(--white);
+  }
+}
+.ck-delivery > legend {
+  margin-bottom: 4px;
 }

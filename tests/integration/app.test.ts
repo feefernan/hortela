@@ -229,7 +229,12 @@ describe('checkout do carrinho', () => {
     $<HTMLInputElement>('#ck-name').value = 'Bia';
     $<HTMLInputElement>('#ck-email').value = 'bia@site.com';
     click('[data-action="submit-order"]');
-    expect($('#toast-el').textContent).toBe('Calcule o frete com o seu CEP');
+    // O erro aparece ao lado do campo (não em toast) e o foco vai para ele.
+    expect($('#ck-cep-err').textContent).toBe('Informe um CEP com 8 números.');
+    expect($('#ck-cep').getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement?.id).toBe('ck-cep');
+    expect($('#ck-title').textContent).toBe('Seu pedido');
+    expect($('#ck-color').parentElement?.hidden).toBe(true);
     await fillDelivery();
     expect($<HTMLInputElement>('#ck-street').value).toBe('Rua do Ouvidor');
     expect($<HTMLInputElement>('#ck-cep').value).toBe('20040-020');
@@ -497,7 +502,15 @@ describe('checkout', () => {
     expect($('#ck-stamps').textContent).toBe('Camanducaia');
 
     click('[data-action="submit-order"]');
-    expect($('#toast-el').textContent).toBe('Preencha nome e e-mail');
+    expect($('#ck-name-err').textContent).toBe('Informe seu nome.');
+    expect($('#ck-email-err').textContent).toBe('Informe seu e-mail.');
+    expect($<HTMLElement>('#ck-email-err').hidden).toBe(false);
+    $<HTMLInputElement>('#ck-email').value = 'ana@';
+    $('#ck-email').dispatchEvent(new Event('blur'));
+    expect($('#ck-email-err').textContent).toMatch(/Confira o e-mail/);
+    // Voltar a digitar limpa o erro do campo.
+    $('#ck-name').dispatchEvent(new Event('input', { bubbles: true }));
+    expect($<HTMLElement>('#ck-name-err').hidden).toBe(true);
 
     $<HTMLInputElement>('#ck-name').value = 'Ana';
     $<HTMLInputElement>('#ck-email').value = 'ana@site.com';
