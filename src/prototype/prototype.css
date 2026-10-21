@@ -1,0 +1,56 @@
+/* PROTÓTIPO (Fase P): esconde o site real nas rotas com variação e desenha a barra de troca. */
+html.proto-on body > nav,
+html.proto-on .page,
+html.proto-on #modal-bg,
+html.proto-on .cart-fab { display: none !important; }
+html.proto-on.layer-open { overflow: auto; }
+html.proto-on body { background: var(--parchment); padding: 0; }
+html:not(.proto-on) #proto-root { display: none; }
+
+#proto-root { font-family: var(--body); color: var(--ink); }
+/* :where() = especificidade de elemento: as classes das variações sempre ganham. */
+:where(#proto-root) a { color: inherit; }
+:where(#proto-root) img { display: block; max-width: 100%; height: auto; }
+/* main.css estiliza todo <nav> como a barra fixa do site; aqui nav é só um agrupador. */
+:where(#proto-root) nav {
+  position: static; height: auto; padding: 0; background: none; border: 0;
+  display: block; z-index: auto;
+}
+
+/* A barra NÃO faz parte do design avaliado: escura, com sombra, de propósito. */
+.proto-bar {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9999;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center;
+  max-width: calc(100vw - 24px);
+  padding: 6px 10px; border-radius: 999px;
+  background: #111; color: #fff; box-shadow: 0 6px 24px rgb(0 0 0 / .35);
+  font: 500 14px/1.2 system-ui, sans-serif;
+}
+.proto-bar button {
+  min-width: 44px; min-height: 36px; border: 0; border-radius: 999px;
+  background: #333; color: #fff; font: inherit; font-size: 18px; cursor: pointer;
+}
+.proto-bar button:hover { background: #555; }
+.proto-bar-label { padding: 0 6px; white-space: nowrap; }
+.proto-bar-note { padding: 0 8px; color: #bbb; font-size: 12px; }
+@media (max-width: 700px) {
+  .proto-bar { border-radius: 18px; width: calc(100vw - 24px); }
+  .proto-bar-note { flex-basis: 100%; text-align: center; padding: 2px 0 4px; }
+}
+
+/* Peças comuns às três: a camiseta e a arte sobre o peito. */
+.pv-shirt { position: relative; aspect-ratio: 360 / 416; width: 100%; }
+.pv-shirt > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pv-shirt-art {
+  position: absolute; left: 27%; right: 27%; top: 24%; bottom: 30%;
+  display: flex; align-items: center; justify-content: center;
+}
+.pv-shirt-art > img { width: 100%; height: 100%; object-fit: contain; }
+.pv-shirt-art > div { width: 100%; }
+.pv-shirt-art svg { display: block; width: 100%; height: auto; max-height: 100%; }
+.pv-empty { font-style: italic; color: var(--sage-text); font-size: 16px; text-align: center; }
+.pv-note { color: var(--sage-text); font-size: 15px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #proto-root *, #proto-root *::before, #proto-root *::after { transition: none !important; animation: none !important; }
+}

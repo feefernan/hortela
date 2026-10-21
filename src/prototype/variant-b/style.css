@@ -1,0 +1,159 @@
+/* Variação B — A folha de numeração. Escopo: .pvb */
+.pvb { --m: 16px; --gap: 14px; background: var(--parchment); font-size: 16px; line-height: 1.45; }
+.pvb p, .pvb a, .pvb li, .pvb dd, .pvb dt, .pvb label, .pvb td, .pvb th, .pvb summary { font-size: 16px; }
+.pvb a { text-decoration: none; }
+.pvb a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pvb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.pvb-soft { color: var(--sage-text); }
+
+/* Faixa de texto no alto, tudo num tamanho só, numa grade de 12. */
+.pvb-band { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gap); padding: 20px var(--m) 0; align-items: start; }
+.pvb-word { grid-column: 1 / 3; font-family: var(--display); font-size: 22px !important; line-height: 1; }
+.pvb-what { grid-column: 3 / 6; }
+.pvb-links { grid-column: 6 / 9; display: flex; flex-direction: column; }
+.pvb-links a, .pvb-reach a, .pvb-cart { padding: 2px 0; }
+.pvb-reach { grid-column: 9 / 11; }
+.pvb-cart { grid-column: 11 / 13; justify-self: end; background: var(--ink); color: var(--parchment) !important; padding: 12px 16px !important; }
+
+.pvb-h1 {
+  font-family: var(--display); font-weight: 500; font-size: clamp(48px, 8vw, 140px); line-height: .95; letter-spacing: -0.03em;
+  padding: 72px var(--m) 48px;
+}
+.pvb-h1 em { font-style: italic; color: var(--lilas-strong); }
+
+/* A folha: uma fileira por obra, um quadro por número. */
+.pvb-sheet { padding: 0 var(--m); display: grid; gap: 40px; }
+.pvb-run-title { font-family: var(--body); font-weight: 400; font-size: 16px; margin-bottom: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+.pvb-run-title a { color: var(--ink); font-weight: 500; }
+.pvb-run-title span { color: var(--sage-text); }
+.pvb-frames { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.pvb-frame { position: relative; width: 104px; height: 104px; background: var(--white); display: block; transition: transform 160ms ease-out, opacity 160ms ease-out; }
+.pvb-frame img { width: 100%; height: 100%; object-fit: cover; }
+.pvb-frame:hover { transform: translateY(-4px); text-decoration: none !important; }
+.pvb-frame > span { position: absolute; left: 0; bottom: -22px; font-size: 14px; white-space: nowrap; color: var(--ink); }
+.pvb-frame.sold { background: var(--dust); display: grid; place-items: center; }
+.pvb-frame.sold > span { position: static; color: var(--sage-text); font-size: 14px; }
+.pvb-frame.lifted { width: 229px; height: 229px; outline: 3px solid var(--lilas-strong); outline-offset: -3px; margin-bottom: 22px; }
+.pvb-frame.lifted > span { bottom: -24px; color: var(--lilas-strong); font-weight: 500; }
+.pvb-run:hover .pvb-frame:not(:hover) { opacity: .85; }
+.pvb-frames { padding-bottom: 22px; }
+
+.pvb-studio-frame { background: var(--moss); padding: 16px; }
+.pvb-studio-form { display: grid; gap: 10px; align-self: center; max-width: 28rem; padding-left: 24px; }
+.pvb-studio-form input {
+  font-family: var(--display); font-size: 32px; text-transform: uppercase; letter-spacing: .04em;
+  padding: 8px 14px; border: 1px solid var(--line-strong); background: var(--white); color: var(--ink);
+}
+.pvb-btn {
+  justify-self: start; display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border: 0; cursor: pointer;
+  background: var(--lilas-strong); color: var(--white) !important; font: 500 16px var(--body); text-decoration: none !important;
+  transition: background 160ms ease-out, transform 120ms ease-out;
+}
+.pvb-btn:hover { background: var(--ink); }
+.pvb-btn:active { transform: scale(.98); }
+.pvb-btn:disabled { background: var(--dust); color: var(--ink) !important; cursor: not-allowed; }
+
+/* Sobre: retrato como capitular. */
+.pvb-about { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gap); padding: 160px var(--m); }
+.pvb-facts { grid-column: 1 / 3; display: grid; gap: 16px; align-content: start; }
+.pvb-facts dt { color: var(--sage-text); font-size: 15px; }
+.pvb-statement { grid-column: 3 / 13; }
+.pvb-statement p { font-family: var(--display); font-size: clamp(24px, 2.5vw, 36px) !important; line-height: 1.2; max-width: 34ch; }
+.pvb-statement p + p { margin-top: 1em; }
+.pvb-statement img { float: left; width: 3.6em; height: 3.6em; object-fit: cover; margin: .1em .5em 0 0; background: var(--white); }
+.pvb-statement strong { font-weight: 500; }
+
+/* Coleção: o livro-razão quieto, com a prévia ao lado. */
+.pvb-ledger { position: relative; padding: 0 var(--m) 160px 22vw; }
+.pvb-ledger h2 { font-family: var(--display); font-weight: 500; font-size: 28px; }
+.pvb-ledger-sub { color: var(--sage-text); margin: 4px 0 32px; }
+.pvb-ledger ul { list-style: none; max-width: 760px; }
+.pvb-ledger li a {
+  display: grid; grid-template-columns: 1.3fr 1fr 1.6fr .9fr .6fr; align-items: center; gap: 12px; min-height: 52px; color: var(--ink);
+  transition: color 150ms ease-out;
+}
+.pvb-ledger ul.dim a:not(.on) { color: var(--sage-text); }
+.pvb-l-name { font-weight: 500; }
+.pvb-l-kind, .pvb-l-next { color: inherit; }
+.pvb-l-price { text-align: right; font-variant-numeric: tabular-nums; }
+.pvb-l-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.pvb-l-dots i { width: 9px; height: 9px; background: var(--white); }
+.pvb-l-dots i.s { background: var(--dust); }
+.pvb-l-dots i.n { background: var(--lilas-strong); }
+.pvb-l-img { display: none !important; }
+.pvb-preview { position: absolute; left: calc(22vw + 800px); width: 300px; opacity: 0; transition: opacity 150ms ease-out; pointer-events: none; }
+.pvb-preview.on { opacity: 1; }
+.pvb-preview img { width: 300px; height: 225px; object-fit: cover; background: var(--white); }
+
+/* Peça: notas à esquerda, a fileira grande à direita. */
+.pvb-piece { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gap); padding: 0 var(--m); }
+.pvb-piece-notes { grid-column: 1 / 4; display: grid; gap: 14px; align-content: start; }
+.pvb-piece-notes h2 { font-family: var(--display); font-weight: 500; font-size: 28px; line-height: 1.1; color: var(--moss); }
+.pvb-frames-big { grid-column: 4 / 13; }
+.pvb-frames-big .pvb-frame { width: 132px; height: 132px; }
+.pvb-frames-big .pvb-frame.lifted { width: 290px; height: 290px; }
+.pvb-frames-big .pvb-frame { margin-bottom: 22px; }
+.pvb-sizes { border: 0; display: flex; gap: 6px; flex-wrap: wrap; }
+.pvb-sizes legend { margin-bottom: 6px; }
+.pvb-sizes input { position: absolute; opacity: 0; }
+.pvb-sizes span { display: grid; place-items: center; width: 48px; height: 44px; background: var(--white); cursor: pointer; }
+.pvb-sizes input:checked + span { background: var(--ink); color: var(--parchment); }
+.pvb-sizes input:focus-visible + span { outline: 2px solid var(--moss); outline-offset: 2px; }
+.pvb-chart summary { cursor: pointer; padding: 10px 0; }
+.pvb-chart table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.pvb-chart th, .pvb-chart td { text-align: left; padding: 6px 0; border-bottom: 1px solid var(--dust); }
+.pvb-stub { color: var(--moss); }
+.pvb-more { font-family: var(--display); font-weight: 500; font-size: 28px; }
+
+/* Rodapé de fichas: todas as células usadas, o nome de ponta a ponta. */
+.pvb-foot { display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; padding: 160px 10px 10px; }
+.pvb-tile { min-height: 220px; padding: 20px; background: var(--white); display: flex; flex-direction: column; justify-content: space-between; color: var(--ink); }
+.pvb-t-statement { grid-column: 1 / 5; }
+.pvb-t-statement p:first-child { font-family: var(--display); font-size: 28px !important; line-height: 1.1; }
+.pvb-t-statement em { font-style: italic; color: var(--lilas-strong); }
+.pvb-legal { font-size: 14px !important; color: var(--sage-text); }
+.pvb-t-nav { grid-column: 5 / 8; justify-content: flex-start; gap: 6px; }
+.pvb-t-mail { grid-column: 8 / 10; }
+.pvb-t-mail a { font-size: 18px !important; }
+.pvb-t-accent { grid-column: 10 / 13; background: var(--lilas-strong); color: var(--white) !important; text-decoration: none !important; transition: background 160ms ease-out; }
+.pvb-t-accent span { font-family: var(--display); font-size: 32px; }
+.pvb-t-accent svg { align-self: flex-end; transition: transform 160ms ease-out; }
+.pvb-t-accent:hover { background: var(--ink); }
+.pvb-t-accent:hover svg { transform: translate(4px, -4px); }
+.pvb-t-name {
+  grid-column: 1 / -1; min-height: 320px; background: var(--moss); color: var(--parchment); justify-content: flex-end;
+  font-family: var(--display); font-size: 24vw; line-height: .78; letter-spacing: -0.05em; overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .pvb { --gap: 12px; }
+  .pvb-band { grid-template-columns: 1fr 1fr; }
+  .pvb-word, .pvb-what { grid-column: 1 / -1; }
+  .pvb-links, .pvb-reach { grid-column: auto; }
+  .pvb-cart { position: fixed; right: 12px; bottom: 76px; z-index: 50; grid-column: auto; }
+  .pvb-h1 { font-size: 13vw; padding: 48px var(--m) 32px; }
+  .pvb-frame { width: calc((100vw - 32px - 32px) / 5); height: calc((100vw - 32px - 32px) / 5); }
+  .pvb-frame.lifted { width: calc(100vw - 32px); height: calc(100vw - 32px); }
+  .pvb-studio-form { padding: 16px 0 0; max-width: none; width: 100%; }
+  .pvb-about { grid-template-columns: 1fr; padding: 112px var(--m); }
+  .pvb-facts, .pvb-statement { grid-column: 1 / -1; }
+  .pvb-facts { order: 2; grid-template-columns: repeat(3, 1fr); }
+  .pvb-statement p { font-size: 22px !important; }
+  .pvb-ledger { padding: 0 var(--m) 112px; }
+  .pvb-ledger li a { grid-template-columns: 1fr auto; padding: 10px 0; }
+  .pvb-ledger li:nth-child(-n + 3) .pvb-l-img { display: block !important; grid-column: 1 / -1; order: -1; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--white); }
+  .pvb-l-kind, .pvb-l-dots { grid-column: 1 / -1; }
+  .pvb-preview { display: none; }
+  .pvb-piece { grid-template-columns: 1fr; }
+  .pvb-piece-notes, .pvb-frames-big { grid-column: 1 / -1; }
+  .pvb-frames-big { order: -1; }
+  .pvb-frames-big .pvb-frame { width: calc((100vw - 32px - 32px) / 5); height: calc((100vw - 32px - 32px) / 5); }
+  .pvb-frames-big .pvb-frame.lifted { width: calc(100vw - 32px); height: calc(100vw - 32px); }
+  .pvb-frames-big .pvb-frame > span { display: none; }
+  .pvb-frames-big .pvb-frame.lifted > span { display: block; }
+  .pvb-foot { grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 112px; }
+  .pvb-t-name { order: -2; min-height: 160px; font-size: 26vw; }
+  .pvb-t-accent { order: -1; grid-column: 1 / -1; min-height: 140px; }
+  .pvb-t-statement { grid-column: 1 / -1; }
+  .pvb-t-nav, .pvb-t-mail { grid-column: auto; }
+}

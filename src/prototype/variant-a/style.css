@@ -1,0 +1,154 @@
+/* Variação A — A metade fixa. Escopo: .pva */
+.pva { --m: 32px; background: var(--parchment); }
+.pva h1, .pva h2 { font-family: var(--display); font-weight: 500; letter-spacing: -0.02em; line-height: 1; }
+.pva p, .pva dd, .pva li, .pva label, .pva td, .pva th { font-size: 18px; line-height: 1.55; }
+
+.pva-split { display: grid; grid-template-columns: 47fr 53fr; }
+
+/* Metade fixa: campo musgo, camiseta e o número da peça em foco. */
+.pva-stage { position: sticky; top: 0; height: 100svh; padding: 20px 0 20px 20px; }
+.pva-stage::before { content: ''; position: absolute; inset: 20px 0 20px 20px; background: var(--moss); }
+.pva-layer {
+  position: absolute; inset: 20px 0 20px 20px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  opacity: 0; transition: opacity 200ms var(--ease-out, cubic-bezier(.2, .7, .2, 1));
+}
+.pva-layer.on { opacity: 1; }
+.pva-stage-shirt { width: min(64%, 58svh); }
+.pva-stage-num { font-family: var(--display); font-size: clamp(56px, 6vw, 96px) !important; line-height: 1 !important; color: var(--parchment); letter-spacing: -0.03em; }
+.pva-stage-cap { color: var(--dust); font-size: 17px !important; }
+
+/* Coluna que rola. */
+.pva-col { padding: 0 var(--m) 160px 64px; min-width: 0; }
+.pva-nav { display: flex; justify-content: space-between; align-items: center; height: 88px; }
+.pva-word { font-family: var(--display); font-size: 28px; text-decoration: none; }
+.pva-nav nav { display: flex; gap: 28px; align-items: center; }
+.pva-nav nav a { font-size: 16px; text-decoration: none; padding: 12px 0; }
+.pva-nav nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.pva-nav-action { background: var(--ink); color: var(--parchment) !important; padding: 12px 20px !important; }
+
+.pva-hero { padding-top: 18svh; }
+.pva-hero h1 { font-size: clamp(56px, 6.2vw, 104px); max-width: 11ch; }
+.pva-hero h1 em { font-style: italic; color: var(--lilas-strong); }
+.pva-lede { font-size: 22px !important; margin-top: 32px; max-width: 30ch; }
+.pva-back { display: inline-block; margin-bottom: 24px; font-size: 17px; padding: 10px 0; }
+
+.pva-col section + section { margin-top: 160px; }
+.pva h2 { font-size: clamp(36px, 3vw, 48px); margin-bottom: 28px; }
+.pva section > p { max-width: 46ch; }
+
+.pva-field { display: grid; gap: 10px; max-width: 30rem; }
+.pva-field span { font-size: 17px; }
+.pva-field input {
+  font-family: var(--display); font-size: 40px; letter-spacing: .04em; text-transform: uppercase;
+  padding: 10px 16px; border: 1px solid var(--line-strong); background: var(--white); color: var(--ink); width: 100%;
+}
+.pva-compose > p { margin-top: 20px; }
+.pva-actions { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; margin-top: 32px; }
+.pva-btn {
+  display: inline-flex; align-items: center; min-height: 56px; padding: 0 28px; border: 0;
+  background: var(--lilas-strong); color: var(--white) !important; font: 500 18px var(--body); text-decoration: none; cursor: pointer;
+  transition: transform 120ms ease-out, background 160ms ease-out;
+}
+.pva-btn:hover { background: var(--ink); }
+.pva-btn:active { transform: scale(.98); }
+.pva-btn:disabled { background: var(--dust); color: var(--ink) !important; cursor: not-allowed; }
+.pva-link { font-size: 18px; padding: 12px 0; }
+
+/* Índice de nomes grandes: o ativo em tinta cheia, os outros em verde de texto (≥4,5:1). */
+.pva-names { list-style: none; }
+.pva-names a { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; padding: 10px 0; text-decoration: none; color: var(--sage-text) !important; transition: color 160ms ease-out; }
+.pva-names a.on, .pva-names a:hover, .pva-names a:focus-visible { color: var(--ink) !important; }
+.pva-name { font-family: var(--display); font-size: clamp(40px, 4.2vw, 72px); line-height: 1; letter-spacing: -0.02em; }
+.pva-name-meta { font-size: 16px; }
+.pva-tabs { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 40px; }
+.pva-tabs button { background: none; border: 0; font: 18px var(--body); color: var(--sage-text); padding: 10px 0; cursor: pointer; }
+.pva-tabs button[aria-pressed="true"] { color: var(--ink); text-decoration: underline; text-underline-offset: 6px; }
+
+/* Peça. */
+.pva-buy h2 { color: var(--moss); }
+.pva-run { list-style: none; display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin: 32px 0; max-width: 30rem; }
+.pva-run li { aspect-ratio: 1; display: grid; place-items: center; font-size: 15px !important; background: var(--white); }
+.pva-run li.sold { background: var(--dust); color: var(--sage-text); }
+.pva-run li.next { background: var(--lilas-strong); color: var(--white); font-weight: 500; }
+.pva-sizes { border: 0; display: flex; gap: 8px; margin-bottom: 24px; }
+.pva-sizes legend { font-size: 17px; margin-bottom: 10px; }
+.pva-sizes input { position: absolute; opacity: 0; }
+.pva-sizes span { display: grid; place-items: center; width: 56px; height: 48px; background: var(--white); cursor: pointer; font-size: 17px; }
+.pva-sizes input:checked + span { background: var(--ink); color: var(--parchment); }
+.pva-sizes input:focus-visible + span { outline: 2px solid var(--moss); outline-offset: 2px; }
+.pva-stub { margin-top: 12px; color: var(--moss); }
+.pva-chart { margin-top: 32px; max-width: 30rem; }
+.pva-chart summary { font-size: 18px; cursor: pointer; padding: 12px 0; }
+.pva-chart table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.pva-chart th, .pva-chart td { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--dust); font-size: 17px; }
+
+.pva-facts dl { display: grid; grid-template-columns: max-content 1fr; gap: 16px 32px; }
+.pva-facts dt { font-family: var(--display); font-size: 28px; line-height: 1.1; }
+
+/* Quebra do split: a placa quadrada em campo de poeira, de ponta a ponta. */
+.pva-plate { display: grid; grid-template-columns: 1fr 1fr; min-height: 88svh; background: var(--dust); }
+.pva-plate-art { padding: 40px; display: grid; place-items: center; }
+.pva-plate-art img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--parchment); }
+.pva-plate-text { display: flex; flex-direction: column; justify-content: space-between; padding: 40px var(--m) 40px 40px; }
+.pva-plate-text p { max-width: 34ch; margin-top: 24px; }
+.pva-plate-tabs { display: flex; gap: 24px; margin: 0 !important; }
+.pva-plate-tabs .on { text-decoration: underline; text-underline-offset: 6px; }
+.pva-cells { display: grid; grid-template-columns: 1fr 1fr; }
+.pva-cell { display: flex; align-items: center; padding: 0 20px; height: 72px; text-decoration: none; font-size: 18px; background: var(--parchment); }
+.pva-cell.ink { background: var(--ink); color: var(--parchment) !important; }
+.pva-cell:hover { background: var(--lilas-strong); color: var(--white) !important; }
+
+/* Carta. */
+.pva-letter { max-width: 520px; margin: 0 auto; padding: 200px 0; }
+.pva-letter h2 { font-size: 32px; }
+.pva-letter p + p { margin-top: 1.2em; }
+.pva-sign { font-family: var(--body); font-style: italic; font-size: 24px !important; }
+.pva-sign span { display: block; font-style: normal; font-size: 15px; color: var(--sage-text); }
+
+/* Rodapé: foto-metade, menu-metade, e o nome de ponta a ponta. */
+.pva-foot { display: grid; grid-template-columns: 1fr 1fr; background: var(--ink); color: var(--parchment); }
+.pva-foot a { color: var(--parchment) !important; }
+.pva-foot-art { overflow: hidden; background: var(--moss); min-height: 70svh; }
+.pva-foot-art img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.8); }
+.pva-foot-menu { padding: 80px var(--m) 40px 64px; }
+.pva-foot-menu nav { display: grid; gap: 20px; }
+.pva-foot-menu nav a { font-family: var(--display); font-size: clamp(32px, 2.8vw, 48px); text-decoration: none; transition: transform 160ms ease-out; }
+.pva-foot-menu nav a:hover { transform: translateX(12px); }
+.pva-foot-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 64px; }
+.pva-foot-blocks p { font-size: 16px; }
+.pva-foot-name {
+  grid-column: 1 / -1; font-family: var(--display); font-size: 25vw !important; line-height: .8 !important;
+  letter-spacing: -0.05em; padding: 40px var(--m) 0; color: var(--parchment);
+}
+.pva-foot-legal { grid-column: 1 / -1; padding: 24px var(--m) 96px; font-size: 15px !important; color: var(--dust); }
+
+@media (max-width: 860px) {
+  .pva { --m: 20px; }
+  .pva-split { grid-template-columns: 1fr; }
+  .pva-stage { position: relative; height: 62svh; padding: 12px; }
+  .pva-stage::before, .pva-layer { inset: 12px; }
+  .pva-stage-shirt { width: min(60%, 34svh); }
+  .pva-stage-num { font-size: 48px !important; }
+  /* No celular: barra, depois a camiseta, depois o texto. */
+  .pva-col { display: contents; }
+  .pva-col > * { padding-left: var(--m); padding-right: var(--m); }
+  .pva-nav { order: -2; }
+  .pva-stage { order: -1; }
+  .pva-col > section:last-child { padding-bottom: 120px; }
+  .pva-hero { padding-top: 32px; }
+  .pva-hero h1 { font-size: 48px; }
+  .pva-nav nav { gap: 16px; }
+  .pva-nav nav a:not(.pva-nav-action):nth-child(3) { display: none; }
+  .pva-col section + section { margin-top: 112px; }
+  .pva-hero { max-width: none; }
+  .pva-name { font-size: 9.5vw; }
+  .pva-plate, .pva-foot { grid-template-columns: 1fr; }
+  .pva-plate-art { padding: 16px; }
+  .pva-plate-text { padding: 16px 20px 40px; gap: 32px; }
+  .pva-letter { padding: 120px 20px; }
+  .pva-foot-art { min-height: 50svh; }
+  .pva-foot-menu { padding: 48px 20px; }
+  .pva-foot-blocks { grid-template-columns: 1fr; }
+  .pva-foot-name { font-size: 27vw !important; padding: 24px 20px 0; }
+}

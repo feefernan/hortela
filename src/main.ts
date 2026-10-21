@@ -35,3 +35,6 @@ fetchCatalog()
     refreshCart();
   })
   .catch(() => {});
+
+// PROTÓTIPO (Fase P, ramo descartável prototype/layout-variantes): três variações por ?variant=.
+if (import.meta.env.DEV) void import('./prototype/switcher');
