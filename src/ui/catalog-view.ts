@@ -1,11 +1,12 @@
 import { isGarmentSize } from '../domain/cart';
-import { type Product, products } from '../domain/catalog';
+import { featuredProducts, type Product, products } from '../domain/catalog';
 import { type CollectionFilter, FILTER_EMPTY_MESSAGE, filterProducts } from '../domain/collection-filter';
 import { editionLabel } from '../domain/edition';
+import { escapeHtml as e } from '../domain/escape';
 import { formatBRL } from '../domain/pricing';
 import { routeToHash } from '../domain/routes';
 import { track } from '../infra/telemetry';
-import { watercolorSVG } from './art';
+import { pieceArtHTML } from './art';
 import { addProductToCart } from './cart';
 import { byId, onAction, qsa, selectInGroup, setLayerOpen } from './dom';
 import { navigate, setProductHook } from './router';
@@ -19,8 +20,8 @@ const badgeHTML = (p: Product) =>
 
 const infoHTML = (p: Product, cls: string) => `
   <div class="${cls}">
-    <div class="p-collection">${p.collection}</div>
-    <div class="p-name">${p.name}</div>
+    <div class="p-collection">${e(p.collection)}</div>
+    <div class="p-name">${e(p.name)}</div>
     <div class="p-row">
       <span class="p-price">${formatBRL(p.price)}</span>
       <span class="p-edition">${editionLabel(p)}</span>
@@ -28,8 +29,8 @@ const infoHTML = (p: Product, cls: string) => `
   </div>`;
 
 const homeCardHTML = (p: Product, i: number) => `
-  <a class="p-card" href="${routeToHash({ page: 'loja', productId: p.id })}" style="--i:${i}" data-action="open-product" data-product="${p.id}">
-    <div class="p-art"><div class="p-art-inner">${watercolorSVG(p.palette, 160)}</div></div>
+  <a class="p-card" href="${e(routeToHash({ page: 'loja', productId: p.id }))}" style="--i:${i}" data-action="open-product" data-product="${e(p.id)}">
+    <div class="p-art"><div class="p-art-inner">${pieceArtHTML(p, 160)}</div></div>
     ${infoHTML(p, 'p-info')}
     ${badgeHTML(p)}
   </a>`;
@@ -37,8 +38,8 @@ const homeCardHTML = (p: Product, i: number) => `
 const collectionCardHTML = (p: Product, i: number) => {
   const available = p.status !== 'sold';
   return `
-  <${available ? 'a' : 'div'} class="loja-card" style="--i:${i}"${available ? ` href="${routeToHash({ page: 'loja', productId: p.id })}" data-action="open-product" data-product="${p.id}"` : ''}>
-    <div class="loja-art"><div class="loja-art-inner">${watercolorSVG(p.palette, 180)}</div></div>
+  <${available ? 'a' : 'div'} class="loja-card" style="--i:${i}"${available ? ` href="${e(routeToHash({ page: 'loja', productId: p.id }))}" data-action="open-product" data-product="${e(p.id)}"` : ''}>
+    <div class="loja-art"><div class="loja-art-inner">${pieceArtHTML(p, 180)}</div></div>
     ${infoHTML(p, 'loja-info')}
     ${available ? '<div class="loja-hover"><span class="btn-ver">Ver peça</span></div>' : ''}
     ${badgeHTML(p)}
@@ -46,6 +47,8 @@ const collectionCardHTML = (p: Product, i: number) => {
 };
 
 let openProductId: string | null = null;
+/** Peça pedida pelo link antes de o catálogo chegar do Notion; abre quando ele chega. */
+let pendingProductId: string | null = null;
 /** true quando o modal foi aberto por clique aqui (há uma entrada de histórico para desfazer). */
 let openedInApp = false;
 let currentFilter: CollectionFilter = 'todas';
@@ -61,7 +64,11 @@ const renderCollection = (filter: CollectionFilter) => {
 
 const showProduct = (id: string) => {
   const p = products().find((x) => x.id === id);
-  if (!p) return;
+  if (!p) {
+    pendingProductId = id;
+    return;
+  }
+  pendingProductId = null;
   openProductId = id;
   // Cada peça abre no tamanho padrão (G), sem herdar a escolha da peça anterior.
   for (const sz of qsa('#modal-bg .sz')) sz.classList.toggle('on', sz.textContent?.trim() === 'G');
@@ -69,7 +76,7 @@ const showProduct = (id: string) => {
   byId('m-name').textContent = p.name;
   byId('m-story').textContent = p.story;
   byId('m-price').textContent = formatBRL(p.price);
-  byId('m-art').innerHTML = watercolorSVG(p.palette, 220);
+  byId('m-art').innerHTML = pieceArtHTML(p, 220);
   setLayerOpen('modal-bg', true);
 };
 
@@ -97,19 +104,20 @@ const closeProduct = () => {
 };
 
 const renderAll = () => {
-  byId('home-grid').innerHTML = products().slice(0, 3).map(homeCardHTML).join('');
+  byId('home-grid').innerHTML = featuredProducts().map(homeCardHTML).join('');
   renderCollection(currentFilter);
+  for (const id of ['home-grid', 'loja-grid']) byId(id).removeAttribute('aria-busy');
 };
 
-/** Redesenha com o catálogo vivo (preço e estoque do Notion), inclusive a peça aberta. */
+/** Desenha o catálogo vivo (do Notion, ou o do código se ele falhar), inclusive a peça aberta ou pedida. */
 export const refreshCatalog = () => {
   renderAll();
-  if (openProductId) showProduct(openProductId);
+  const id = openProductId ?? pendingProductId;
+  if (id) showProduct(id);
 };
 
+/** Liga as ações; as grades ficam em skeleton até `refreshCatalog` (catálogo chegou ou falhou). */
 export const initCatalog = () => {
-  renderAll();
-  for (const id of ['home-grid', 'loja-grid']) byId(id).removeAttribute('aria-busy');
   setProductHook((id) => (id ? showProduct(id) : hideProduct()));
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && openProductId) closeProduct();

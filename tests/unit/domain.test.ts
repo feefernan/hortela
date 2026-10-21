@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALPHABET,
-  applyStock,
+  featuredProducts,
   findProduct,
   findStamp,
+  fromNotion,
   PRODUCTS,
   STAMPS,
   type StockRow,
@@ -59,23 +60,62 @@ describe('catálogo vivo (banco Peças)', () => {
     ...o,
   });
 
-  it('preço, edição e estoque do Notion por cima do código', () => {
-    const live = applyStock([row('floresta-3', { price: 250, total: 30, available: 1 })]);
-    expect(live.find((p) => p.id === 'floresta-3')).toMatchObject({
+  it('preço, edição e estoque do Notion; nome e história do código quando a coluna está vazia', () => {
+    const live = fromNotion([row('floresta-3', { price: 250, total: 30, available: 1 })]);
+    expect(live).toHaveLength(1);
+    expect(live[0]).toMatchObject({
       name: 'Floresta nº 3',
       price: 250,
       edition: { total: 30 },
       available: 1,
       status: 'last',
     });
-    expect(live.find((p) => p.id === 'nevoa')).toEqual(PRODUCTS.find((p) => p.id === 'nevoa'));
+    expect(live[0].story).toBe(PRODUCTS[0].story);
   });
 
-  it('sem estoque vira esgotada; desativada some; coluna vazia mantém o código', () => {
-    const live = applyStock([row('floresta-3', { available: 0 }), row('nevoa', { active: false }), row('raizes')]);
-    expect(live.find((p) => p.id === 'floresta-3')?.status).toBe('sold');
-    expect(live.some((p) => p.id === 'nevoa')).toBe(false);
-    expect(live.find((p) => p.id === 'raizes')).toMatchObject({ price: 225, status: 'last' });
+  it('o Notion manda: peça sem linha some, desativada some, esgotada vira esgotada', () => {
+    const live = fromNotion([row('floresta-3', { available: 0 }), row('nevoa', { active: false }), row('raizes')]);
+    expect(live.map((p) => p.id)).toEqual(['floresta-3', 'raizes']);
+    expect(live[0].status).toBe('sold');
+    expect(live[1]).toMatchObject({ price: 225, status: 'last' });
+  });
+
+  it('peça nova só no Notion entra com nome, história, imagem e paleta padrão; segue a Ordem', () => {
+    const live = fromNotion([
+      row('floresta-3', { order: 2 }),
+      row('mare-alta', {
+        name: 'Maré alta',
+        collection: 'Série Mar',
+        story: 'Ondas em azul.',
+        price: 240,
+        total: 12,
+        available: 12,
+        order: 1,
+        featured: true,
+        image: '/api/pecas/mare-alta/imagem?v=1',
+      }),
+      row('sem-nome'),
+    ]);
+    expect(live.map((p) => p.id)).toEqual(['mare-alta', 'floresta-3']);
+    expect(live[0]).toMatchObject({
+      name: 'Maré alta',
+      collection: 'Série Mar',
+      story: 'Ondas em azul.',
+      price: 240,
+      status: 'ok',
+      image: '/api/pecas/mare-alta/imagem?v=1',
+      featured: true,
+    });
+    expect(live[0].palette).toHaveLength(3);
+  });
+
+  it('home: peças em Destaque, ou as 3 primeiras', () => {
+    useStock([row('floresta-3'), row('nevoa', { featured: true }), row('raizes'), row('broto')]);
+    expect(featuredProducts().map((p) => p.id)).toEqual(['nevoa']);
+    // Sem Ordem preenchida, vale a ordem do código.
+    useStock([row('broto'), row('nevoa'), row('raizes'), row('floresta-3')]);
+    expect(featuredProducts().map((p) => p.id)).toEqual(['floresta-3', 'raizes', 'nevoa']);
+    useStock([]);
   });
 
   it('useStock muda o que findProduct enxerga', () => {

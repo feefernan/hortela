@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PRODUCTS } from '../../src/domain/catalog';
 
 const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf-8');
 const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('<script type="module"'));
@@ -25,8 +26,15 @@ const apiFetch = vi.fn(async (url: string, init?: RequestInit) => {
     return Response.json({ logradouro: 'Rua do Ouvidor', bairro: 'Centro', localidade: 'Rio de Janeiro', uf: 'RJ' });
   if (url.endsWith('/status')) return Response.json({ status: api.status });
   // Banco Peças: só a Floresta nº 3 tem estoque cadastrado; as outras ficam como no código.
+  // Banco Peças: as 6 peças do código; só a Floresta nº 3 tem estoque preenchido.
   if (url.endsWith('/api/catalog'))
-    return Response.json({ pieces: [{ id: 'floresta-3', price: 210, total: 20, available: 12, active: true }] });
+    return Response.json({
+      pieces: PRODUCTS.map((p) =>
+        p.id === 'floresta-3'
+          ? { id: p.id, price: 210, total: 20, available: 12, active: true }
+          : { id: p.id, price: null, total: null, available: null, active: true },
+      ),
+    });
   if (url.endsWith('/api/shipping/quote')) return Response.json({ options: SHIPPING });
   const body = JSON.parse(String(init?.body));
   api.sent.push(body);
@@ -50,6 +58,8 @@ beforeAll(async () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   document.body.innerHTML = body;
   await import('../../src/main');
+  // As grades ficam em skeleton até o catálogo chegar do Worker.
+  await vi.waitFor(() => expect(document.querySelectorAll('#loja-grid .loja-card').length).toBe(PRODUCTS.length));
 });
 
 beforeEach(() => {

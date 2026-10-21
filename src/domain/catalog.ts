@@ -10,8 +10,12 @@ export interface Product {
   story: string;
   price: number;
   status: ProductStatus;
-  /** Paleta da aquarela placeholder: [principal, secundária, fundo]. */
+  /** Paleta do desenho de reserva (sem imagem): [principal, secundária, fundo]. */
   palette: [string, string, string];
+  /** Imagem real da peça, vinda do Notion (via Worker). */
+  image?: string;
+  /** Aparece na home. */
+  featured?: boolean;
 }
 
 // Stryker disable all : dados do catálogo, não lógica
@@ -118,14 +122,23 @@ export const STAMPS: readonly Stamp[] = [
 
 export const findStamp = (id: string): Stamp | undefined => STAMPS.find((s) => s.id === id);
 
-/** Uma linha do banco Peças do Notion (null = coluna vazia). */
+/** Uma linha do banco Peças do Notion (null/ausente = coluna vazia). */
 export interface StockRow {
   id: string;
   price: number | null;
   total: number | null;
   available: number | null;
   active: boolean;
+  name?: string | null;
+  collection?: string | null;
+  story?: string | null;
+  order?: number | null;
+  featured?: boolean;
+  /** Caminho da imagem servida pelo Worker, se a peça tiver arquivo. */
+  image?: string | null;
 }
+
+const DEFAULT_PALETTE: Product['palette'] = ['#3C4E2E', '#7A9268', '#D6CCBA'];
 
 const statusFor = (available: number | undefined, fallback: ProductStatus): ProductStatus => {
   if (available === undefined) return fallback;
@@ -134,30 +147,45 @@ const statusFor = (available: number | undefined, fallback: ProductStatus): Prod
 };
 
 /**
- * Catálogo vivo: nome, história e arte vêm do código; preço, edição e estoque, do Notion.
- * Peça desativada no Notion sai do site; peça que não está no Notion fica como no código.
+ * Catálogo vivo a partir do banco Peças. Sem linhas (Notion fora do ar ou não configurado), vale o
+ * catálogo do código. Com linhas, o Notion manda: só as peças ativas, na Ordem dele; o código entra
+ * só como reserva de campos vazios (história, paleta do desenho) das peças que já existiam.
  */
-export const applyStock = (rows: readonly StockRow[]): Product[] =>
-  PRODUCTS.flatMap((p) => {
-    const row = rows.find((r) => r.id === p.id);
-    if (!row) return [p];
-    if (!row.active) return [];
-    const available = row.available ?? undefined;
-    return [
-      {
-        ...p,
-        price: row.price ?? p.price,
-        edition: { total: row.total ?? p.edition.total },
+export const fromNotion = (rows: readonly StockRow[]): Product[] => {
+  if (!rows.length) return [...PRODUCTS];
+  const known = new Map(PRODUCTS.map((p, i) => [p.id, { p, i }]));
+  return rows
+    .filter((r) => r.active && (r.name || known.has(r.id)))
+    .map((r, i) => ({ r, i, base: known.get(r.id) }))
+    .sort((a, b) => (a.r.order ?? a.base?.i ?? 1000 + a.i) - (b.r.order ?? b.base?.i ?? 1000 + b.i))
+    .map(({ r, base }) => {
+      const p = base?.p;
+      const available = r.available ?? undefined;
+      return {
+        id: r.id,
+        name: r.name || p?.name || r.id,
+        collection: r.collection || p?.collection || '',
+        story: r.story || p?.story || '',
+        price: r.price ?? p?.price ?? 0,
+        edition: { total: r.total ?? p?.edition.total ?? 1 },
         available,
-        status: statusFor(available, p.status),
-      },
-    ];
-  });
+        status: statusFor(available, p?.status ?? 'ok'),
+        palette: p?.palette ?? DEFAULT_PALETTE,
+        ...(r.image ? { image: r.image } : {}),
+        ...(r.featured ? { featured: true } : {}),
+      };
+    });
+};
 
 // Estado do módulo: o site troca uma vez ao receber o catálogo; o Worker, a cada pedido.
 let live: readonly Product[] = PRODUCTS;
 export const useStock = (rows: readonly StockRow[]) => {
-  live = applyStock(rows);
+  live = fromNotion(rows);
 };
 export const products = (): readonly Product[] => live;
 export const findProduct = (id: string): Product | undefined => live.find((p) => p.id === id);
+/** Peças da home: as marcadas como Destaque no Notion, ou as 3 primeiras. */
+export const featuredProducts = (): readonly Product[] => {
+  const marked = live.filter((p) => p.featured);
+  return (marked.length ? marked : live).slice(0, 3);
+};

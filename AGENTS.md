@@ -59,6 +59,12 @@ worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.co
   src/entry.ts   ponto de entrada; confere o Env local contra os tipos gerados
 ```
 
+**Catálogo (banco Peças do Notion):** o Notion é a fonte das peças. Colunas: Peça (nome), ID, Coleção, História, Imagem, Preço, Edição total, Disponíveis, Ordem, Destaque e Ativa no site.
+- Quem mostra: o Worker serve tudo em `GET /api/catalog`, com cache de 1 min, e a imagem em `GET /api/pecas/:id/imagem` (link fresco do Notion, cache imutável por versão).
+- Peça nova no Notion aparece no site sozinha; desmarcar "Ativa no site" a esconde.
+- O catálogo em `src/domain/catalog.ts` (`PRODUCTS`) só vale se o Notion não responder; o site mostra skeleton até o catálogo chegar.
+- Colunas novas: `bash scripts/notion-catalogo.sh`.
+
 **Fluxo do pedido:**
 1. No checkout, o cliente digita o CEP: o endereço vem do ViaCEP e as opções de frete de `POST /api/shipping/quote`
    (Worker → Melhor Envio).

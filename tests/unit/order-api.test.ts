@@ -74,3 +74,20 @@ describe('frete, status e CEP', () => {
     await expect(lookupCep('20040020', down as unknown as typeof fetch)).resolves.toBeNull();
   });
 });
+
+describe('catálogo', () => {
+  it('a imagem servida pelo Worker vira endereço completo da API', async () => {
+    const { fetchCatalog } = await load();
+    const f = vi.fn(async () =>
+      Response.json({
+        pieces: [
+          { id: 'a', price: 1, total: 1, available: 1, active: true, image: '/api/pecas/a/imagem?v=1' },
+          { id: 'b', price: 1, total: 1, available: 1, active: true, image: null },
+        ],
+      }),
+    );
+    const rows = await fetchCatalog(f as unknown as typeof fetch);
+    expect(rows[0].image).toBe('https://api.test/api/pecas/a/imagem?v=1');
+    expect(rows[1].image).toBeNull();
+  });
+});

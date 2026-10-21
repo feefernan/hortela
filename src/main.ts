@@ -27,11 +27,12 @@ initCheckout(clearCart);
 initRouter();
 settleLoadedImages();
 
-// Preço e estoque reais chegam do Notion; até lá (ou se falhar) vale o catálogo do código.
+// O catálogo vem do Notion (peças, preço, estoque, imagem); até lá as grades ficam em skeleton.
+// Se ele falhar, vale o catálogo do código.
 fetchCatalog()
-  .then((rows) => {
-    useStock(rows);
+  .then(useStock)
+  .catch(() => {})
+  .finally(() => {
     refreshCatalog();
     refreshCart();
-  })
-  .catch(() => {});
+  });

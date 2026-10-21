@@ -62,7 +62,10 @@ export const quoteShipping = async (payload: unknown, f: typeof fetch = fetch): 
 
 /** Preço e estoque das peças (banco Peças do Notion, via Worker). */
 export const fetchCatalog = async (f: typeof fetch = fetch): Promise<StockRow[]> =>
-  (await call<{ pieces: StockRow[] }>('/api/catalog', undefined, 'Catálogo indisponível.', f)).pieces;
+  (await call<{ pieces: StockRow[] }>('/api/catalog', undefined, 'Catálogo indisponível.', f)).pieces.map((row) =>
+    // A imagem é servida pelo Worker: o caminho vira endereço completo da API.
+    row.image ? { ...row, image: `${ORDERS_API}${row.image}` } : row,
+  );
 
 export const fetchOrderStatus = async (serial: string, f: typeof fetch = fetch): Promise<string> =>
   (

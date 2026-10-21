@@ -16,7 +16,15 @@ import {
 } from '../../src/domain/shipping';
 import { quoteShipping } from './melhor-envio';
 import { createCheckout, getPayment, verifySignature } from './mercado-pago';
-import { createOrderPage, decrementStock, fetchStock, findOrderPage, updatePaymentStatus, uploadFile } from './notion';
+import {
+  createOrderPage,
+  decrementStock,
+  fetchPieces,
+  findOrderPage,
+  pieceImageUrl,
+  updatePaymentStatus,
+  uploadFile,
+} from './notion';
 import { goodsOf, OrderError, type OrderInput, type ValidOrder, validateOrder } from './order';
 
 interface Limiter {
@@ -97,7 +105,7 @@ export const clearStockCache = () => {
 /** Lê preço e estoque do banco Peças (com cache) e aplica ao catálogo usado pelas regras do domínio. */
 const loadStock = async (env: Env, f: typeof fetch) => {
   if (!stockCache || Date.now() - stockCache.at > 60_000)
-    stockCache = { at: Date.now(), rows: await fetchStock(f, env.NOTION_TOKEN, env.NOTION_PIECES_DB) };
+    stockCache = { at: Date.now(), rows: await fetchPieces(f, env.NOTION_TOKEN, env.NOTION_PIECES_DB) };
   useStock(stockCache.rows);
   return stockCache.rows;
 };
@@ -109,6 +117,40 @@ const catalog = async (env: Env, f: typeof fetch, h: Record<string, string>) => 
   } catch (e) {
     log('error', 'catálogo do Notion indisponível', { error: String(e) });
     return json({ error: 'Catálogo indisponível' }, 502, h);
+  }
+};
+
+interface EdgeCache {
+  match(request: Request): Promise<Response | undefined>;
+  put(request: Request, response: Response): Promise<void>;
+}
+const edgeCache = (): EdgeCache | null =>
+  typeof caches !== 'undefined' ? ((caches as unknown as { default?: EdgeCache }).default ?? null) : null;
+
+/**
+ * GET /api/pecas/:id/imagem — a imagem da peça. O link do Notion expira em ~1h, então ele é pedido de
+ * novo a cada falta de cache; o `?v=` muda quando a peça é editada, e por isso a resposta é imutável.
+ */
+const pieceImage = async (request: Request, id: string, env: Env, ctx: Ctx, f: typeof fetch) => {
+  const cache = edgeCache();
+  const hit = await cache?.match(request);
+  if (hit) return hit;
+  try {
+    const url = await pieceImageUrl(f, env.NOTION_TOKEN, env.NOTION_PIECES_DB, id);
+    if (!url) return new Response('Peça sem imagem', { status: 404 });
+    const file = await f(url);
+    if (!file.ok) throw new Error(`imagem ${id}: ${file.status}`);
+    const response = new Response(file.body, {
+      headers: {
+        'Content-Type': file.headers.get('Content-Type') ?? 'image/jpeg',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
+    if (cache) ctx.waitUntil(cache.put(request, response.clone()));
+    return response;
+  } catch (e) {
+    log('error', 'imagem da peça indisponível', { id, error: String(e) });
+    return new Response(null, { status: 502 });
   }
 };
 
@@ -271,7 +313,7 @@ const orderStatus = async (request: Request, serial: string, env: Env, f: typeof
   }
 };
 
-export const handle = async (request: Request, env: Env, _ctx: Ctx, f: typeof fetch = fetch): Promise<Response> => {
+export const handle = async (request: Request, env: Env, ctx: Ctx, f: typeof fetch = fetch): Promise<Response> => {
   const url = new URL(request.url);
   const h = cors(request, env);
   const { method } = request;
@@ -281,6 +323,8 @@ export const handle = async (request: Request, env: Env, _ctx: Ctx, f: typeof fe
   if (url.pathname === '/api/orders' && method === 'POST') return createOrder(request, env, f, h);
   if (url.pathname === '/api/shipping/quote' && method === 'POST') return shippingQuote(request, env, f, h);
   if (url.pathname === '/api/mp/webhook' && method === 'POST') return paymentWebhook(request, env, f);
+  const image = url.pathname.match(/^\/api\/pecas\/([^/]+)\/imagem$/);
+  if (image && method === 'GET') return pieceImage(request, decodeURIComponent(image[1]), env, ctx, f);
   const status = url.pathname.match(/^\/api\/orders\/([^/]+)\/status$/);
   if (status && method === 'GET') return orderStatus(request, decodeURIComponent(status[1]), env, f, h);
   return json({ error: 'Não encontrado' }, 404, h);

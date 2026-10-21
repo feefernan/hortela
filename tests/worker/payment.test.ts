@@ -35,15 +35,23 @@ const QUOTES = [
 ];
 
 /** Linha do banco Peças como a API do Notion devolve. */
-const piece = (id: string, price: number | null, available: number | null, active = true) => ({
+const piece = (
+  id: string,
+  price: number | null,
+  available: number | null,
+  active = true,
+  extra: Record<string, unknown> = {},
+) => ({
   id: `pc-${id}`,
+  last_edited_time: '2026-10-21T10:00:00.000Z',
   properties: {
     ID: { rich_text: [{ plain_text: id }] },
     Preço: { number: price },
     'Edição total': { number: 20 },
     Disponíveis: { number: available },
     'Ativa no site': { checkbox: active },
-  },
+    ...extra,
+  } as Record<string, unknown> & { ID: { rich_text: { plain_text: string }[] } },
 });
 
 /** Melhor Envio, Mercado Pago e Notion falsos: registram as chamadas e respondem como as APIs reais. */
@@ -344,12 +352,58 @@ describe('preço e estoque do Notion (banco Peças)', () => {
       a.f,
     );
     expect(res.status).toBe(200);
+    const empty = { name: null, collection: null, story: null, order: null, featured: false, image: null };
     expect(await res.json()).toEqual({
       pieces: [
-        { id: 'floresta-3', price: 250, total: 20, available: 12, active: true },
-        { id: 'raizes', price: null, total: 20, available: 0, active: false },
+        { id: 'floresta-3', price: 250, total: 20, available: 12, active: true, ...empty },
+        { id: 'raizes', price: null, total: 20, available: 0, active: false, ...empty },
       ],
     });
+  });
+
+  it('GET /api/catalog traz nome, coleção, história, ordem, destaque e o endereço versionado da imagem', async () => {
+    const extra = {
+      Peça: { title: [{ plain_text: 'Maré alta' }] },
+      Coleção: { select: { name: 'Série Mar' } },
+      História: { rich_text: [{ plain_text: 'Ondas ' }, { plain_text: 'em azul.' }] },
+      Ordem: { number: 1 },
+      Destaque: { checkbox: true },
+      Imagem: { files: [{ name: 'mare.jpg', file: { url: 'https://s3.notion.test/mare.jpg?X-Amz=1' } }] },
+    };
+    const a = apis({ pieces: [piece('mare-alta', 240, 12, true, extra)] });
+    const res = await handle(
+      new Request('https://usehortela.art.br/api/catalog', { headers: { Origin: ORIGIN } }),
+      env,
+      ctx,
+      a.f,
+    );
+    const { pieces } = (await res.json()) as { pieces: Record<string, unknown>[] };
+    expect(pieces[0]).toMatchObject({
+      id: 'mare-alta',
+      name: 'Maré alta',
+      collection: 'Série Mar',
+      story: 'Ondas em azul.',
+      order: 1,
+      featured: true,
+      image: '/api/pecas/mare-alta/imagem?v=2026-10-21T10%3A00%3A00.000Z',
+    });
+  });
+
+  it('GET /api/pecas/:id/imagem busca o link fresco no Notion e devolve a imagem com cache imutável', async () => {
+    const extra = { Imagem: { files: [{ file: { url: 'https://s3.notion.test/mare.jpg?X-Amz=1' } }] } };
+    const a = apis({ pieces: [piece('mare-alta', 240, 12, true, extra), piece('sem-foto', 200, 1)] });
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) =>
+      String(url).startsWith('https://s3.notion.test/')
+        ? new Response('JPEGDATA', { headers: { 'Content-Type': 'image/jpeg' } })
+        : a.f(url, init),
+    ) as unknown as typeof fetch;
+    const img = await handle(new Request('https://usehortela.art.br/api/pecas/mare-alta/imagem?v=1'), env, ctx, f);
+    expect(img.status).toBe(200);
+    expect(img.headers.get('Content-Type')).toBe('image/jpeg');
+    expect(img.headers.get('Cache-Control')).toContain('immutable');
+    expect(await img.text()).toBe('JPEGDATA');
+    const none = await handle(new Request('https://usehortela.art.br/api/pecas/sem-foto/imagem?v=1'), env, ctx, f);
+    expect(none.status).toBe(404);
   });
 
   it('o pedido cobra o preço do Notion e manda as peças junto da cobrança', async () => {

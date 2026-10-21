@@ -1,10 +1,11 @@
 import { findStamp, type Stamp } from '../domain/catalog';
+import { escapeHtml } from '../domain/escape';
 
 let uid = 0;
 const nextId = (prefix: string) => `${prefix}${++uid}`;
 
 /** Aquarela vetorial usada como arte placeholder dos produtos. */
-export const watercolorSVG = ([c1, c2, c3]: readonly [string, string, string], size = 160): string => {
+const watercolorSVG = ([c1, c2, c3]: readonly [string, string, string], size = 160): string => {
   const id = nextId('wc');
   return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">
     <defs>
@@ -71,3 +72,12 @@ export const installStampFallback = () => {
     true,
   );
 };
+
+/** Arte da peça: a imagem real (do Notion) quando existe; senão, o desenho de reserva. */
+export const pieceArtHTML = (
+  p: { name: string; image?: string; palette: readonly [string, string, string] },
+  size: number,
+) =>
+  p.image
+    ? `<img class="piece-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" width="${size}" height="${size}" loading="lazy" decoding="async" data-lazy>`
+    : watercolorSVG(p.palette, size);
