@@ -882,3 +882,11 @@ html.layer-open { overflow: hidden; }
 #ck-name:focus, #ck-email:focus, #ck-obs:focus { border-color: var(--moss) !important; }
 [data-hover="solid"]:hover { background: var(--ink) !important; }
 [data-hover="outline"]:hover { border-color: var(--ink) !important; }
+
+/* Imagem real da peça (Notion): ocupa a moldura da arte sem distorcer. */
+.piece-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

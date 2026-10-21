@@ -117,12 +117,16 @@ export const updatePaymentStatus = async (
     'atualizar pagamento',
   );
 
+type NotionFile = { name?: string; file?: { url: string }; external?: { url: string } };
 type Prop = {
   number?: number | null;
   checkbox?: boolean;
   rich_text?: { plain_text: string }[];
   title?: { plain_text: string }[];
+  select?: { name: string } | null;
+  files?: NotionFile[];
 };
+type PiecePage = { id: string; last_edited_time?: string; properties: Record<string, Prop> };
 const plain = (p?: Prop) =>
   (p?.rich_text ?? p?.title ?? [])
     .map((t) => t.plain_text)
@@ -138,20 +142,46 @@ const queryPieces = async (f: Fetch, token: string, piecesDb: string, filter?: u
     }),
     'ler peças',
   );
-  return data.results as { id: string; properties: Record<string, Prop> }[];
+  return data.results as PiecePage[];
 };
 
-/** Preço, edição e estoque de cada peça (banco Peças), casando pela coluna ID. */
-export const fetchStock = async (f: Fetch, token: string, piecesDb: string): Promise<StockRow[]> =>
+/** Link de download da primeira imagem da peça (arquivo enviado ao Notion ou link externo). */
+const fileUrl = (p?: Prop) => {
+  const first = p?.files?.[0];
+  return first?.file?.url ?? first?.external?.url ?? null;
+};
+
+/**
+ * Todas as peças do banco Peças, casando pela coluna ID. A imagem não vai direto: o link do Notion
+ * expira em ~1h, então o site recebe o endereço da rota do Worker, com a data de edição como versão.
+ */
+export const fetchPieces = async (f: Fetch, token: string, piecesDb: string): Promise<StockRow[]> =>
   (await queryPieces(f, token, piecesDb))
-    .map(({ properties: p }) => ({
-      id: plain(p.ID),
-      price: p.Preço?.number ?? null,
-      total: p['Edição total']?.number ?? null,
-      available: p.Disponíveis?.number ?? null,
-      active: p['Ativa no site']?.checkbox ?? true,
-    }))
+    .map(({ properties: p, last_edited_time }) => {
+      const id = plain(p.ID);
+      return {
+        id,
+        price: p.Preço?.number ?? null,
+        total: p['Edição total']?.number ?? null,
+        available: p.Disponíveis?.number ?? null,
+        active: p['Ativa no site']?.checkbox ?? true,
+        name: plain(p.Peça) || null,
+        collection: p.Coleção?.select?.name ?? (plain(p.Coleção) || null),
+        story: plain(p.História) || null,
+        order: p.Ordem?.number ?? null,
+        featured: p.Destaque?.checkbox ?? false,
+        image: fileUrl(p.Imagem)
+          ? `/api/pecas/${encodeURIComponent(id)}/imagem?v=${encodeURIComponent(last_edited_time ?? '')}`
+          : null,
+      };
+    })
     .filter((row) => row.id);
+
+/** Link fresco da imagem da peça, ou null se ela não tem imagem. */
+export const pieceImageUrl = async (f: Fetch, token: string, piecesDb: string, id: string) => {
+  const [page] = await queryPieces(f, token, piecesDb, { property: 'ID', rich_text: { equals: id } });
+  return fileUrl(page?.properties.Imagem);
+};
 
 /**
  * Desconta `qty` de Disponíveis da peça, sem passar de zero.

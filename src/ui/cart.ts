@@ -13,7 +13,7 @@ import { escapeHtml as e } from '../domain/escape';
 import { formatBRL } from '../domain/pricing';
 import type { CartStorage } from '../infra/cart-storage';
 import { track } from '../infra/telemetry';
-import { watercolorSVG } from './art';
+import { pieceArtHTML } from './art';
 import { byId, onAction, setLayerOpen } from './dom';
 import { bump } from './motion';
 import { go } from './router';
@@ -52,7 +52,7 @@ const renderDrawer = () => {
     .map((l, i) => {
       const p = findProduct(l.productId);
       return `<div class="cart-line" style="--i:${i}">
-        <div class="cart-line-art">${p ? watercolorSVG(p.palette, 64) : ''}</div>
+        <div class="cart-line-art">${p ? pieceArtHTML(p, 64) : ''}</div>
         <div>
           <div class="cart-line-name">${e(l.name)}</div>
           <div class="cart-line-meta">Tamanho ${e(l.size)} · ${l.qty} ${l.qty === 1 ? 'unidade' : 'unidades'}</div>
