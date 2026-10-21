@@ -23,7 +23,7 @@ html:not(.proto-on) #proto-root { display: none; }
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center;
   max-width: calc(100vw - 24px);
   padding: 6px 10px; border-radius: 999px;
-  background: #111; color: #fff; box-shadow: 0 6px 24px rgb(0 0 0 / .35);
+  background: #111; color: #fff; box-shadow: 0 6px 24px rgb(0 0 0 / .35); /* taste-skill-ignore: a barra flutua */
   font: 500 14px/1.2 system-ui, sans-serif;
 }
 .proto-bar button {
