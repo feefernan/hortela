@@ -1,5 +1,5 @@
 /** Conversa com o Worker de pedidos (worker/): catálogo vivo, frete, pedido e status do pagamento. */
-import type { StockRow } from '../domain/catalog';
+import type { StampRow, StockRow } from '../domain/catalog';
 
 export const ORDERS_API = import.meta.env.VITE_ORDERS_API ?? '';
 
@@ -64,6 +64,12 @@ export const quoteShipping = async (payload: unknown, f: typeof fetch = fetch): 
 export const fetchCatalog = async (f: typeof fetch = fetch): Promise<StockRow[]> =>
   (await call<{ pieces: StockRow[] }>('/api/catalog', undefined, 'Catálogo indisponível.', f)).pieces.map((row) =>
     // A imagem é servida pelo Worker: o caminho vira endereço completo da API.
+    row.image ? { ...row, image: `${ORDERS_API}${row.image}` } : row,
+  );
+
+/** Estampas do Estúdio (banco Estampas do Notion; as imagens são cópias fixas no R2, servidas pelo Worker). */
+export const fetchStamps = async (f: typeof fetch = fetch): Promise<StampRow[]> =>
+  (await call<{ stamps: StampRow[] }>('/api/estampas', undefined, 'Estampas indisponíveis.', f)).stamps.map((row) =>
     row.image ? { ...row, image: `${ORDERS_API}${row.image}` } : row,
   );
 

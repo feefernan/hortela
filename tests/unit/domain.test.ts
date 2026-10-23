@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   ALPHABET,
   featuredProducts,
+  findStamp as findLiveStamp,
   findProduct,
   findStamp,
   fromNotion,
+  fromNotionStamps,
   PRODUCTS,
   STAMPS,
+  type StampRow,
   type StockRow,
+  stamps,
+  useStamps,
   useStock,
 } from '../../src/domain/catalog';
 import { editionLabel } from '../../src/domain/edition';
@@ -123,6 +128,53 @@ describe('catálogo vivo (banco Peças)', () => {
     expect(findProduct('floresta-3')?.price).toBe(999);
     useStock([]);
     expect(findProduct('floresta-3')?.price).toBe(210);
+  });
+});
+
+describe('estampas vivas (banco Estampas)', () => {
+  const srow = (id: string, o: Partial<StampRow> = {}): StampRow => ({
+    id,
+    name: id.toUpperCase(),
+    series: 'Série X',
+    order: null,
+    image: null,
+    ...o,
+  });
+
+  it('sem linhas, vale a lista do código', () => {
+    expect(fromNotionStamps([])).toEqual([...STAMPS]);
+  });
+
+  it('o Notion manda: só as linhas dele, por Ordem; o alfabeto segue fixo', () => {
+    const live = fromNotionStamps([
+      srow('s10', { order: 2, name: 'Açucena' }),
+      srow('s12', { order: 1, name: 'Maré' }),
+    ]);
+    expect(live.filter((s) => s.series !== 'Alfabeto').map((s) => s.id)).toEqual(['s12', 's10']);
+    expect(live.filter((s) => s.series === 'Alfabeto')).toHaveLength(26);
+  });
+
+  it('imagem: a do Notion; senão /images/<id>.png (404 cai no desenho de reserva)', () => {
+    const live = fromNotionStamps([
+      srow('s12', { image: 'https://usehortela.art.br/api/estampas/img/abc' }),
+      srow('s10'),
+    ]);
+    expect(live.find((s) => s.id === 's12')?.image).toBe('https://usehortela.art.br/api/estampas/img/abc');
+    expect(live.find((s) => s.id === 's10')?.image).toBe('/images/s10.png');
+  });
+
+  it('estampa do código mantém as cores do desenho de reserva; a nova não tem', () => {
+    const live = fromNotionStamps([srow('s10'), srow('s12')]);
+    expect(live.find((s) => s.id === 's10')?.colorA).toBe('#8060B0');
+    expect(live.find((s) => s.id === 's12')).not.toHaveProperty('colorA');
+  });
+
+  it('useStamps muda o que findStamp enxerga', () => {
+    useStamps([srow('s12', { name: 'Maré' })]);
+    expect(findLiveStamp('s12')?.name).toBe('Maré');
+    expect(stamps().some((s) => s.id === 's1')).toBe(false);
+    useStamps([]);
+    expect(findLiveStamp('s1')?.name).toBe('Floresta nº 3');
   });
 });
 

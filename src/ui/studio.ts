@@ -1,4 +1,5 @@
-import { findStamp, STAMPS, type Stamp } from '../domain/catalog';
+import { findStamp, type Stamp, stamps } from '../domain/catalog';
+import { escapeHtml as e } from '../domain/escape';
 import { BODY_PATH, COLLAR_PATH, SIDE_LABEL, type Side, viewLabel } from '../domain/garment';
 import type { StudioConfig } from '../domain/orders';
 import { nextPlacement, type Rect } from '../domain/placement';
@@ -46,28 +47,28 @@ const renderStampPicker = () => {
   const scroll = byId('stamps-scroll');
   scroll.innerHTML = '';
   scroll.removeAttribute('aria-busy');
-  let currentSeries = '';
-  let grid: HTMLElement | null = null;
-  for (const s of STAMPS.filter((x) => x.series !== 'Alfabeto')) {
-    if (s.series !== currentSeries) {
-      if (grid) scroll.appendChild(grid);
-      const label = document.createElement('div');
-      label.className = 'ser-label';
-      label.textContent = s.series;
-      scroll.appendChild(label);
-      grid = document.createElement('div');
-      grid.className = 'sg';
-      currentSeries = s.series;
+  // Séries na ordem em que aparecem (a Ordem do Notion), mesmo que a lista as intercale.
+  const bySeries = new Map<string, Stamp[]>();
+  for (const s of stamps().filter((x) => x.series !== 'Alfabeto'))
+    bySeries.set(s.series, [...(bySeries.get(s.series) ?? []), s]);
+  for (const [series, items] of bySeries) {
+    const heading = document.createElement('div');
+    heading.className = 'ser-label';
+    heading.textContent = series;
+    scroll.appendChild(heading);
+    const grid = document.createElement('div');
+    grid.className = 'sg';
+    for (const s of items) {
+      const tile = document.createElement('div');
+      tile.className = 'st is-loading';
+      tile.title = s.name;
+      tile.dataset.action = 'add-stamp';
+      tile.dataset.stampId = s.id;
+      tile.innerHTML = `${stampImageHTML(s, 52)}<div class="st-name">${e(s.name)}</div>`;
+      grid.appendChild(tile);
     }
-    const tile = document.createElement('div');
-    tile.className = 'st is-loading';
-    tile.title = s.name;
-    tile.dataset.action = 'add-stamp';
-    tile.dataset.stampId = s.id;
-    tile.innerHTML = `${stampImageHTML(s, 52)}<div class="st-name">${s.name}</div>`;
-    grid?.appendChild(tile);
+    scroll.appendChild(grid);
   }
-  if (grid) scroll.appendChild(grid);
 
   const label = document.createElement('div');
   label.className = 'ser-label';
@@ -220,7 +221,7 @@ const renderLayers = () => {
       const stamp = el.dataset.word ? undefined : findStamp(el.dataset.sid ?? '');
       return `<div class="layer-item ${el.classList.contains('sel') ? 'hi' : ''}" data-action="select-layer" data-index="${idx}">
         <div class="layer-thumb">${layerThumb(el, stamp)}</div>
-        <div class="layer-name">${el.dataset.word ?? stamp?.name ?? 'Estampa'}</div>
+        <div class="layer-name">${e(el.dataset.word ?? stamp?.name ?? 'Estampa')}</div>
         <button type="button" class="layer-del" title="Remover" aria-label="Remover camada" data-action="remove-layer" data-index="${idx}">✕</button>
       </div>`;
     })
@@ -280,7 +281,7 @@ const center = () => {
 
 const surprise = () => {
   clearComposition(true);
-  const artwork = STAMPS.filter((s) => s.series !== 'Alfabeto');
+  const artwork = stamps().filter((s) => s.series !== 'Alfabeto');
   const pool = [...artwork].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
   const target = side;
   pool.forEach((s, i) => {
@@ -320,6 +321,9 @@ export const updateStageScale = (viewportWidth = window.innerWidth) => {
   stageScale = Math.min(1, Math.max(0.5, (viewportWidth - STAGE_GUTTER) / STAGE_W));
   document.documentElement.style.setProperty('--stage-scale', String(stageScale));
 };
+
+/** Redesenha o seletor quando as estampas vivas (Notion) chegam. */
+export const refreshStamps = renderStampPicker;
 
 export const initStudio = (onCheckout: () => void) => {
   renderStampPicker();

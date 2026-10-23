@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearStockCache, type Env, handle } from '../../worker/src/app';
+import { fakeBucket } from './fake-r2';
 
 beforeEach(clearStockCache);
 
@@ -9,6 +10,8 @@ const env: Env = {
   ALLOWED_ORIGIN: ORIGIN,
   NOTION_ORDERS_DB: 'db-pedidos',
   NOTION_PIECES_DB: 'db-pecas',
+  NOTION_STAMPS_DB: 'db-estampas',
+  ESTAMPAS_BUCKET: fakeBucket().bucket,
   NOTION_TOKEN: 'segredo',
   ORDERS_LIMITER: { limit: async () => ({ success: true }) },
   QUOTES_LIMITER: { limit: async () => ({ success: true }) },

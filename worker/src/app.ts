@@ -14,6 +14,7 @@ import {
   pickShippingOptions,
   shippingLabel,
 } from '../../src/domain/shipping';
+import { backupOrder } from './backup';
 import { quoteShipping } from './melhor-envio';
 import { createCheckout, getPayment, verifySignature } from './mercado-pago';
 import {
@@ -26,6 +27,7 @@ import {
   uploadFile,
 } from './notion';
 import { goodsOf, OrderError, type OrderInput, type ValidOrder, validateOrder } from './order';
+import { type Bucket, imageKey, listStamps, SHA_PATTERN } from './stamps';
 
 interface Limiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -35,6 +37,9 @@ export interface Env {
   ALLOWED_ORIGIN: string;
   NOTION_ORDERS_DB: string;
   NOTION_PIECES_DB: string;
+  NOTION_STAMPS_DB: string;
+  /** R2: cópia permanente das imagens das estampas e dos arquivos dos pedidos. */
+  ESTAMPAS_BUCKET: Bucket;
   NOTION_TOKEN: string;
   ORDERS_LIMITER: Limiter;
   QUOTES_LIMITER: Limiter;
@@ -157,6 +162,44 @@ const pieceImage = async (request: Request, id: string, env: Env, ctx: Ctx, f: t
   }
 };
 
+// Estampas em memória por 1 minuto (mesmo cuidado com o limite do Notion que o catálogo das peças).
+let stampsCache: { at: number; rows: Awaited<ReturnType<typeof listStamps>> } | null = null;
+export const clearStampsCache = () => {
+  stampsCache = null;
+};
+
+/** GET /api/estampas — estampas ativas do Estúdio; as imagens já são cópias fixas no R2. */
+const stampList = async (env: Env, f: typeof fetch, h: Record<string, string>) => {
+  try {
+    if (!stampsCache || Date.now() - stampsCache.at > 60_000)
+      stampsCache = { at: Date.now(), rows: await listStamps(f, env) };
+    return json({ stamps: stampsCache.rows }, 200, { ...h, 'Cache-Control': 'public, max-age=60' });
+  } catch (e) {
+    log('error', 'estampas do Notion indisponíveis', { error: String(e) });
+    return json({ error: 'Estampas indisponíveis' }, 502, h);
+  }
+};
+
+/** GET /api/estampas/img/:sha — imagem da estampa guardada no R2; o endereço é o hash, então nunca muda. */
+const stampImage = async (request: Request, sha: string, env: Env, ctx: Ctx) => {
+  if (!SHA_PATTERN.test(sha)) return new Response('Não encontrado', { status: 404 });
+  const cache = edgeCache();
+  const hit = await cache?.match(request);
+  if (hit) return hit;
+  const obj = await env.ESTAMPAS_BUCKET.get(imageKey(sha));
+  if (!obj) return new Response('Não encontrado', { status: 404 });
+  const response = new Response(await obj.arrayBuffer(), {
+    headers: {
+      'Content-Type': obj.httpMetadata?.contentType ?? 'image/png',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      // Imagem pública e imutável: o canvas e o fetch do site (qualquer origem permitida) podem lê-la.
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+  if (cache) ctx.waitUntil(cache.put(request, response.clone()));
+  return response;
+};
+
 /** POST /api/shipping/quote — opções de frete para o carrinho ou a composição, até o CEP informado. */
 const shippingQuote = async (request: Request, env: Env, f: typeof fetch, h: Record<string, string>) => {
   const blocked = await guard(request, env.QUOTES_LIMITER, h);
@@ -188,7 +231,7 @@ const withShipping = async (order: ValidOrder, input: OrderInput, env: Env, f: t
   return { ...order, shipping: { service, price }, total: Math.round((order.total + price) * 100) / 100 };
 };
 
-const createOrder = async (request: Request, env: Env, f: typeof fetch, h: Record<string, string>) => {
+const createOrder = async (request: Request, env: Env, ctx: Ctx, f: typeof fetch, h: Record<string, string>) => {
   const blocked = await guard(request, env.ORDERS_LIMITER, h);
   if (blocked) return blocked;
 
@@ -242,6 +285,12 @@ const createOrder = async (request: Request, env: Env, f: typeof fetch, h: Recor
     log('error', 'pedido não gravado no Notion', { serial: order.serial, kind: order.kind, error: String(e) });
     return json({ error: 'Não foi possível registrar o pedido agora. Tente de novo.' }, 502, h);
   }
+  // Cópia de segurança dos arquivos do pedido no R2, sem atrasar a resposta; falha só vira log.
+  ctx.waitUntil(
+    backupOrder(env.ESTAMPAS_BUCKET, env.SITE_URL, order, f).catch((e) =>
+      log('error', 'cópia do pedido no R2 falhou', { serial: order.serial, error: String(e) }),
+    ),
+  );
   log('info', 'pedido criado', { serial: order.serial, kind: order.kind, total: order.total, cobranca: !!checkoutUrl });
   return json({ serial: order.serial, total: order.total, checkoutUrl }, 201, h);
 };
@@ -323,7 +372,10 @@ export const handle = async (request: Request, env: Env, ctx: Ctx, f: typeof fet
   if (method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
   if (url.pathname === '/api/health') return json({ ok: true }, 200, h);
   if (url.pathname === '/api/catalog' && method === 'GET') return catalog(env, f, h);
-  if (url.pathname === '/api/orders' && method === 'POST') return createOrder(request, env, f, h);
+  if (url.pathname === '/api/estampas' && method === 'GET') return stampList(env, f, h);
+  const stampImg = url.pathname.match(/^\/api\/estampas\/img\/([^/]+)$/);
+  if (stampImg && method === 'GET') return stampImage(request, stampImg[1], env, ctx);
+  if (url.pathname === '/api/orders' && method === 'POST') return createOrder(request, env, ctx, f, h);
   if (url.pathname === '/api/shipping/quote' && method === 'POST') return shippingQuote(request, env, f, h);
   if (url.pathname === '/api/mp/webhook' && method === 'POST') return paymentWebhook(request, env, f);
   const image = url.pathname.match(/^\/api\/pecas\/([^/]+)\/imagem$/);

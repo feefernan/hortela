@@ -120,7 +120,43 @@ export const STAMPS: readonly Stamp[] = [
   ...ALPHABET.map((ch) => ({ id: `lt${ch}`, name: ch, series: 'Alfabeto', image: alphabetImage(ch) })),
 ];
 
-export const findStamp = (id: string): Stamp | undefined => STAMPS.find((s) => s.id === id);
+/** Uma linha do banco Estampas do Notion (image = endereço fixo da cópia no R2, ou null). */
+export interface StampRow {
+  id: string;
+  name: string;
+  series: string;
+  order: number | null;
+  image: string | null;
+}
+
+/**
+ * Estampas vivas: sem linhas (Notion fora do ar ou banco vazio), vale a lista do código. Com linhas,
+ * o Notion manda — só as ativas, por Ordem (a do código desempata) — e o alfabeto segue fixo.
+ * Imagem: a do Notion; senão `/images/<id>.png` (404 cai no desenho de reserva).
+ */
+export const fromNotionStamps = (rows: readonly StampRow[]): Stamp[] => {
+  if (!rows.length) return [...STAMPS];
+  const builtIn = new Map(ARTWORK.map((s, i) => [s.id, { s, i }]));
+  const art = rows
+    .map((r, i) => ({ r, i, base: builtIn.get(r.id) }))
+    .sort((a, b) => (a.r.order ?? a.base?.i ?? 1000 + a.i) - (b.r.order ?? b.base?.i ?? 1000 + b.i))
+    .map(({ r, base }) => ({
+      id: r.id,
+      name: r.name,
+      series: r.series,
+      ...(base?.s.colorA ? { colorA: base.s.colorA } : {}),
+      ...(base?.s.colorB ? { colorB: base.s.colorB } : {}),
+      image: r.image ?? `/images/${r.id}.png`,
+    }));
+  return [...art, ...STAMPS.filter((s) => s.series === 'Alfabeto')];
+};
+
+let liveStamps: readonly Stamp[] = STAMPS;
+export const useStamps = (rows: readonly StampRow[]) => {
+  liveStamps = fromNotionStamps(rows);
+};
+export const stamps = (): readonly Stamp[] => liveStamps;
+export const findStamp = (id: string): Stamp | undefined => liveStamps.find((s) => s.id === id);
 
 /** Uma linha do banco Peças do Notion (null/ausente = coluna vazia). */
 export interface StockRow {

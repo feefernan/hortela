@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearStockCache, type Env, handle } from '../../worker/src/app';
+import { fakeBucket } from './fake-r2';
 
 const ORIGIN = 'http://usehortela.comercial.ws';
 const env = (allow = true): Env => ({
   ALLOWED_ORIGIN: `${ORIGIN},http://localhost:5173`,
   NOTION_ORDERS_DB: 'db-pedidos',
   NOTION_PIECES_DB: 'db-pecas',
+  NOTION_STAMPS_DB: 'db-estampas',
+  ESTAMPAS_BUCKET: fakeBucket().bucket,
   NOTION_TOKEN: 'segredo',
   ORDERS_LIMITER: { limit: vi.fn(async () => ({ success: allow })) },
   QUOTES_LIMITER: { limit: vi.fn(async () => ({ success: allow })) },
@@ -53,6 +56,53 @@ const studio = {
   previewPng: `data:image/png;base64,${btoa('PNG')}`,
   productionSvg: '<svg/>',
 };
+
+describe('cópia de segurança do pedido no R2', () => {
+  it('guarda a prévia e o SVG de produção por serial, com a estampa embutida', async () => {
+    const r2 = fakeBucket();
+    const stamp = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 9, 9]);
+    const sha = [...new Uint8Array(await crypto.subtle.digest('SHA-256', stamp))]
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    await r2.bucket.put(`estampas/${sha}`, stamp.buffer as ArrayBuffer);
+    const pending: Promise<unknown>[] = [];
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
+    const body = {
+      ...studio,
+      previewPng: `data:image/png;base64,${btoa(String.fromCharCode(...png))}`,
+      productionSvg: `<svg><image href="https://usehortela.art.br/api/estampas/img/${sha}"/></svg>`,
+    };
+    const e = { ...env(), ESTAMPAS_BUCKET: r2.bucket };
+    const res = await handle(post(body), e, { waitUntil: (p) => void pending.push(p) }, notion().f);
+    expect(res.status).toBe(201);
+    await Promise.all(pending);
+    const { serial } = (await res.json()) as { serial: string };
+    expect(r2.objects.has(`pedidos/${serial}/preview.png`)).toBe(true);
+    const svg = new TextDecoder().decode(r2.objects.get(`pedidos/${serial}/producao.svg`)?.bytes);
+    expect(svg).toContain('href="data:image/png;base64,');
+    expect(svg).not.toContain('/api/estampas/img/');
+  });
+
+  it('falha do R2 não derruba o pedido', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const broken = {
+      get: async () => null,
+      head: async () => null,
+      put: async () => {
+        throw new Error('R2 fora do ar');
+      },
+    };
+    const pending: Promise<unknown>[] = [];
+    const res = await handle(
+      post(studio),
+      { ...env(), ESTAMPAS_BUCKET: broken },
+      { waitUntil: (p) => void pending.push(p) },
+      notion().f,
+    );
+    expect(res.status).toBe(201);
+    await Promise.all(pending);
+  });
+});
 
 describe('POST /api/orders', () => {
   it('cria o pedido no Notion com anexos e devolve serial e total calculados no servidor', async () => {
