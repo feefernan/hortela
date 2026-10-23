@@ -14,7 +14,7 @@ await page.addStyleTag({
   content: `nav{display:none!important}.page{padding-top:0!important}
   .hero{min-height:630px!important;padding:40px!important;justify-content:center}
   .hero-art-frame{width:300px!important;height:300px!important;margin-bottom:24px!important}
-  .hero-btns,.hero-eyebrow{display:none!important}`,
+  .hero-btns{display:none!important}`,
 });
 await page.screenshot({ path: 'public/og.png', clip: { x: 0, y: 0, width: 1200, height: 630 } });
 await browser.close();

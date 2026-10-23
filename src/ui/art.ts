@@ -18,7 +18,7 @@ const watercolorSVG = ([c1, c2, c3]: readonly [string, string, string], size = 1
     <path d="M 72 55 Q 110 24 148 56 Q 138 112 100 98 Q 60 84 72 55 Z" fill="${c1}" opacity=".5"/>
     <path d="M 72 55 Q 110 72 148 56" fill="none" stroke="${c1}" stroke-width="1.2" opacity=".6"/>
     <path d="M 104 28 Q 108 62 112 98" fill="none" stroke="${c1}" stroke-width=".9" opacity=".5"/>
-    <circle cx="144" cy="44" r="3.5" fill="#9B7FA8" opacity=".65"/>
+    <circle cx="144" cy="44" r="3.5" fill="#A878E0" opacity=".65"/>
   </svg>`;
 };
 
@@ -38,8 +38,8 @@ const BLOB_PATHS: Record<string, string> = {
 const stampBlobSVG = (stamp: Stamp, size: number): string => {
   const id = nextId('st');
   const d = BLOB_PATHS[stamp.id] ?? BLOB_PATHS.s1;
-  const a = stamp.colorA ?? '#3C4E2E';
-  const b = stamp.colorB ?? '#7A9268';
+  const a = stamp.colorA ?? '#1F4A2E';
+  const b = stamp.colorB ?? '#6FA06A';
   return `<svg viewBox="0 0 60 60" width="${size}" height="${size}" aria-hidden="true">
     <defs><filter id="${id}"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
     <ellipse cx="30" cy="30" rx="24" ry="22" fill="${a}" opacity=".28" filter="url(#${id})"/>

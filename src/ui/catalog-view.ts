@@ -15,7 +15,7 @@ const badgeHTML = (p: Product) =>
   p.status === 'last'
     ? '<div class="p-badge">Última</div>'
     : p.status === 'sold'
-      ? '<div class="p-badge" style="background:var(--sage)">Esgotada</div>'
+      ? '<div class="p-badge" style="background:var(--folha)">Esgotada</div>'
       : '';
 
 const infoHTML = (p: Product, cls: string) => `

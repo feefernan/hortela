@@ -121,7 +121,7 @@ a.loja-card {
   .sl {
     order: 2;
     border-right: none;
-    border-top: 1px solid var(--dust);
+    border-top: 1px solid var(--orvalho);
   }
   .sr {
     order: 3;
@@ -237,8 +237,8 @@ a.loja-card {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0;
-    background: var(--white);
-    border-top: 1px solid var(--dust);
+    background: var(--nevoa);
+    border-top: 1px solid var(--orvalho);
   }
   .nav-center li {
     display: flex;

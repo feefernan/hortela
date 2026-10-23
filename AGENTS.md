@@ -121,6 +121,29 @@ Skill vendorizada em `.claude/skills/ponytail*` (de github.com/DietrichGebert/po
 - Erros, performance e traces via **Sentry** + **OpenTelemetry** (`src/infra/telemetry.ts`), ligados apenas
   quando as variáveis de ambiente existem. Nunca envie dados pessoais do cliente (nome, e-mail) para telemetria.
 
+## Identidade visual (Brisa)
+
+Fonte: guia "Revisão da identidade visual" da Hortelã (direção 1a Brisa). Os tokens vivem em `src/styles/main.css` (`:root`); use sempre a variável, nunca o hex.
+
+| Token | Cor | Uso |
+|---|---|---|
+| `--nevoa` | `#F6F8F6` | fundo principal |
+| `--apoio` | `#E9EEE9` | painéis e campos |
+| `--orvalho` | `#C9D3CA` | bordas e divisores (não serve de borda de campo) |
+| `--tinta` | `#16261A` | texto corrido |
+| `--floresta` | `#1F4A2E` | símbolo, títulos, botões |
+| `--texto-2` | `#4F6B55` | texto secundário (5,5:1) |
+| `--folha` | `#6FA06A` | arcos e detalhes — **nunca texto** (2,9:1) |
+| `--lilas` | `#A878E0` | ponto do símbolo e acento de drop; texto escuro por cima, nunca fundo grande |
+| `--lilas-texto` | `#6B3FB5` | lilás quando é texto |
+| `--borda-campo` | `#5F7F63` | borda de campo (≥3:1) |
+
+- **Fontes: duas, e só:** Cormorant Garamond (títulos, nome da marca, subtítulo e história em itálico) e DM Sans (todo o resto, sem itálico). Nunca as duas na mesma linha. O teste `tests/unit/identidade.test.ts` barra qualquer outra fonte e as cores antigas.
+- **Rótulos:** só o nome HORTELÃ e etiquetas curtas de drop em caixa alta espaçada; os demais, em frase normal, ≥13px.
+- **Símbolo:** módulo único `src/ui/symbol.ts` (haste, dois arcos, ponto). O cabeçalho e o `public/favicon.svg` repetem os caminhos e o teste confere que são os mesmos. Abaixo de 48px de altura o traço engrossa (44 em vez de 26), senão some.
+- Cores de **produto** (camiseta e opções do Estúdio, arte das peças) não são da marca e ficam fora dessas regras.
+- Texto novo respeita o tom de voz do guia: poético, contemplativo, pessoal e discreto; nunca "aproveite" nem "última chance".
+
 ## Motion e estados de carregamento
 
 Use a skill **design-motion-principles** (`.claude/skills/design-motion-principles`, de

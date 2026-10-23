@@ -79,12 +79,12 @@ const renderStampPicker = () => {
   wordBox.innerHTML = `
     <input id="word-input" type="text" placeholder="Escreva uma palavra" data-enter-action="add-word"
       aria-label="Palavra com letras do alfabeto em aquarela"
-      style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--dust);
-        border-radius:4px;font-family:var(--body);font-size:13px;background:var(--white);">
-    <div id="word-err" style="opacity:0;color:#a33;font-size:11.5px;font-style:italic;margin-top:6px;">
+      style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--orvalho);
+        border-radius:4px;font-family:var(--body);font-size:13px;background:var(--nevoa);">
+    <div id="word-err" style="opacity:0;color:var(--erro);font-size:13px;margin-top:6px;">
       Só letras de A a Z (sem acento, sem números).
     </div>
-    <div style="font-size:11px;color:var(--sage-text);margin-top:6px;">Aperte Enter pra adicionar.</div>`;
+    <div style="font-size:11px;color:var(--texto-2);margin-top:6px;">Aperte Enter pra adicionar.</div>`;
   scroll.appendChild(wordBox);
 };
 
@@ -212,7 +212,7 @@ const renderLayers = () => {
   const wrap = byId('layers-wrap');
   const els = placedEls();
   if (!els.length) {
-    wrap.innerHTML = `<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--sage-text);">Nenhuma estampa ${side === 'frente' ? 'na frente' : 'nas costas'}</div>`;
+    wrap.innerHTML = `<div style="font-family:var(--body);font-style:italic;font-size:13px;color:var(--texto-2);">Nenhuma estampa ${side === 'frente' ? 'na frente' : 'nas costas'}</div>`;
     return;
   }
   wrap.innerHTML = els
