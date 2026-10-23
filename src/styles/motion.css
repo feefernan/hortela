@@ -365,7 +365,7 @@ img[data-lazy].is-loaded {
   bottom: 0;
   height: 3px;
   width: 100%;
-  background: var(--lilas-strong);
+  background: var(--lilas);
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--dur-slow) var(--ease-out);

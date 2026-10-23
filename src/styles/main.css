@@ -1,19 +1,21 @@
 /* ── TOKENS ─────────────────────────────────────── */
+/* Identidade Brisa: Névoa de fundo, Floresta no texto e no símbolo, Folha e Lilás só em decoração e acento. */
 :root {
-  --ink:       #1C1812;
-  --moss:      #3C4E2E;
-  --sage:      #7A9268; /* decoração: bordas, traços, fundos */
-  --sage-text: #55684A; /* texto secundário: ≥4,5:1 sobre branco e pergaminho */
-  --lilas:     #9B7FA8;
-  --lilas-strong: #6E5680; /* texto lilás e fundo de selo com texto branco (≥4,5:1) */
-  --line-strong: #8A7F6C;  /* borda de campo: ≥3:1 sobre pergaminho */
+  --ink:       #16261A; /* texto corrido */
+  --moss:      #1F4A2E; /* Floresta: símbolo, títulos, botões */
+  --sage:      #6FA06A; /* Folha: arcos, traços, fundos (nunca texto) */
+  --sage-text: #4F6B55; /* texto secundário: 5,5:1 sobre Névoa */
+  --lilas:     #A878E0; /* só o ponto do símbolo e acentos de drop */
+  --lilas-strong: #6B3FB5; /* texto lilás (≥4,5:1 sobre Névoa) */
+  --line-strong: #5F7F63;  /* borda de campo: ≥3:1 sobre Névoa */
   --error:     #9A3B2E;
-  --dust:      #D6CCBA;
-  --parchment: #F3EDE0;
-  --white:     #FAFAF8;
+
+  --dust:      #C9D3CA; /* Orvalho: bordas e divisores */
+  --parchment: #E9EEE9; /* superfícies de apoio */
+  --white:     #F6F8F6; /* Névoa: fundo principal */
 
   --display: 'Cormorant Garamond', serif;
-  --body:    'EB Garamond', serif;
+  --body:    'DM Sans', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -88,9 +90,9 @@ nav {
 
 .cart-n {
   width: 18px; height: 18px; border-radius: 50%;
-  background: var(--lilas-strong);
-  color: white;
-  font-size: 10px;
+  background: var(--lilas);
+  color: var(--ink);
+  font-size: 11px;
   display: none; align-items: center; justify-content: center;
 }
 .cart-n.on { display: flex; }
@@ -222,7 +224,7 @@ nav {
   font-family: var(--body);
   font-size: 14px; letter-spacing: .01em;
   padding: 5px 10px;
-  background: var(--lilas-strong); color: white;
+  background: var(--lilas); color: var(--ink);
 }
 
 .p-info {
@@ -539,7 +541,7 @@ nav {
   color: var(--lilas-strong); padding: 5px 16px; cursor: pointer;
   transition: color .18s, background-color .18s, border-color .18s;
 }
-.sc-surp:hover { background: var(--lilas-strong); color: white; }
+.sc-surp:hover { background: var(--lilas); color: var(--ink); }
 
 .sc-stage {
   flex: 1;
@@ -576,7 +578,7 @@ nav {
 .ps-del {
   position: absolute; top: -10px; right: -10px;
   width: 20px; height: 20px; border-radius: 50%;
-  background: var(--lilas-strong); color: white; font-size: 10px;
+  background: var(--lilas); color: var(--ink); font-size: 10px;
   border: none; cursor: pointer;
   display: none; align-items: center; justify-content: center;
 }
