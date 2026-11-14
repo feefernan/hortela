@@ -1,6 +1,7 @@
 /**
  * Cria o banco "Estampas" no Notion (ao lado do banco Peças) e semeia as estampas atuais do Estúdio (#65).
  * Uso: bash scripts/notion-estampas.sh (pede o token; nunca passe o token na linha de comando).
+ * Se o banco Peças estiver solto no espaço de trabalho, passe a página de destino em NOTION_PARENT_PAGE (link ou ID).
  * Se o banco já existir (mesmo nome na mesma página), não cria outro: só completa o que falta.
  */
 import { STAMPS } from '../src/domain/catalog.ts';
@@ -24,14 +25,19 @@ const findParentPage = async (start) => {
   let parent = start;
   for (let hops = 0; hops < 10 && parent; hops += 1) {
     if (parent.page_id) return parent.page_id;
-    if (!parent.block_id) throw new Error(`Pai do banco Peças é "${parent.type}": a API não cria banco aí.`);
+    if (!parent.block_id) throw new Error(
+        `Pai do banco Peças é "${parent.type}": crie uma página no Notion, conecte a integração a ela e passe o link em NOTION_PARENT_PAGE.`,
+      );
     parent = (await notion(`/blocks/${parent.block_id}`, 'GET')).parent;
   }
   throw new Error('Não achei a página-mãe do banco Peças.');
 };
 
+/** A página pode vir do ambiente (NOTION_PARENT_PAGE: link ou ID) quando o banco Peças está solto no espaço de trabalho. */
+const pageFromEnv = (raw) => raw?.match(/[0-9a-f]{32}|[0-9a-f-]{36}/i)?.[0].replaceAll('-', '');
+
 const pieces = await notion(`/databases/${PIECES_DB}`, 'GET');
-const parent = await findParentPage(pieces.parent);
+const parent = pageFromEnv(process.env.NOTION_PARENT_PAGE) ?? (await findParentPage(pieces.parent));
 
 const series = [...new Set(STAMPS.filter((s) => s.series !== 'Alfabeto').map((s) => s.series))];
 const found = (
