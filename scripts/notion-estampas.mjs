@@ -25,7 +25,8 @@ const findParentPage = async (start) => {
   let parent = start;
   for (let hops = 0; hops < 10 && parent; hops += 1) {
     if (parent.page_id) return parent.page_id;
-    if (!parent.block_id) throw new Error(
+    if (!parent.block_id)
+      throw new Error(
         `Pai do banco Peças é "${parent.type}": crie uma página no Notion, conecte a integração a ela e passe o link em NOTION_PARENT_PAGE.`,
       );
     parent = (await notion(`/blocks/${parent.block_id}`, 'GET')).parent;
