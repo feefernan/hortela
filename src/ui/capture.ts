@@ -91,7 +91,7 @@ export const captureComposition = async (): Promise<string | null> => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   ctx.scale(2, 2);
-  ctx.fillStyle = '#FAFAF8';
+  ctx.fillStyle = '#F6F8F6';
   ctx.fillRect(0, 0, W, H);
 
   const shirtUrl = svgUrl(shirtWithCollar(first.collar));

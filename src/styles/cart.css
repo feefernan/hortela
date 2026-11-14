@@ -17,7 +17,7 @@
 .drawer {
   width: min(420px, 100vw);
   height: 100%;
-  background: var(--white);
+  background: var(--nevoa);
   display: flex;
   flex-direction: column;
   box-shadow: -12px 0 40px rgba(28, 24, 18, 0.12);
@@ -28,7 +28,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 22px 24px;
-  border-bottom: 1px solid var(--dust);
+  border-bottom: 1px solid var(--orvalho);
 }
 .drawer-head h2 {
   font-family: var(--display);
@@ -52,12 +52,12 @@
   gap: 14px;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid var(--parchment);
+  border-bottom: 1px solid var(--apoio);
 }
 .cart-line-art {
   width: 64px;
   height: 64px;
-  background: var(--parchment);
+  background: var(--apoio);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,19 +67,19 @@
   font-family: var(--display);
   font-style: italic;
   font-size: 18px;
-  color: var(--ink);
+  color: var(--tinta);
 }
 .cart-line-meta {
   font-family: var(--body);
   font-size: 12px;
-  color: var(--sage-text);
+  color: var(--texto-2);
   margin-top: 2px;
 }
 .cart-line-side {
   text-align: right;
   font-family: var(--body);
   font-size: 14px;
-  color: var(--ink);
+  color: var(--tinta);
 }
 .cart-line-remove {
   display: block;
@@ -90,19 +90,18 @@
   font-family: var(--body);
   font-size: 13px;
   letter-spacing: 0.08em;
-  color: var(--sage-text);
+  color: var(--texto-2);
   cursor: pointer;
 }
 .cart-line-remove:hover {
-  color: var(--ink);
+  color: var(--tinta);
 }
 
 .cart-empty {
   padding: 48px 0;
   text-align: center;
   font-family: var(--body);
-  font-style: italic;
-  color: var(--sage-text);
+  color: var(--texto-2);
 }
 .cart-empty .btn {
   margin-top: 18px;
@@ -110,7 +109,7 @@
 
 .drawer-foot {
   padding: 20px 24px 24px;
-  border-top: 1px solid var(--dust);
+  border-top: 1px solid var(--orvalho);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -127,9 +126,8 @@
 }
 .drawer-note {
   font-family: var(--body);
-  font-style: italic;
   font-size: 12px;
-  color: var(--sage-text);
+  color: var(--texto-2);
 }
 
 /* ── COLEÇÃO: estado vazio do filtro ─────────────── */
@@ -137,8 +135,7 @@
   padding: 48px;
   text-align: center;
   font-family: var(--body);
-  font-style: italic;
-  color: var(--sage-text);
+  color: var(--texto-2);
 }
 
 /* ── CHECKOUT: entrega (CEP, endereço, frete) ────── */
@@ -152,12 +149,12 @@
   min-width: 0;
 }
 .ck-input {
-  border: 1px solid var(--line-strong);
-  background: var(--parchment);
+  border: 1px solid var(--borda-campo);
+  background: var(--apoio);
   padding: 11px 14px;
   font-family: var(--body);
   font-size: 14px;
-  color: var(--ink);
+  color: var(--tinta);
   min-width: 0;
   width: 100%;
   transition: border-color 0.18s;
@@ -167,10 +164,10 @@
   resize: vertical;
 }
 .ck-input[aria-invalid='true'] {
-  border-color: var(--error);
+  border-color: var(--erro);
 }
 .ck-input:focus {
-  border-color: var(--sage-text);
+  border-color: var(--texto-2);
 }
 .ck-cep-row {
   display: grid;
@@ -178,9 +175,9 @@
   gap: 8px;
 }
 .ck-quote {
-  border: 1px solid var(--moss);
+  border: 1px solid var(--floresta);
   background: transparent;
-  color: var(--moss);
+  color: var(--floresta);
   padding: 0 16px;
   font-family: var(--body);
   font-size: 13px;
@@ -216,25 +213,24 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--dust);
+  border: 1px solid var(--orvalho);
   padding: 10px 12px;
   font-family: var(--body);
   font-size: 13px;
-  color: var(--ink);
+  color: var(--tinta);
   cursor: pointer;
   transition: border-color 0.18s, background-color 0.18s;
 }
 .ck-ship input {
-  accent-color: var(--moss);
+  accent-color: var(--floresta);
 }
 .ck-ship:has(input:checked) {
-  border-color: var(--moss);
-  background: var(--parchment);
+  border-color: var(--floresta);
+  background: var(--apoio);
 }
 .ck-ship small {
   display: block;
-  color: var(--sage-text);
-  font-style: italic;
+  color: var(--texto-2);
 }
 .ck-ship strong {
   font-family: var(--display);
@@ -260,39 +256,36 @@
   font-family: var(--body);
   font-size: 13px;
   letter-spacing: 0.01em;
-  color: var(--sage-text);
+  color: var(--texto-2);
   padding: 0;
 }
 .field-optional {
-  font-style: italic;
 }
 /* Erro ao lado do campo: diz o que falta e como corrigir. */
 .field-error {
   font-family: var(--body);
   font-size: 13px;
-  color: var(--error);
+  color: var(--erro);
 }
 .note {
   font-family: var(--body);
-  font-style: italic;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--sage-text);
+  color: var(--texto-2);
 }
 .pay-note {
   font-family: var(--body);
-  font-style: italic;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--sage-text);
+  color: var(--texto-2);
   padding: 10px 14px;
-  border-left: 2px solid var(--sage);
+  border-left: 2px solid var(--folha);
 }
 
 /* Botão de pagamento com o total: no celular fica preso embaixo enquanto o formulário rola. */
 .ck-submit {
-  background: var(--moss);
-  color: var(--white);
+  background: var(--floresta);
+  color: var(--nevoa);
   border: none;
   padding: 17px;
   font-family: var(--body);
@@ -307,7 +300,7 @@
     position: sticky;
     bottom: 0;
     z-index: 2;
-    box-shadow: 0 -12px 16px var(--white);
+    box-shadow: 0 -12px 16px var(--nevoa);
   }
 }
 .ck-delivery > legend {
