@@ -20,7 +20,7 @@ export default defineConfig({
       // Banco Peças: preço, edição e estoque de cada peça da coleção (#56).
       NOTION_PIECES_DB: bindings.text('3facabbfb8c68079aea8c6534c5de876'),
       // Banco Estampas (Estúdio): criado por scripts/notion-estampas.sh; o ID entra aqui (#65).
-      NOTION_STAMPS_DB: bindings.text('PREENCHER-COM-O-ID-DO-BANCO-ESTAMPAS'),
+      NOTION_STAMPS_DB: bindings.text('418cabbfb8c681df813bd8def3580bf1'),
       // Cópia permanente das imagens das estampas e dos arquivos dos pedidos. Bucket criado com `cf r2 buckets create`.
       ESTAMPAS_BUCKET: bindings.r2({ name: 'hortela-estampas' }),
       NOTION_TOKEN: bindings.secret(),
