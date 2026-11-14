@@ -125,6 +125,28 @@ describe('GET /api/estampas', () => {
     );
   });
 
+  it('apagar a imagem no Notion mantém a última cópia, até entrar uma nova', async () => {
+    const r2 = fakeBucket();
+    const url = 'https://s3.notion.test/a.png?X-Amz=1';
+    await list(makeEnv(r2), world([row('s12', 'Maré', file('mare.png', url))], { [url]: PNG('v1') }).f);
+    clearStampsCache();
+    const removed = world([row('s12', 'Maré', {}, '2026-10-25T09:00:00.000Z')], {});
+    const kept = await list(makeEnv(r2), removed.f);
+    expect(((await kept.json()) as { stamps: { image: string }[] }).stamps[0].image).toContain(
+      await sha256Hex(PNG('v1')),
+    );
+
+    clearStampsCache();
+    const url2 = 'https://s3.notion.test/b.png?X-Amz=2';
+    const replaced = world([row('s12', 'Maré', file('nova.png', url2), '2026-10-26T09:00:00.000Z')], {
+      [url2]: PNG('v2'),
+    });
+    const res = await list(makeEnv(r2), replaced.f);
+    expect(((await res.json()) as { stamps: { image: string }[] }).stamps[0].image).toContain(
+      await sha256Hex(PNG('v2')),
+    );
+  });
+
   it('arquivo que não é imagem ou é grande demais é recusado sem derrubar as outras estampas', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     const bad = 'https://s3.notion.test/bad.pdf';

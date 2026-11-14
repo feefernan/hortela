@@ -104,9 +104,10 @@ export const listStamps = async (f: Fetch, env: StampEnv): Promise<StampRow[]> =
       const name = plain(p.Estampa);
       if (!id || !name || !(p['Ativa no Estúdio']?.checkbox ?? true)) return null;
       const file = firstFile(p.Imagem);
+      // Sem arquivo no Notion (apagado de propósito ou sem querer), vale a última cópia até entrar uma nova.
       const sha = file
         ? await syncImage(f, env.ESTAMPAS_BUCKET, id, file.url, `${last_edited_time ?? ''}|${file.name}`)
-        : null;
+        : ((await readMeta(env.ESTAMPAS_BUCKET, id))?.sha ?? null);
       return {
         id,
         name,
