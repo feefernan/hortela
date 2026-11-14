@@ -19,9 +19,19 @@ const notion = async (path, method, body) => {
   return res.json();
 };
 
+/** Sobe pela árvore até achar a página: o banco pode estar dentro de coluna, callout etc. (block_id). */
+const findParentPage = async (start) => {
+  let parent = start;
+  for (let hops = 0; hops < 10 && parent; hops += 1) {
+    if (parent.page_id) return parent.page_id;
+    if (!parent.block_id) throw new Error(`Pai do banco Peças é "${parent.type}": a API não cria banco aí.`);
+    parent = (await notion(`/blocks/${parent.block_id}`, 'GET')).parent;
+  }
+  throw new Error('Não achei a página-mãe do banco Peças.');
+};
+
 const pieces = await notion(`/databases/${PIECES_DB}`, 'GET');
-const parent = pieces.parent?.page_id;
-if (!parent) throw new Error('Não achei a página-mãe do banco Peças (o banco está direto no espaço de trabalho?).');
+const parent = await findParentPage(pieces.parent);
 
 const series = [...new Set(STAMPS.filter((s) => s.series !== 'Alfabeto').map((s) => s.series))];
 const found = (
