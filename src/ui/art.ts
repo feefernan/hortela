@@ -53,9 +53,9 @@ const stampBlobSVG = (stamp: Stamp, size: number): string => {
  * frequência (miniaturas de camada) ou que já têm animação própria (estampa na camiseta).
  */
 export const stampImageHTML = (stamp: Stamp, size = 54, lazy = true): string =>
-  `<img src="${stamp.image}" width="${size}" height="${size}" data-stamp="${stamp.id}"${lazy ? ' data-lazy loading="lazy" decoding="async"' : ''}
+  `<img src="${escapeHtml(stamp.image)}" width="${size}" height="${size}" data-stamp="${escapeHtml(stamp.id)}"${lazy ? ' data-lazy loading="lazy" decoding="async"' : ''}
     style="width:${size}px;height:${size}px;object-fit:contain;display:block;pointer-events:none;"
-    draggable="false" alt="${stamp.name}">`;
+    draggable="false" alt="${escapeHtml(stamp.name)}">`;
 
 /** Troca imagens de estampa que falharem pelo placeholder vetorial. */
 export const installStampFallback = () => {

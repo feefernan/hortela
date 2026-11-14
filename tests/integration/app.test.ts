@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PRODUCTS } from '../../src/domain/catalog';
+import { PRODUCTS, STAMPS } from '../../src/domain/catalog';
 
 const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf-8');
 const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('<script type="module"'));
@@ -34,6 +34,20 @@ const apiFetch = vi.fn(async (url: string, init?: RequestInit) => {
           ? { id: p.id, price: 210, total: 20, available: 12, active: true }
           : { id: p.id, price: null, total: null, available: null, active: true },
       ),
+    });
+  // Banco Estampas: as 11 do código (sem imagem no Notion) + uma estampa nova, só no Notion, com imagem no R2.
+  if (url.endsWith('/api/estampas'))
+    return Response.json({
+      stamps: [
+        { id: 's12', name: 'Maré <alta>', series: 'Série Mar', order: 0, image: `/api/estampas/img/${'a'.repeat(64)}` },
+        ...STAMPS.filter((s) => s.series !== 'Alfabeto').map((s, i) => ({
+          id: s.id,
+          name: s.name,
+          series: s.series,
+          order: i + 1,
+          image: null,
+        })),
+      ],
     });
   if (url.endsWith('/api/shipping/quote')) return Response.json({ options: SHIPPING });
   const body = JSON.parse(String(init?.body));
@@ -277,7 +291,7 @@ describe('estúdio', () => {
   });
 
   it('lista as estampas por série com o campo do alfabeto', () => {
-    expect(document.querySelectorAll('#stamps-scroll .st')).toHaveLength(11);
+    expect(document.querySelectorAll('#stamps-scroll .st')).toHaveLength(12);
     expect($('#word-input')).toBeTruthy();
   });
 
@@ -599,5 +613,25 @@ describe('pagamento no Mercado Pago', () => {
     await vi.waitFor(() => expect($('#conf-status').textContent).toBe('Pagamento não aprovado'));
     expect($('#conf-serial').textContent).toBe('HRT-20261015-XYZ789');
     api.status = 'Pago';
+  });
+});
+
+describe('estampas do Estúdio vindas do Notion', () => {
+  it('uma estampa nova aparece no seletor, com a imagem do R2 e o nome escapado', async () => {
+    click('#n-estudio');
+    await vi.waitFor(() => expect(document.querySelector('.st[data-stamp-id="s12"]')).not.toBeNull());
+    const tile = $('.st[data-stamp-id="s12"]');
+    expect(tile.querySelector('img')?.getAttribute('src')).toBe('https://api.test/api/estampas/img/' + 'a'.repeat(64));
+    expect(tile.querySelector('.st-name')?.textContent).toBe('Maré <alta>');
+    expect(tile.querySelector('.st-name script, .st-name alta')).toBeNull();
+    // A série nova aparece primeiro (Ordem 0); as do código seguem depois.
+    expect(document.querySelector('.ser-label')?.textContent).toBe('Série Mar');
+    expect(document.querySelector('.st[data-stamp-id="s1"]')).not.toBeNull();
+  });
+
+  it('a estampa nova entra na camiseta como camada', () => {
+    click('[data-action="clear"]');
+    click('.st[data-stamp-id="s12"]');
+    expect(document.querySelectorAll('#drop-zone .ps')).toHaveLength(1);
   });
 });

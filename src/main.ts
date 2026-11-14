@@ -2,9 +2,9 @@ import './styles/main.css';
 import './styles/cart.css';
 import './styles/responsive.css';
 import './styles/motion.css';
-import { useStock } from './domain/catalog';
+import { useStamps, useStock } from './domain/catalog';
 import { createCartStorage } from './infra/cart-storage';
-import { fetchCatalog } from './infra/order-api';
+import { fetchCatalog, fetchStamps } from './infra/order-api';
 import { initTelemetry } from './infra/telemetry';
 import { installStampFallback } from './ui/art';
 import { clearCart, initCart, refreshCart } from './ui/cart';
@@ -13,7 +13,7 @@ import { initCheckout, openCartCheckout, openCheckout } from './ui/checkout';
 import { bindActions } from './ui/dom';
 import { installLazyImages, settleLoadedImages } from './ui/motion';
 import { initRouter } from './ui/router';
-import { initStudio } from './ui/studio';
+import { initStudio, refreshStamps } from './ui/studio';
 
 void initTelemetry();
 
@@ -36,3 +36,9 @@ fetchCatalog()
     refreshCatalog();
     refreshCart();
   });
+
+// As estampas do Estúdio também vêm do Notion; se a chamada falhar, vale a lista do código.
+fetchStamps()
+  .then(useStamps)
+  .catch(() => {})
+  .finally(refreshStamps);

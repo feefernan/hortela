@@ -117,8 +117,8 @@ export const updatePaymentStatus = async (
     'atualizar pagamento',
   );
 
-type NotionFile = { name?: string; file?: { url: string }; external?: { url: string } };
-type Prop = {
+export type NotionFile = { name?: string; file?: { url: string }; external?: { url: string } };
+export type Prop = {
   number?: number | null;
   checkbox?: boolean;
   rich_text?: { plain_text: string }[];
@@ -126,14 +126,14 @@ type Prop = {
   select?: { name: string } | null;
   files?: NotionFile[];
 };
-type PiecePage = { id: string; last_edited_time?: string; properties: Record<string, Prop> };
-const plain = (p?: Prop) =>
+export type DatabasePage = { id: string; last_edited_time?: string; properties: Record<string, Prop> };
+export const plain = (p?: Prop) =>
   (p?.rich_text ?? p?.title ?? [])
     .map((t) => t.plain_text)
     .join('')
     .trim();
 
-const queryPieces = async (f: Fetch, token: string, piecesDb: string, filter?: unknown) => {
+export const queryDatabase = async (f: Fetch, token: string, piecesDb: string, filter?: unknown) => {
   const data = await ok(
     await f(`${API}/databases/${piecesDb}/query`, {
       method: 'POST',
@@ -142,21 +142,25 @@ const queryPieces = async (f: Fetch, token: string, piecesDb: string, filter?: u
     }),
     'ler peças',
   );
-  return data.results as PiecePage[];
+  return data.results as DatabasePage[];
 };
 
-/** Link de download da primeira imagem da peça (arquivo enviado ao Notion ou link externo). */
-const fileUrl = (p?: Prop) => {
+/** Primeiro arquivo de uma propriedade "Arquivos" (enviado ao Notion ou link externo): link e nome. */
+export const firstFile = (p?: Prop): { url: string; name: string } | null => {
   const first = p?.files?.[0];
-  return first?.file?.url ?? first?.external?.url ?? null;
+  const url = first?.file?.url ?? first?.external?.url;
+  return url ? { url, name: first?.name ?? '' } : null;
 };
+
+/** Link de download da primeira imagem da peça. */
+const fileUrl = (p?: Prop) => firstFile(p)?.url ?? null;
 
 /**
  * Todas as peças do banco Peças, casando pela coluna ID. A imagem não vai direto: o link do Notion
  * expira em ~1h, então o site recebe o endereço da rota do Worker, com a data de edição como versão.
  */
 export const fetchPieces = async (f: Fetch, token: string, piecesDb: string): Promise<StockRow[]> =>
-  (await queryPieces(f, token, piecesDb))
+  (await queryDatabase(f, token, piecesDb))
     .map(({ properties: p, last_edited_time }) => {
       const id = plain(p.ID);
       return {
@@ -179,7 +183,7 @@ export const fetchPieces = async (f: Fetch, token: string, piecesDb: string): Pr
 
 /** Link fresco da imagem da peça, ou null se ela não tem imagem. */
 export const pieceImageUrl = async (f: Fetch, token: string, piecesDb: string, id: string) => {
-  const [page] = await queryPieces(f, token, piecesDb, { property: 'ID', rich_text: { equals: id } });
+  const [page] = await queryDatabase(f, token, piecesDb, { property: 'ID', rich_text: { equals: id } });
   return fileUrl(page?.properties.Imagem);
 };
 
@@ -188,7 +192,7 @@ export const pieceImageUrl = async (f: Fetch, token: string, piecesDb: string, i
  * shortcut: lê e grava em dois passos; dois pagamentos da mesma peça no mesmo segundo podem descontar um só.
  */
 export const decrementStock = async (f: Fetch, token: string, piecesDb: string, id: string, qty: number) => {
-  const [page] = await queryPieces(f, token, piecesDb, { property: 'ID', rich_text: { equals: id } });
+  const [page] = await queryDatabase(f, token, piecesDb, { property: 'ID', rich_text: { equals: id } });
   const available = page?.properties.Disponíveis?.number;
   if (!page || available == null) return;
   await ok(

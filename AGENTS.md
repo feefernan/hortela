@@ -56,6 +56,8 @@ worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.co
   src/notion.ts         cliente mínimo da API do Notion
   src/melhor-envio.ts   cotação de frete (Melhor Envio)
   src/mercado-pago.ts   Checkout Pro: preferência, consulta de pagamento, assinatura do webhook
+  src/stamps.ts         estampas do Notion → cópia no R2 (hash do conteúdo)
+  src/backup.ts         cópia dos arquivos de cada pedido no R2
   src/entry.ts   ponto de entrada; confere o Env local contra os tipos gerados
 ```
 
@@ -64,6 +66,14 @@ worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.co
 - Peça nova no Notion aparece no site sozinha; desmarcar "Ativa no site" a esconde.
 - O catálogo em `src/domain/catalog.ts` (`PRODUCTS`) só vale se o Notion não responder; o site mostra skeleton até o catálogo chegar.
 - Colunas novas: `bash scripts/notion-catalogo.sh`.
+
+**Estampas do Estúdio (banco Estampas do Notion + R2):** o Notion é onde a Hortelã sobe e edita; **não é o depósito**.
+- Colunas: Estampa (nome), ID, Série, Imagem, Ordem e Ativa no Estúdio. Estampa nova aparece no Estúdio sozinha; o alfabeto (A–Z) segue no código.
+- Por que não só o Notion: o link do arquivo expira em ~1h e o arquivo some se a linha for apagada.
+- `GET /api/estampas` (cache de 1 min): o Worker baixa a imagem nova ou trocada do Notion, **valida** (assinatura PNG/JPEG/WebP, ≤2 MB) e guarda no R2 como `estampas/<sha256>`. Falha numa estampa não derruba as outras e mantém a cópia anterior.
+- `GET /api/estampas/img/:sha` serve do R2, só com hash de 64 caracteres, `immutable`. O endereço é o hash: trocar a arte gera outro e o antigo continua, então o SVG de produção de pedidos antigos segue reproduzível.
+- **Cópia dos pedidos:** a cada pedido o Worker guarda `pedidos/<serial>/preview.png` e `producao.svg` (com as imagens embutidas) no R2; falha só vira log.
+- Sem estampas do Notion, vale a lista do código (`ARTWORK`). Criar o banco: `bash scripts/notion-estampas.sh`; cópia fora da Cloudflare: `bash scripts/backup-estampas.sh`.
 
 **Fluxo do pedido:**
 1. No checkout, o cliente digita o CEP: o endereço vem do ViaCEP e as opções de frete de `POST /api/shipping/quote`
