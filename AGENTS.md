@@ -71,6 +71,7 @@ worker/     API de pedidos (Cloudflare Worker, CLI `cf`, config em cloudflare.co
 - Colunas: Estampa (nome), ID, Série, Imagem, Ordem e Ativa no Estúdio. Estampa nova aparece no Estúdio sozinha; o alfabeto (A–Z) segue no código.
 - Por que não só o Notion: o link do arquivo expira em ~1h e o arquivo some se a linha for apagada.
 - `GET /api/estampas` (cache de 1 min): o Worker baixa a imagem nova ou trocada do Notion, **valida** (assinatura PNG/JPEG/WebP, ≤2 MB) e guarda no R2 como `estampas/<sha256>`. Falha numa estampa não derruba as outras e mantém a cópia anterior.
+- **Apagar a imagem no Notion não tira a arte da estampa:** vale a última cópia do R2 até entrar uma imagem nova.
 - `GET /api/estampas/img/:sha` serve do R2, só com hash de 64 caracteres, `immutable`. O endereço é o hash: trocar a arte gera outro e o antigo continua, então o SVG de produção de pedidos antigos segue reproduzível.
 - **Cópia dos pedidos:** a cada pedido o Worker guarda `pedidos/<serial>/preview.png` e `producao.svg` (com as imagens embutidas) no R2; falha só vira log.
 - Sem estampas do Notion, vale a lista do código (`ARTWORK`). Criar o banco: `bash scripts/notion-estampas.sh`; cópia fora da Cloudflare: `bash scripts/backup-estampas.sh`.
